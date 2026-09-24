@@ -39,3 +39,379 @@
     font-size: 17px;
     font-weight: 600;
     background: var(--button);
+    color: var(--button-text);
+    cursor: pointer;
+  }
+  .big-button:disabled { opacity: 0.5; }
+  .stats-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .hint { color: var(--hint); font-size: 13px; }
+  .history-item {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid rgba(128,128,128,0.15);
+    font-size: 14px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  #error { color: #ff3b30; font-size: 14px; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+
+<h1>😴 Сон малыша</h1>
+
+<div class="card">
+  <div class="status-line" id="statusLine">Загрузка...</div>
+  <button class="big-button" id="actionBtn" disabled>...</button>
+  <div id="error"></div>
+</div>
+
+<div class="card">
+  <div class="stats-row"><span>Сегодня</span><span id="todayStats">—</span></div>
+  <div class="stats-row"><span>За 7 дней</span><span id="weekStats">—</span></div>
+</div>
+
+<div class="card">
+  <div class="hint" style="margin-bottom:8px;">Последние записи</div>
+  <div id="historyList"></div>
+</div>
+
+<script>
+// ==== НАСТРОЙКИ: впиши сюда данные своего проекта Supabase ====
+const SUPABASE_URL = "https://zokqayumtpissabtofau.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_cLNOLRhZ7cyCUKFi1nhjVQ_4Dma0xXS";
+const TABLE = "sleep_sessions";
+// ================================================================
+
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const statusLine = document.getElementById("statusLine");
+const actionBtn = document.getElementById("actionBtn");
+const errorDiv = document.getElementById("error");
+const todayStats = document.getElementById("todayStats");
+const weekStats = document.getElementById("weekStats");
+const historyList = document.getElementById("historyList");
+
+let openSession = null;
+
+function showError(msg) {
+  errorDiv.textContent = msg;
+  errorDiv.style.display = "block";
+}
+
+function formatDuration(ms) {
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h > 0 ? `${h} ч ${m} мин` : `${m} мин`;
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+async function loadOpenSession() {
+  const { data, error } = await supabaseClient
+    .from(TABLE)
+    .select("*")
+    .is("end_time", null)
+    .order("start_time", { ascending: false })
+    .limit(1);
+  if (error) { showError(error.message); return; }
+  openSession = data && data.length ? data[0] : null;
+  renderStatus();
+}
+
+function renderStatus() {
+  if (openSession) {
+    const dur = Date.now() - new Date(openSession.start_time).getTime();
+    statusLine.textContent = `Спит уже ${formatDuration(dur)} (с ${formatTime(openSession.start_time)})`;
+    actionBtn.textContent = "☀️ Закончить сон";
+  } else {
+    statusLine.textContent = "Сейчас не спит";
+    actionBtn.textContent = "😴 Начать сон";
+  }
+  actionBtn.disabled = false;
+}
+
+async function toggleSleep() {
+  actionBtn.disabled = true;
+  errorDiv.style.display = "none";
+  try {
+    if (openSession) {
+      const { error } = await supabaseClient
+        .from(TABLE)
+        .update({ end_time: new Date().toISOString() })
+        .eq("id", openSession.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient
+        .from(TABLE)
+        .insert({ start_time: new Date().toISOString() });
+      if (error) throw error;
+    }
+    if (tg) tg.HapticFeedback?.notificationOccurred("success");
+    await refreshAll();
+  } catch (e) {
+    showError(e.message || "Ошибка. Попробуй ещё раз.");
+    actionBtn.disabled = false;
+  }
+}
+
+async function loadStats() {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const weekStart = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
+
+  const { data, error } = await supabaseClient
+    .from(TABLE)
+    .select("start_time,end_time")
+    .not("end_time", "is", null)
+    .gte("start_time", weekStart)
+    .order("start_time", { ascending: false });
+
+  if (error) { showError(error.message); return; }
+
+  let todayMs = 0, todayCount = 0, weekMs = 0, weekCount = 0;
+  data.forEach(s => {
+    const dur = new Date(s.end_time) - new Date(s.start_time);
+    weekMs += dur; weekCount++;
+    if (s.start_time >= todayStart) { todayMs += dur; todayCount++; }
+  });
+
+  todayStats.textContent = `${todayCount} раз(а), ${formatDuration(todayMs)}`;
+  weekStats.textContent = `${weekCount} раз(а), ${formatDuration(weekMs)}`;
+
+  historyList.innerHTML = "";
+  data.slice(0, 5).forEach(s => {
+    const dur = new Date(s.end_time) - new Date(s.start_time);
+    const row = document.createElement("div");
+    row.className = "history-item";
+    row.innerHTML = `<span>${formatTime(s.start_time)} → ${formatTime(s.end_time)}</span><span>${formatDuration(dur)}</span>`;
+    historyList.appendChild(row);
+  });
+}
+
+async function refreshAll() {
+  await loadOpenSession();
+  await loadStats();
+}
+
+actionBtn.addEventListener("click", toggleSleep);
+
+refreshAll();
+setInterval(refreshAll, 30000); // обновление каждые 30 секунд
+</script>
+
+</body>
+</html><!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Сон малыша</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-bg-color, #ffffff);
+    --text: var(--tg-theme-text-color, #1c1c1e);
+    --hint: var(--tg-theme-hint-color, #8e8e93);
+    --button: var(--tg-theme-button-color, #2481cc);
+    --button-text: var(--tg-theme-button-text-color, #ffffff);
+    --secondary-bg: var(--tg-theme-secondary-bg-color, #f2f2f7);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 16px;
+  }
+  h1 { font-size: 20px; margin: 0 0 16px; }
+  .card {
+    background: var(--secondary-bg);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .status-line { font-size: 16px; margin-bottom: 12px; }
+  .big-button {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    background: var(--button);
+    color: var(--button-text);
+    cursor: pointer;
+  }
+  .big-button:disabled { opacity: 0.5; }
+  .stats-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .hint { color: var(--hint); font-size: 13px; }
+  .history-item {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid rgba(128,128,128,0.15);
+    font-size: 14px;
+  }
+  .history-item:last-child { border-bottom: none; }
+  #error { color: #ff3b30; font-size: 14px; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+
+<h1>😴 Сон малыша</h1>
+
+<div class="card">
+  <div class="status-line" id="statusLine">Загрузка...</div>
+  <button class="big-button" id="actionBtn" disabled>...</button>
+  <div id="error"></div>
+</div>
+
+<div class="card">
+  <div class="stats-row"><span>Сегодня</span><span id="todayStats">—</span></div>
+  <div class="stats-row"><span>За 7 дней</span><span id="weekStats">—</span></div>
+</div>
+
+<div class="card">
+  <div class="hint" style="margin-bottom:8px;">Последние записи</div>
+  <div id="historyList"></div>
+</div>
+
+<script>
+// ==== НАСТРОЙКИ: впиши сюда данные своего проекта Supabase ====
+const SUPABASE_URL = "https://zokqayumtpissabtofau.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_cLNOLRhZ7cyCUKFi1nhjVQ_4Dma0xXS";
+const TABLE = "sleep_sessions";
+// ================================================================
+
+const tg = window.Telegram?.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const statusLine = document.getElementById("statusLine");
+const actionBtn = document.getElementById("actionBtn");
+const errorDiv = document.getElementById("error");
+const todayStats = document.getElementById("todayStats");
+const weekStats = document.getElementById("weekStats");
+const historyList = document.getElementById("historyList");
+
+let openSession = null;
+
+function showError(msg) {
+  errorDiv.textContent = msg;
+  errorDiv.style.display = "block";
+}
+
+function formatDuration(ms) {
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return h > 0 ? `${h} ч ${m} мин` : `${m} мин`;
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+}
+
+async function loadOpenSession() {
+  const { data, error } = await supabaseClient
+    .from(TABLE)
+    .select("*")
+    .is("end_time", null)
+    .order("start_time", { ascending: false })
+    .limit(1);
+  if (error) { showError(error.message); return; }
+  openSession = data && data.length ? data[0] : null;
+  renderStatus();
+}
+
+function renderStatus() {
+  if (openSession) {
+    const dur = Date.now() - new Date(openSession.start_time).getTime();
+    statusLine.textContent = `Спит уже ${formatDuration(dur)} (с ${formatTime(openSession.start_time)})`;
+    actionBtn.textContent = "☀️ Закончить сон";
+  } else {
+    statusLine.textContent = "Сейчас не спит";
+    actionBtn.textContent = "😴 Начать сон";
+  }
+  actionBtn.disabled = false;
+}
+
+async function toggleSleep() {
+  actionBtn.disabled = true;
+  errorDiv.style.display = "none";
+  try {
+    if (openSession) {
+      const { error } = await supabaseClient
+        .from(TABLE)
+        .update({ end_time: new Date().toISOString() })
+        .eq("id", openSession.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient
+        .from(TABLE)
+        .insert({ start_time: new Date().toISOString() });
+      if (error) throw error;
+    }
+    if (tg) tg.HapticFeedback?.notificationOccurred("success");
+    await refreshAll();
+  } catch (e) {
+    showError(e.message || "Ошибка. Попробуй ещё раз.");
+    actionBtn.disabled = false;
+  }
+}
+
+async function loadStats() {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const weekStart = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
+
+  const { data, error } = await supabaseClient
+    .from(TABLE)
+    .select("start_time,end_time")
+    .not("end_time", "is", null)
+    .gte("start_time", weekStart)
+    .order("start_time", { ascending: false });
+
+  if (error) { showError(error.message); return; }
+
+  let todayMs = 0, todayCount = 0, weekMs = 0, weekCount = 0;
+  data.forEach(s => {
+    const dur = new Date(s.end_time) - new Date(s.start_time);
+    weekMs += dur; weekCount++;
+    if (s.start_time >= todayStart) { todayMs += dur; todayCount++; }
+  });
+
+  todayStats.textContent = `${todayCount} раз(а), ${formatDuration(todayMs)}`;
+  weekStats.textContent = `${weekCount} раз(а), ${formatDuration(weekMs)}`;
+
+  historyList.innerHTML = "";
+  data.slice(0, 5).forEach(s => {
+    const dur = new Date(s.end_time) - new Date(s.start_time);
+    const row = document.createElement("div");
+    row.className = "history-item";
+    row.innerHTML = `<span>${formatTime(s.start_time)} → ${formatTime(s.end_time)}</span><span>${formatDuration(dur)}</span>`;
+    historyList.appendChild(row);
+  });
+}
+
+async function refreshAll() {
+  await loadOpenSession();
+  await loadStats();
+}
+
+actionBtn.addEventListener("click", toggleSleep);
+
+refreshAll();
+setInterval(refreshAll, 30000); // обновление каждые 30 секунд
+</script>
+
+</body>
+</html>
