@@ -1,416 +1,1421 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Сон малыша</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  :root {
-    --bg: var(--tg-theme-bg-color, #ffffff);
-    --text: var(--tg-theme-text-color, #1c1c1e);
-    --hint: var(--tg-theme-hint-color, #8e8e93);
-    --button: var(--tg-theme-button-color, #2481cc);
-    --button-text: var(--tg-theme-button-text-color, #ffffff);
-    --secondary-bg: var(--tg-theme-secondary-bg-color, #f2f2f7);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: 16px;
-  }
-  h1 { font-size: 20px; margin: 0 0 16px; }
-  .card {
-    background: var(--secondary-bg);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-  }
-  .status-line { font-size: 16px; margin-bottom: 12px; }
-  .big-button {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 12px;
-    font-size: 17px;
-    font-weight: 600;
-    background: var(--button);
-    color: var(--button-text);
-    cursor: pointer;
-  }
-  .big-button:disabled { opacity: 0.5; }
-  .stats-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-  .hint { color: var(--hint); font-size: 13px; }
-  .history-item {
-    display: flex; justify-content: space-between;
-    padding: 8px 0; border-bottom: 1px solid rgba(128,128,128,0.15);
-    font-size: 14px;
-  }
-  .history-item:last-child { border-bottom: none; }
-  #error { color: #ff3b30; font-size: 14px; margin-top: 8px; display: none; }
-</style>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
+
+  <title>Сон малыша</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg: var(--tg-theme-bg-color, #ffffff);
+      --text: var(--tg-theme-text-color, #1c1c1e);
+      --hint: var(--tg-theme-hint-color, #8e8e93);
+      --button: var(--tg-theme-button-color, #2481cc);
+      --button-text: var(--tg-theme-button-text-color, #ffffff);
+      --secondary-bg: var(--tg-theme-secondary-bg-color, #f2f2f7);
+      --danger: #ff3b30;
+      --border: rgba(128, 128, 128, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0 0 16px;
+    }
+
+    .card {
+      background: var(--secondary-bg);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .status-line {
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .big-button {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 600;
+      background: var(--button);
+      color: var(--button-text);
+      cursor: pointer;
+    }
+
+    .big-button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .secondary-button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      background: rgba(128, 128, 128, 0.12);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .stats-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .hint {
+      color: var(--hint);
+      font-size: 13px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .history-time {
+      line-height: 1.35;
+    }
+
+    .history-duration {
+      margin-top: 3px;
+      color: var(--hint);
+      font-size: 13px;
+    }
+
+    .edit-btn {
+      flex-shrink: 0;
+      border: none;
+      border-radius: 9px;
+      padding: 8px 11px;
+      background: rgba(128, 128, 128, 0.14);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #error {
+      color: var(--danger);
+      font-size: 14px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .empty {
+      color: var(--hint);
+      font-size: 14px;
+      padding: 4px 0;
+    }
+
+    /* ===== ОКНО РЕДАКТИРОВАНИЯ ===== */
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 520px;
+      background: var(--bg);
+      border-radius: 18px 18px 0 0;
+      padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-title {
+      font-size: 19px;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--hint);
+      font-size: 13px;
+    }
+
+    .field input {
+      width: 100%;
+      height: 46px;
+      padding: 0 12px;
+      border: none;
+      border-radius: 10px;
+      background: var(--secondary-bg);
+      color: var(--text);
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    .modal-hint {
+      color: var(--hint);
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      height: 46px;
+      border: none;
+      border-radius: 11px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .cancel-btn {
+      background: var(--secondary-bg);
+      color: var(--text);
+    }
+
+    .save-btn {
+      background: var(--button);
+      color: var(--button-text);
+    }
+
+    .save-btn:disabled {
+      opacity: 0.5;
+    }
+  </style>
 </head>
+
 <body>
 
-<h1>😴 Сон малыша</h1>
+  <h1>😴 Сон малыша</h1>
 
-<div class="card">
-  <div class="status-line" id="statusLine">Загрузка...</div>
-  <button class="big-button" id="actionBtn" disabled>...</button>
-  <div id="error"></div>
-</div>
+  <!-- ТЕКУЩИЙ СОН -->
+  <div class="card">
+    <div class="status-line" id="statusLine">
+      Загрузка...
+    </div>
 
-<div class="card">
-  <div class="stats-row"><span>Сегодня</span><span id="todayStats">—</span></div>
-  <div class="stats-row"><span>За 7 дней</span><span id="weekStats">—</span></div>
-</div>
+    <button class="big-button" id="actionBtn" disabled>
+      ...
+    </button>
 
-<div class="card">
-  <div class="hint" style="margin-bottom:8px;">Последние записи</div>
-  <div id="historyList"></div>
-</div>
+    <button
+      class="secondary-button"
+      id="editCurrentBtn"
+      style="display: none;"
+    >
+      ✏️ Изменить время
+    </button>
 
-<script>
-// ==== НАСТРОЙКИ: впиши сюда данные своего проекта Supabase ====
-const SUPABASE_URL = "https://zokqayumtpissabtofau.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_cLNOLRhZ7cyCUKFi1nhjVQ_4Dma0xXS";
-const TABLE = "sleep_sessions";
-// ================================================================
+    <div id="error"></div>
+  </div>
 
-const tg = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
+  <!-- СТАТИСТИКА -->
+  <div class="card">
+    <div class="stats-row">
+      <span>Сегодня</span>
+      <span id="todayStats">—</span>
+    </div>
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <div class="stats-row">
+      <span>За 7 дней</span>
+      <span id="weekStats">—</span>
+    </div>
+  </div>
 
-const statusLine = document.getElementById("statusLine");
-const actionBtn = document.getElementById("actionBtn");
-const errorDiv = document.getElementById("error");
-const todayStats = document.getElementById("todayStats");
-const weekStats = document.getElementById("weekStats");
-const historyList = document.getElementById("historyList");
+  <!-- ИСТОРИЯ -->
+  <div class="card">
+    <div class="hint" style="margin-bottom: 8px;">
+      Последние записи
+    </div>
 
-let openSession = null;
+    <div id="historyList">
+      <div class="empty">Загрузка...</div>
+    </div>
+  </div>
 
-function showError(msg) {
-  errorDiv.textContent = msg;
-  errorDiv.style.display = "block";
-}
 
-function formatDuration(ms) {
-  const totalMin = Math.floor(ms / 60000);
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  return h > 0 ? `${h} ч ${m} мин` : `${m} мин`;
-}
+  <!-- ОКНО РЕДАКТИРОВАНИЯ -->
+  <div class="modal-backdrop" id="editModal">
 
-function formatTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-}
+    <div class="modal">
 
-async function loadOpenSession() {
-  const { data, error } = await supabaseClient
-    .from(TABLE)
-    .select("*")
-    .is("end_time", null)
-    .order("start_time", { ascending: false })
-    .limit(1);
-  if (error) { showError(error.message); return; }
-  openSession = data && data.length ? data[0] : null;
-  renderStatus();
-}
+      <div class="modal-title">
+        ✏️ Изменить сон
+      </div>
 
-function renderStatus() {
-  if (openSession) {
-    const dur = Date.now() - new Date(openSession.start_time).getTime();
-    statusLine.textContent = `Спит уже ${formatDuration(dur)} (с ${formatTime(openSession.start_time)})`;
-    actionBtn.textContent = "☀️ Закончить сон";
-  } else {
-    statusLine.textContent = "Сейчас не спит";
-    actionBtn.textContent = "😴 Начать сон";
-  }
-  actionBtn.disabled = false;
-}
+      <div class="field">
+        <label for="editStart">
+          Начало сна
+        </label>
 
-async function toggleSleep() {
-  actionBtn.disabled = true;
-  errorDiv.style.display = "none";
-  try {
-    if (openSession) {
-      const { error } = await supabaseClient
-        .from(TABLE)
-        .update({ end_time: new Date().toISOString() })
-        .eq("id", openSession.id);
-      if (error) throw error;
-    } else {
-      const { error } = await supabaseClient
-        .from(TABLE)
-        .insert({ start_time: new Date().toISOString() });
-      if (error) throw error;
-    }
-    if (tg) tg.HapticFeedback?.notificationOccurred("success");
-    await refreshAll();
-  } catch (e) {
-    showError(e.message || "Ошибка. Попробуй ещё раз.");
-    actionBtn.disabled = false;
-  }
-}
+        <input
+          type="datetime-local"
+          id="editStart"
+        />
+      </div>
 
-async function loadStats() {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const weekStart = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
+      <div class="field">
+        <label for="editEnd">
+          Конец сна
+        </label>
 
-  const { data, error } = await supabaseClient
-    .from(TABLE)
-    .select("start_time,end_time")
-    .not("end_time", "is", null)
-    .gte("start_time", weekStart)
-    .order("start_time", { ascending: false });
+        <input
+          type="datetime-local"
+          id="editEnd"
+        />
 
-  if (error) { showError(error.message); return; }
+        <div class="modal-hint">
+          Если оставить пустым — сон останется незавершённым.
+        </div>
+      </div>
 
-  let todayMs = 0, todayCount = 0, weekMs = 0, weekCount = 0;
-  data.forEach(s => {
-    const dur = new Date(s.end_time) - new Date(s.start_time);
-    weekMs += dur; weekCount++;
-    if (s.start_time >= todayStart) { todayMs += dur; todayCount++; }
-  });
+      <div class="modal-buttons">
 
-  todayStats.textContent = `${todayCount} раз(а), ${formatDuration(todayMs)}`;
-  weekStats.textContent = `${weekCount} раз(а), ${formatDuration(weekMs)}`;
+        <button
+          class="cancel-btn"
+          id="cancelEditBtn"
+        >
+          Отмена
+        </button>
 
-  historyList.innerHTML = "";
-  data.slice(0, 5).forEach(s => {
-    const dur = new Date(s.end_time) - new Date(s.start_time);
-    const row = document.createElement("div");
-    row.className = "history-item";
-    row.innerHTML = `<span>${formatTime(s.start_time)} → ${formatTime(s.end_time)}</span><span>${formatDuration(dur)}</span>`;
-    historyList.appendChild(row);
-  });
-}
+        <button
+          class="save-btn"
+          id="saveEditBtn"
+        >
+          Сохранить
+        </button>
 
-async function refreshAll() {
-  await loadOpenSession();
-  await loadStats();
-}
+      </div>
 
-actionBtn.addEventListener("click", toggleSleep);
+    </div>
 
-refreshAll();
-setInterval(refreshAll, 30000); // обновление каждые 30 секунд
-</script>
+  </div>
 
-</body>
-</html><!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Сон малыша</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-  :root {
-    --bg: var(--tg-theme-bg-color, #ffffff);
-    --text: var(--tg-theme-text-color, #1c1c1e);
-    --hint: var(--tg-theme-hint-color, #8e8e93);
-    --button: var(--tg-theme-button-color, #2481cc);
-    --button-text: var(--tg-theme-button-text-color, #ffffff);
-    --secondary-bg: var(--tg-theme-secondary-bg-color, #f2f2f7);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    padding: 16px;
-  }
-  h1 { font-size: 20px; margin: 0 0 16px; }
-  .card {
-    background: var(--secondary-bg);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-  }
-  .status-line { font-size: 16px; margin-bottom: 12px; }
-  .big-button {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 12px;
-    font-size: 17px;
-    font-weight: 600;
-    background: var(--button);
-    color: var(--button-text);
-    cursor: pointer;
-  }
-  .big-button:disabled { opacity: 0.5; }
-  .stats-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
-  .hint { color: var(--hint); font-size: 13px; }
-  .history-item {
-    display: flex; justify-content: space-between;
-    padding: 8px 0; border-bottom: 1px solid rgba(128,128,128,0.15);
-    font-size: 14px;
-  }
-  .history-item:last-child { border-bottom: none; }
-  #error { color: #ff3b30; font-size: 14px; margin-top: 8px; display: none; }
-</style>
-</head>
-<body>
-
-<h1>😴 Сон малыша</h1>
-
-<div class="card">
-  <div class="status-line" id="statusLine">Загрузка...</div>
-  <button class="big-button" id="actionBtn" disabled>...</button>
-  <div id="error"></div>
-</div>
-
-<div class="card">
-  <div class="stats-row"><span>Сегодня</span><span id="todayStats">—</span></div>
-  <div class="stats-row"><span>За 7 дней</span><span id="weekStats">—</span></div>
-</div>
-
-<div class="card">
-  <div class="hint" style="margin-bottom:8px;">Последние записи</div>
-  <div id="historyList"></div>
-</div>
 
 <script>
-// ==== НАСТРОЙКИ: впиши сюда данные своего проекта Supabase ====
-const SUPABASE_URL = "https://zokqayumtpissabtofau.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_cLNOLRhZ7cyCUKFi1nhjVQ_4Dma0xXS";
-const TABLE = "sleep_sessions";
-// ================================================================
 
-const tg = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
+  // ============================================================
+  // SUPABASE
+  // ============================================================
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const SUPABASE_URL =
+    "https://zokqayumtpissabtofau.supabase.co";
 
-const statusLine = document.getElementById("statusLine");
-const actionBtn = document.getElementById("actionBtn");
-const errorDiv = document.getElementById("error");
-const todayStats = document.getElementById("todayStats");
-const weekStats = document.getElementById("weekStats");
-const historyList = document.getElementById("historyList");
+  const SUPABASE_ANON_KEY =
+    "sb_publishable_cLNOLRhZ7cyCUKFi1nhjVQ_4Dma0xXS";
 
-let openSession = null;
+  const TABLE =
+    "sleep_sessions";
 
-function showError(msg) {
-  errorDiv.textContent = msg;
-  errorDiv.style.display = "block";
-}
 
-function formatDuration(ms) {
-  const totalMin = Math.floor(ms / 60000);
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  return h > 0 ? `${h} ч ${m} мин` : `${m} мин`;
-}
+  // ============================================================
+  // TELEGRAM
+  // ============================================================
 
-function formatTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
-}
+  const tg =
+    window.Telegram?.WebApp;
 
-async function loadOpenSession() {
-  const { data, error } = await supabaseClient
-    .from(TABLE)
-    .select("*")
-    .is("end_time", null)
-    .order("start_time", { ascending: false })
-    .limit(1);
-  if (error) { showError(error.message); return; }
-  openSession = data && data.length ? data[0] : null;
-  renderStatus();
-}
-
-function renderStatus() {
-  if (openSession) {
-    const dur = Date.now() - new Date(openSession.start_time).getTime();
-    statusLine.textContent = `Спит уже ${formatDuration(dur)} (с ${formatTime(openSession.start_time)})`;
-    actionBtn.textContent = "☀️ Закончить сон";
-  } else {
-    statusLine.textContent = "Сейчас не спит";
-    actionBtn.textContent = "😴 Начать сон";
+  if (tg) {
+    tg.ready();
+    tg.expand();
   }
-  actionBtn.disabled = false;
-}
 
-async function toggleSleep() {
-  actionBtn.disabled = true;
-  errorDiv.style.display = "none";
-  try {
-    if (openSession) {
-      const { error } = await supabaseClient
-        .from(TABLE)
-        .update({ end_time: new Date().toISOString() })
-        .eq("id", openSession.id);
-      if (error) throw error;
-    } else {
-      const { error } = await supabaseClient
-        .from(TABLE)
-        .insert({ start_time: new Date().toISOString() });
-      if (error) throw error;
+
+  // ============================================================
+  // SUPABASE CLIENT
+  // ============================================================
+
+  const supabaseClient =
+    supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
+
+
+  // ============================================================
+  // ELEMENTS
+  // ============================================================
+
+  const statusLine =
+    document.getElementById("statusLine");
+
+  const actionBtn =
+    document.getElementById("actionBtn");
+
+  const editCurrentBtn =
+    document.getElementById("editCurrentBtn");
+
+  const errorDiv =
+    document.getElementById("error");
+
+  const todayStats =
+    document.getElementById("todayStats");
+
+  const weekStats =
+    document.getElementById("weekStats");
+
+  const historyList =
+    document.getElementById("historyList");
+
+  const editModal =
+    document.getElementById("editModal");
+
+  const editStart =
+    document.getElementById("editStart");
+
+  const editEnd =
+    document.getElementById("editEnd");
+
+  const saveEditBtn =
+    document.getElementById("saveEditBtn");
+
+  const cancelEditBtn =
+    document.getElementById("cancelEditBtn");
+
+
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  let openSession = null;
+
+  let editingSessionId = null;
+
+  let refreshing = false;
+
+  let firstLoad = true;
+
+
+  // ============================================================
+  // ERRORS
+  // ============================================================
+
+  function showError(message) {
+
+    errorDiv.textContent =
+      message;
+
+    errorDiv.style.display =
+      "block";
+  }
+
+
+  function hideError() {
+
+    errorDiv.textContent =
+      "";
+
+    errorDiv.style.display =
+      "none";
+  }
+
+
+  // ============================================================
+  // FORMAT DURATION
+  // ============================================================
+
+  function formatDuration(ms) {
+
+    if (
+      !Number.isFinite(ms) ||
+      ms < 0
+    ) {
+      return "0 мин";
     }
-    if (tg) tg.HapticFeedback?.notificationOccurred("success");
-    await refreshAll();
-  } catch (e) {
-    showError(e.message || "Ошибка. Попробуй ещё раз.");
-    actionBtn.disabled = false;
+
+    const totalMin =
+      Math.floor(
+        ms / 60000
+      );
+
+    const hours =
+      Math.floor(
+        totalMin / 60
+      );
+
+    const minutes =
+      totalMin % 60;
+
+
+    if (hours > 0) {
+
+      return (
+        `${hours} ч ` +
+        `${minutes} мин`
+      );
+    }
+
+    return `${minutes} мин`;
   }
-}
 
-async function loadStats() {
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const weekStart = new Date(now.getTime() - 7 * 24 * 3600 * 1000).toISOString();
 
-  const { data, error } = await supabaseClient
-    .from(TABLE)
-    .select("start_time,end_time")
-    .not("end_time", "is", null)
-    .gte("start_time", weekStart)
-    .order("start_time", { ascending: false });
+  // ============================================================
+  // FORMAT DATE/TIME
+  // ============================================================
 
-  if (error) { showError(error.message); return; }
+  function formatTime(iso) {
 
-  let todayMs = 0, todayCount = 0, weekMs = 0, weekCount = 0;
-  data.forEach(s => {
-    const dur = new Date(s.end_time) - new Date(s.start_time);
-    weekMs += dur; weekCount++;
-    if (s.start_time >= todayStart) { todayMs += dur; todayCount++; }
-  });
+    const date =
+      new Date(iso);
 
-  todayStats.textContent = `${todayCount} раз(а), ${formatDuration(todayMs)}`;
-  weekStats.textContent = `${weekCount} раз(а), ${formatDuration(weekMs)}`;
+    return date.toLocaleString(
+      "ru-RU",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      }
+    );
+  }
 
-  historyList.innerHTML = "";
-  data.slice(0, 5).forEach(s => {
-    const dur = new Date(s.end_time) - new Date(s.start_time);
-    const row = document.createElement("div");
-    row.className = "history-item";
-    row.innerHTML = `<span>${formatTime(s.start_time)} → ${formatTime(s.end_time)}</span><span>${formatDuration(dur)}</span>`;
-    historyList.appendChild(row);
-  });
-}
 
-async function refreshAll() {
-  await loadOpenSession();
-  await loadStats();
-}
+  // ============================================================
+  // ISO -> DATETIME-LOCAL
+  // ============================================================
 
-actionBtn.addEventListener("click", toggleSleep);
+  function isoToLocalInput(iso) {
 
-refreshAll();
-setInterval(refreshAll, 30000); // обновление каждые 30 секунд
+    if (!iso) {
+      return "";
+    }
+
+    const date =
+      new Date(iso);
+
+    const year =
+      date.getFullYear();
+
+    const month =
+      String(
+        date.getMonth() + 1
+      ).padStart(2, "0");
+
+    const day =
+      String(
+        date.getDate()
+      ).padStart(2, "0");
+
+    const hours =
+      String(
+        date.getHours()
+      ).padStart(2, "0");
+
+    const minutes =
+      String(
+        date.getMinutes()
+      ).padStart(2, "0");
+
+    return (
+      `${year}-${month}-${day}` +
+      `T${hours}:${minutes}`
+    );
+  }
+
+
+  // ============================================================
+  // DATETIME-LOCAL -> ISO
+  // ============================================================
+
+  function localInputToISO(value) {
+
+    if (!value) {
+      return null;
+    }
+
+    const date =
+      new Date(value);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
+      return null;
+    }
+
+    return date.toISOString();
+  }
+
+
+  // ============================================================
+  // ЗАГРУЗКА ТЕКУЩЕГО СНА
+  // ============================================================
+
+  async function loadOpenSession() {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from(TABLE)
+        .select("*")
+        .is(
+          "end_time",
+          null
+        )
+        .order(
+          "start_time",
+          {
+            ascending: false
+          }
+        )
+        .limit(1);
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    openSession =
+      data &&
+      data.length > 0
+        ? data[0]
+        : null;
+
+
+    renderStatus();
+  }
+
+
+  // ============================================================
+  // ОТОБРАЖЕНИЕ ТЕКУЩЕГО СОСТОЯНИЯ
+  // ============================================================
+
+  function renderStatus() {
+
+    if (openSession) {
+
+      const start =
+        new Date(
+          openSession.start_time
+        ).getTime();
+
+      const duration =
+        Date.now() - start;
+
+
+      statusLine.textContent =
+        `Спит уже ` +
+        `${formatDuration(duration)} ` +
+        `(с ${formatTime(
+          openSession.start_time
+        )})`;
+
+
+      actionBtn.textContent =
+        "☀️ Закончить сон";
+
+
+      actionBtn.disabled =
+        false;
+
+
+      editCurrentBtn.style.display =
+        "block";
+
+    } else {
+
+      statusLine.textContent =
+        "Сейчас не спит";
+
+
+      actionBtn.textContent =
+        "😴 Начать сон";
+
+
+      actionBtn.disabled =
+        false;
+
+
+      editCurrentBtn.style.display =
+        "none";
+    }
+  }
+
+
+  // ============================================================
+  // НАЧАТЬ / ЗАКОНЧИТЬ СОН
+  // ============================================================
+
+  async function toggleSleep() {
+
+    actionBtn.disabled =
+      true;
+
+    hideError();
+
+
+    try {
+
+      if (openSession) {
+
+        const {
+          error
+        } =
+          await supabaseClient
+            .from(TABLE)
+            .update({
+              end_time:
+                new Date()
+                  .toISOString()
+            })
+            .eq(
+              "id",
+              openSession.id
+            );
+
+
+        if (error) {
+          throw error;
+        }
+
+      } else {
+
+        const {
+          error
+        } =
+          await supabaseClient
+            .from(TABLE)
+            .insert({
+              start_time:
+                new Date()
+                  .toISOString()
+            });
+
+
+        if (error) {
+          throw error;
+        }
+      }
+
+
+      if (tg) {
+
+        tg.HapticFeedback
+          ?.notificationOccurred(
+            "success"
+          );
+      }
+
+
+      await refreshAll();
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        error.message ||
+        "Ошибка. Попробуй ещё раз."
+      );
+
+      actionBtn.disabled =
+        false;
+    }
+  }
+
+
+  // ============================================================
+  // СТАТИСТИКА
+  // ============================================================
+
+  async function loadStats() {
+
+    const now =
+      new Date();
+
+
+    const todayStart =
+      new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      ).toISOString();
+
+
+    const weekStart =
+      new Date(
+        now.getTime() -
+        7 * 24 * 60 * 60 * 1000
+      ).toISOString();
+
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from(TABLE)
+        .select(
+          "id,start_time,end_time"
+        )
+        .not(
+          "end_time",
+          "is",
+          null
+        )
+        .gte(
+          "start_time",
+          weekStart
+        )
+        .order(
+          "start_time",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    let todayMs = 0;
+    let todayCount = 0;
+
+    let weekMs = 0;
+    let weekCount = 0;
+
+
+    data.forEach(
+      session => {
+
+        const start =
+          new Date(
+            session.start_time
+          );
+
+        const end =
+          new Date(
+            session.end_time
+          );
+
+        const duration =
+          end - start;
+
+
+        if (
+          !Number.isFinite(
+            duration
+          ) ||
+          duration < 0
+        ) {
+          return;
+        }
+
+
+        weekMs += duration;
+
+        weekCount++;
+
+
+        if (
+          session.start_time >=
+          todayStart
+        ) {
+
+          todayMs += duration;
+
+          todayCount++;
+        }
+      }
+    );
+
+
+    todayStats.textContent =
+      `${todayCount} раз(а), ` +
+      `${formatDuration(
+        todayMs
+      )}`;
+
+
+    weekStats.textContent =
+      `${weekCount} раз(а), ` +
+      `${formatDuration(
+        weekMs
+      )}`;
+
+
+    renderHistory(data);
+  }
+
+
+  // ============================================================
+  // ИСТОРИЯ
+  // ============================================================
+
+  function renderHistory(data) {
+
+    historyList.innerHTML =
+      "";
+
+
+    if (
+      !data ||
+      data.length === 0
+    ) {
+
+      const empty =
+        document.createElement(
+          "div"
+        );
+
+      empty.className =
+        "empty";
+
+      empty.textContent =
+        "Записей пока нет";
+
+      historyList.appendChild(
+        empty
+      );
+
+      return;
+    }
+
+
+    data
+      .slice(0, 10)
+      .forEach(
+        session => {
+
+          const start =
+            new Date(
+              session.start_time
+            );
+
+          const end =
+            new Date(
+              session.end_time
+            );
+
+          const duration =
+            end - start;
+
+
+          const row =
+            document.createElement(
+              "div"
+            );
+
+          row.className =
+            "history-item";
+
+
+          const info =
+            document.createElement(
+              "div"
+            );
+
+          info.className =
+            "history-info";
+
+
+          const time =
+            document.createElement(
+              "div"
+            );
+
+          time.className =
+            "history-time";
+
+          time.textContent =
+            `${formatTime(
+              session.start_time
+            )} → ${formatTime(
+              session.end_time
+            )}`;
+
+
+          const durationElement =
+            document.createElement(
+              "div"
+            );
+
+          durationElement.className =
+            "history-duration";
+
+          durationElement.textContent =
+            formatDuration(
+              duration
+            );
+
+
+          info.appendChild(time);
+
+          info.appendChild(
+            durationElement
+          );
+
+
+          const editButton =
+            document.createElement(
+              "button"
+            );
+
+          editButton.className =
+            "edit-btn";
+
+          editButton.textContent =
+            "Изменить";
+
+
+          editButton.addEventListener(
+            "click",
+            () => {
+              openEditModal(
+                session
+              );
+            }
+          );
+
+
+          row.appendChild(info);
+
+          row.appendChild(
+            editButton
+          );
+
+
+          historyList.appendChild(
+            row
+          );
+        }
+      );
+  }
+
+
+  // ============================================================
+  // ОТКРЫТЬ РЕДАКТИРОВАНИЕ
+  // ============================================================
+
+  function openEditModal(session) {
+
+    editingSessionId =
+      session.id;
+
+
+    editStart.value =
+      isoToLocalInput(
+        session.start_time
+      );
+
+
+    editEnd.value =
+      isoToLocalInput(
+        session.end_time
+      );
+
+
+    saveEditBtn.disabled =
+      false;
+
+
+    editModal.classList.add(
+      "visible"
+    );
+  }
+
+
+  // ============================================================
+  // РЕДАКТИРОВАНИЕ ТЕКУЩЕГО СНА
+  // ============================================================
+
+  function openEditCurrentModal() {
+
+    if (!openSession) {
+      return;
+    }
+
+
+    editingSessionId =
+      openSession.id;
+
+
+    editStart.value =
+      isoToLocalInput(
+        openSession.start_time
+      );
+
+
+    /*
+     * Для текущего сна конец оставляем
+     * пустым, потому что он ещё идёт.
+     */
+    editEnd.value =
+      "";
+
+
+    saveEditBtn.disabled =
+      false;
+
+
+    editModal.classList.add(
+      "visible"
+    );
+  }
+
+
+  // ============================================================
+  // ЗАКРЫТЬ РЕДАКТИРОВАНИЕ
+  // ============================================================
+
+  function closeEditModal() {
+
+    editModal.classList.remove(
+      "visible"
+    );
+
+    editingSessionId =
+      null;
+  }
+
+
+  // ============================================================
+  // СОХРАНИТЬ РЕДАКТИРОВАНИЕ
+  // ============================================================
+
+  async function saveEdit() {
+
+    if (!editingSessionId) {
+      return;
+    }
+
+
+    const startValue =
+      editStart.value;
+
+    const endValue =
+      editEnd.value;
+
+
+    if (!startValue) {
+
+      alert(
+        "Укажи время начала сна."
+      );
+
+      return;
+    }
+
+
+    const startISO =
+      localInputToISO(
+        startValue
+      );
+
+    const endISO =
+      localInputToISO(
+        endValue
+      );
+
+
+    if (!startISO) {
+
+      alert(
+        "Некорректное время начала."
+      );
+
+      return;
+    }
+
+
+    if (
+      endValue &&
+      !endISO
+    ) {
+
+      alert(
+        "Некорректное время окончания."
+      );
+
+      return;
+    }
+
+
+    if (
+      endISO &&
+      new Date(endISO) <=
+      new Date(startISO)
+    ) {
+
+      alert(
+        "Конец сна должен быть позже начала."
+      );
+
+      return;
+    }
+
+
+    saveEditBtn.disabled =
+      true;
+
+    hideError();
+
+
+    try {
+
+      const {
+        error
+      } =
+        await supabaseClient
+          .from(TABLE)
+          .update({
+            start_time:
+              startISO,
+
+            end_time:
+              endISO
+          })
+          .eq(
+            "id",
+            editingSessionId
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      closeEditModal();
+
+
+      if (tg) {
+
+        tg.HapticFeedback
+          ?.notificationOccurred(
+            "success"
+          );
+      }
+
+
+      await refreshAll();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        error.message ||
+        "Не удалось сохранить изменения."
+      );
+
+      saveEditBtn.disabled =
+        false;
+    }
+  }
+
+
+  // ============================================================
+  // ОБНОВЛЕНИЕ
+  // ============================================================
+
+  async function refreshAll() {
+
+    /*
+     * Если предыдущий запрос ещё выполняется,
+     * новый не запускаем.
+     */
+    if (refreshing) {
+      return;
+    }
+
+
+    refreshing = true;
+
+
+    try {
+
+      await loadOpenSession();
+
+      await loadStats();
+
+      firstLoad = false;
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        error.message ||
+        "Не удалось загрузить данные."
+      );
+
+
+      if (firstLoad) {
+
+        statusLine.textContent =
+          "Не удалось загрузить данные";
+
+
+        actionBtn.textContent =
+          "Попробовать снова";
+
+
+        actionBtn.disabled =
+          false;
+
+
+        historyList.innerHTML =
+          '<div class="empty">Ошибка загрузки</div>';
+      }
+
+    } finally {
+
+      refreshing = false;
+    }
+  }
+
+
+  // ============================================================
+  // СОБЫТИЯ
+  // ============================================================
+
+  actionBtn.addEventListener(
+    "click",
+    toggleSleep
+  );
+
+
+  editCurrentBtn.addEventListener(
+    "click",
+    openEditCurrentModal
+  );
+
+
+  cancelEditBtn.addEventListener(
+    "click",
+    closeEditModal
+  );
+
+
+  saveEditBtn.addEventListener(
+    "click",
+    saveEdit
+  );
+
+
+  /*
+   * Закрытие окна по нажатию
+   * на затемнённый фон.
+   */
+  editModal.addEventListener(
+    "click",
+    event => {
+
+      if (
+        event.target ===
+        editModal
+      ) {
+        closeEditModal();
+      }
+    }
+  );
+
+
+  // ============================================================
+  // ПЕРВИЧЕСКАЯ ЗАГРУЗКА
+  // ============================================================
+
+  refreshAll();
+
+
+  // Обновляем данные каждые 30 секунд.
+  setInterval(
+    refreshAll,
+    30000
+  );
+
+
+  /*
+   * Если ребёнок сейчас спит,
+   * обновляем длительность каждую минуту
+   * без обращения к Supabase.
+   */
+  setInterval(
+    () => {
+
+      if (openSession) {
+        renderStatus();
+      }
+
+    },
+    60000
+  );
+
 </script>
 
 </body>
