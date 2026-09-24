@@ -1,18 +1,11 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!DOCTYPE html><html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  />
+  <meta charset="UTF-8" /><meta
+name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+/>
 
-  <title>Сон малыша</title>
-
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
+  <title>Сон малыша</title>  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <style>
     :root {
       --bg: var(--tg-theme-bg-color, #ffffff);
       --text: var(--tg-theme-text-color, #1c1c1e);
@@ -88,6 +81,31 @@
       cursor: pointer;
     }
 
+    .secondary-button:disabled {
+      opacity: 0.5;
+    }
+
+    .diaper-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .diaper-button {
+      flex: 1;
+      padding: 15px 8px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      background: rgba(128, 128, 128, 0.12);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .diaper-button:active {
+      transform: scale(0.98);
+    }
+
     .stats-row {
       display: flex;
       justify-content: space-between;
@@ -103,6 +121,12 @@
     .hint {
       color: var(--hint);
       font-size: 13px;
+    }
+
+    .event-stats {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
     }
 
     .history-item {
@@ -156,6 +180,10 @@
       color: var(--hint);
       font-size: 14px;
       padding: 4px 0;
+    }
+
+    .csv-button {
+      margin-top: 0;
     }
 
     /* ===== ОКНО РЕДАКТИРОВАНИЯ ===== */
@@ -247,118 +275,154 @@
     .save-btn:disabled {
       opacity: 0.5;
     }
-  </style>
-</head>
+  </style></head><body>  <h1>😴 Сон малыша</h1>  <!-- ТЕКУЩИЙ СОН -->  <div class="card"><div class="status-line" id="statusLine">
+  Загрузка...
+</div>
 
-<body>
+<button class="big-button" id="actionBtn" disabled>
+  ...
+</button>
 
-  <h1>😴 Сон малыша</h1>
+<button
+  class="secondary-button"
+  id="editCurrentBtn"
+  style="display: none;"
+>
+  ✏️ Изменить время
+</button>
 
-  <!-- ТЕКУЩИЙ СОН -->
-  <div class="card">
-    <div class="status-line" id="statusLine">
-      Загрузка...
+<div id="error"></div>
+
+  </div>  <!-- ПИСАЕТ / КАКАЕТ -->  <div class="card"><div class="hint" style="margin-bottom: 10px;">
+  Подгузник
+</div>
+
+<div class="diaper-buttons">
+
+  <button
+    class="diaper-button"
+    id="peeBtn"
+  >
+    💧 Пописал
+  </button>
+
+  <button
+    class="diaper-button"
+    id="poopBtn"
+  >
+    💩 Покакал
+  </button>
+
+</div>
+
+  </div>  <!-- СТАТИСТИКА -->  <div class="card"><div class="stats-row">
+  <span>Сегодня</span>
+  <span id="todayStats">—</span>
+</div>
+
+<div class="stats-row">
+  <span>За 7 дней</span>
+  <span id="weekStats">—</span>
+</div>
+
+<div class="event-stats">
+
+  <div class="stats-row">
+    <span>💧 Пописал</span>
+    <span id="peeStats">—</span>
+  </div>
+
+  <div class="stats-row">
+    <span>💩 Покакал</span>
+    <span id="poopStats">—</span>
+  </div>
+
+</div>
+
+  </div>  <!-- ИСТОРИЯ СНА -->  <div class="card"><div class="hint" style="margin-bottom: 8px;">
+  Последние записи сна
+</div>
+
+<div id="historyList">
+  <div class="empty">
+    Загрузка...
+  </div>
+</div>
+
+  </div>  <!-- ПОСЛЕДНИЕ СОБЫТИЯ -->  <div class="card"><div class="hint" style="margin-bottom: 8px;">
+  Последние события
+</div>
+
+<div id="eventsList">
+  <div class="empty">
+    Загрузка...
+  </div>
+</div>
+
+  </div>  <!-- CSV -->  <div class="card"><button
+  class="secondary-button csv-button"
+  id="csvBtn"
+>
+  📊 Выгрузить статистику в CSV
+</button>
+
+  </div>  <!-- ОКНО РЕДАКТИРОВАНИЯ СНА -->  <div class="modal-backdrop" id="editModal"><div class="modal">
+
+  <div class="modal-title">
+    ✏️ Изменить сон
+  </div>
+
+  <div class="field">
+
+    <label for="editStart">
+      Начало сна
+    </label>
+
+    <input
+      type="datetime-local"
+      id="editStart"
+    />
+
+  </div>
+
+  <div class="field">
+
+    <label for="editEnd">
+      Конец сна
+    </label>
+
+    <input
+      type="datetime-local"
+      id="editEnd"
+    />
+
+    <div class="modal-hint">
+      Если оставить пустым — сон останется незавершённым.
     </div>
 
-    <button class="big-button" id="actionBtn" disabled>
-      ...
+  </div>
+
+  <div class="modal-buttons">
+
+    <button
+      class="cancel-btn"
+      id="cancelEditBtn"
+    >
+      Отмена
     </button>
 
     <button
-      class="secondary-button"
-      id="editCurrentBtn"
-      style="display: none;"
+      class="save-btn"
+      id="saveEditBtn"
     >
-      ✏️ Изменить время
+      Сохранить
     </button>
 
-    <div id="error"></div>
   </div>
 
-  <!-- СТАТИСТИКА -->
-  <div class="card">
-    <div class="stats-row">
-      <span>Сегодня</span>
-      <span id="todayStats">—</span>
-    </div>
+</div>
 
-    <div class="stats-row">
-      <span>За 7 дней</span>
-      <span id="weekStats">—</span>
-    </div>
-  </div>
-
-  <!-- ИСТОРИЯ -->
-  <div class="card">
-    <div class="hint" style="margin-bottom: 8px;">
-      Последние записи
-    </div>
-
-    <div id="historyList">
-      <div class="empty">Загрузка...</div>
-    </div>
-  </div>
-
-
-  <!-- ОКНО РЕДАКТИРОВАНИЯ -->
-  <div class="modal-backdrop" id="editModal">
-
-    <div class="modal">
-
-      <div class="modal-title">
-        ✏️ Изменить сон
-      </div>
-
-      <div class="field">
-        <label for="editStart">
-          Начало сна
-        </label>
-
-        <input
-          type="datetime-local"
-          id="editStart"
-        />
-      </div>
-
-      <div class="field">
-        <label for="editEnd">
-          Конец сна
-        </label>
-
-        <input
-          type="datetime-local"
-          id="editEnd"
-        />
-
-        <div class="modal-hint">
-          Если оставить пустым — сон останется незавершённым.
-        </div>
-      </div>
-
-      <div class="modal-buttons">
-
-        <button
-          class="cancel-btn"
-          id="cancelEditBtn"
-        >
-          Отмена
-        </button>
-
-        <button
-          class="save-btn"
-          id="saveEditBtn"
-        >
-          Сохранить
-        </button>
-
-      </div>
-
-    </div>
-
-  </div>
-
-
-<script>
+  </div><script>
 
   // ============================================================
   // SUPABASE
@@ -372,6 +436,9 @@
 
   const TABLE =
     "sleep_sessions";
+
+  const EVENTS_TABLE =
+    "baby_events";
 
 
   // ============================================================
@@ -420,8 +487,26 @@
   const weekStats =
     document.getElementById("weekStats");
 
+  const peeStats =
+    document.getElementById("peeStats");
+
+  const poopStats =
+    document.getElementById("poopStats");
+
   const historyList =
     document.getElementById("historyList");
+
+  const eventsList =
+    document.getElementById("eventsList");
+
+  const peeBtn =
+    document.getElementById("peeBtn");
+
+  const poopBtn =
+    document.getElementById("poopBtn");
+
+  const csvBtn =
+    document.getElementById("csvBtn");
 
   const editModal =
     document.getElementById("editModal");
@@ -473,6 +558,22 @@
 
     errorDiv.style.display =
       "none";
+  }
+
+
+  // ============================================================
+  // HAPTIC
+  // ============================================================
+
+  function hapticSuccess() {
+
+    if (tg) {
+
+      tg.HapticFeedback
+        ?.notificationOccurred(
+          "success"
+        );
+    }
   }
 
 
@@ -758,14 +859,7 @@
       }
 
 
-      if (tg) {
-
-        tg.HapticFeedback
-          ?.notificationOccurred(
-            "success"
-          );
-      }
-
+      hapticSuccess();
 
       await refreshAll();
 
@@ -785,7 +879,61 @@
 
 
   // ============================================================
-  // СТАТИСТИКА
+  // ЗАПИСЬ ПОПИСАЛ / ПОКАКАЛ
+  // ============================================================
+
+  async function addBabyEvent(eventType) {
+
+    peeBtn.disabled = true;
+    poopBtn.disabled = true;
+
+    hideError();
+
+
+    try {
+
+      const {
+        error
+      } =
+        await supabaseClient
+          .from(EVENTS_TABLE)
+          .insert({
+            event_type: eventType,
+            event_time:
+              new Date()
+                .toISOString()
+          });
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      hapticSuccess();
+
+      await loadEventStats();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        error.message ||
+        "Не удалось записать событие."
+      );
+
+    } finally {
+
+      peeBtn.disabled = false;
+      poopBtn.disabled = false;
+    }
+  }
+
+
+  // ============================================================
+  // СТАТИСТИКА СНА
   // ============================================================
 
   async function loadStats() {
@@ -911,7 +1059,7 @@
 
 
   // ============================================================
-  // ИСТОРИЯ
+  // ИСТОРИЯ СНА
   // ============================================================
 
   function renderHistory(data) {
@@ -1056,6 +1204,212 @@
 
 
   // ============================================================
+  // СТАТИСТИКА ПОПИСАЛ / ПОКАКАЛ
+  // ============================================================
+
+  async function loadEventStats() {
+
+    const now =
+      new Date();
+
+
+    const todayStart =
+      new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate()
+      ).toISOString();
+
+
+    const weekStart =
+      new Date(
+        now.getTime() -
+        7 * 24 * 60 * 60 * 1000
+      ).toISOString();
+
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from(EVENTS_TABLE)
+        .select(
+          "id,event_type,event_time"
+        )
+        .gte(
+          "event_time",
+          weekStart
+        )
+        .order(
+          "event_time",
+          {
+            ascending: false
+          }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    let todayPee = 0;
+    let todayPoop = 0;
+
+    let weekPee = 0;
+    let weekPoop = 0;
+
+
+    data.forEach(
+      event => {
+
+        if (
+          event.event_type ===
+          "pee"
+        ) {
+
+          weekPee++;
+
+        } else if (
+          event.event_type ===
+          "poop"
+        ) {
+
+          weekPoop++;
+        }
+
+
+        if (
+          event.event_time >=
+          todayStart
+        ) {
+
+          if (
+            event.event_type ===
+            "pee"
+          ) {
+            todayPee++;
+
+          } else if (
+            event.event_type ===
+            "poop"
+          ) {
+            todayPoop++;
+          }
+        }
+      }
+    );
+
+
+    peeStats.textContent =
+      `${todayPee} сегодня / ${weekPee} за 7 дней`;
+
+
+    poopStats.textContent =
+      `${todayPoop} сегодня / ${weekPoop} за 7 дней`;
+
+
+    renderEvents(data);
+  }
+
+
+  // ============================================================
+  // ИСТОРИЯ СОБЫТИЙ
+  // ============================================================
+
+  function renderEvents(data) {
+
+    eventsList.innerHTML =
+      "";
+
+
+    if (
+      !data ||
+      data.length === 0
+    ) {
+
+      const empty =
+        document.createElement(
+          "div"
+        );
+
+      empty.className =
+        "empty";
+
+      empty.textContent =
+        "Событий пока нет";
+
+      eventsList.appendChild(
+        empty
+      );
+
+      return;
+    }
+
+
+    data
+      .slice(0, 10)
+      .forEach(
+        event => {
+
+          const row =
+            document.createElement(
+              "div"
+            );
+
+          row.className =
+            "history-item";
+
+
+          const info =
+            document.createElement(
+              "div"
+            );
+
+          info.className =
+            "history-info";
+
+
+          const time =
+            document.createElement(
+              "div"
+            );
+
+          time.className =
+            "history-time";
+
+
+          if (
+            event.event_type ===
+            "pee"
+          ) {
+
+            time.textContent =
+              `💧 Пописал — ${formatTime(
+                event.event_time
+              )}`;
+
+          } else {
+
+            time.textContent =
+              `💩 Покакал — ${formatTime(
+                event.event_time
+              )}`;
+          }
+
+
+          info.appendChild(time);
+
+          row.appendChild(info);
+
+          eventsList.appendChild(row);
+        }
+      );
+  }
+
+
+  // ============================================================
   // ОТКРЫТЬ РЕДАКТИРОВАНИЕ
   // ============================================================
 
@@ -1108,10 +1462,6 @@
       );
 
 
-    /*
-     * Для текущего сна конец оставляем
-     * пустым, потому что он ещё идёт.
-     */
     editEnd.value =
       "";
 
@@ -1250,15 +1600,7 @@
 
       closeEditModal();
 
-
-      if (tg) {
-
-        tg.HapticFeedback
-          ?.notificationOccurred(
-            "success"
-          );
-      }
-
+      hapticSuccess();
 
       await refreshAll();
 
@@ -1279,15 +1621,304 @@
 
 
   // ============================================================
+  // CSV
+  // ============================================================
+
+  function csvEscape(value) {
+
+    const stringValue =
+      String(
+        value ??
+        ""
+      );
+
+    return (
+      '"' +
+      stringValue
+        .replace(
+          /"/g,
+          '""'
+        ) +
+      '"'
+    );
+  }
+
+
+  async function downloadCSV() {
+
+    csvBtn.disabled =
+      true;
+
+    hideError();
+
+
+    try {
+
+      /*
+       * Загружаем все завершённые сны.
+       */
+
+      const {
+        data: sleepData,
+        error: sleepError
+      } =
+        await supabaseClient
+          .from(TABLE)
+          .select(
+            "id,start_time,end_time"
+          )
+          .not(
+            "end_time",
+            "is",
+            null
+          )
+          .order(
+            "start_time",
+            {
+              ascending: true
+            }
+          );
+
+
+      if (sleepError) {
+        throw sleepError;
+      }
+
+
+      /*
+       * Загружаем все события.
+       */
+
+      const {
+        data: eventData,
+        error: eventError
+      } =
+        await supabaseClient
+          .from(EVENTS_TABLE)
+          .select(
+            "id,event_type,event_time"
+          )
+          .order(
+            "event_time",
+            {
+              ascending: true
+            }
+          );
+
+
+      if (eventError) {
+        throw eventError;
+      }
+
+
+      const rows = [];
+
+
+      /*
+       * Сны.
+       */
+
+      sleepData.forEach(
+        session => {
+
+          const start =
+            new Date(
+              session.start_time
+            );
+
+          const end =
+            new Date(
+              session.end_time
+            );
+
+          rows.push([
+            start.toLocaleDateString(
+              "ru-RU"
+            ),
+
+            start.toLocaleTimeString(
+              "ru-RU",
+              {
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            ),
+
+            "Сон",
+
+            formatDuration(
+              end - start
+            ),
+
+            start.toISOString(),
+
+            end.toISOString()
+          ]);
+        }
+      );
+
+
+      /*
+       * Пописал / покакал.
+       */
+
+      eventData.forEach(
+        event => {
+
+          const date =
+            new Date(
+              event.event_time
+            );
+
+
+          const eventName =
+            event.event_type ===
+            "pee"
+              ? "Пописал"
+              : "Покакал";
+
+
+          rows.push([
+            date.toLocaleDateString(
+              "ru-RU"
+            ),
+
+            date.toLocaleTimeString(
+              "ru-RU",
+              {
+                hour: "2-digit",
+                minute: "2-digit"
+              }
+            ),
+
+            eventName,
+
+            "",
+
+            date.toISOString(),
+
+            ""
+          ]);
+        }
+      );
+
+
+      /*
+       * Сортируем всё вместе
+       * по фактическому времени.
+       */
+
+      rows.sort(
+        (a, b) =>
+          new Date(a[4]) -
+          new Date(b[4])
+      );
+
+
+      const csvRows = [
+        [
+          "Дата",
+          "Время",
+          "Событие",
+          "Продолжительность",
+          "Начало / время события",
+          "Конец сна"
+        ],
+
+        ...rows
+      ];
+
+
+      const csv =
+        csvRows
+          .map(
+            row =>
+              row
+                .map(
+                  csvEscape
+                )
+                .join(";")
+          )
+          .join("\r\n");
+
+
+      /*
+       * BOM нужен, чтобы Excel
+       * нормально открыл русский текст.
+       */
+
+      const blob =
+        new Blob(
+          [
+            "\uFEFF" +
+            csv
+          ],
+          {
+            type:
+              "text/csv;charset=utf-8;"
+          }
+        );
+
+
+      const url =
+        URL.createObjectURL(
+          blob
+        );
+
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+      link.href =
+        url;
+
+      link.download =
+        `ivan_sleep_${new Date()
+          .toISOString()
+          .slice(0, 10)}.csv`;
+
+
+      document.body.appendChild(
+        link
+      );
+
+      link.click();
+
+      link.remove();
+
+      URL.revokeObjectURL(
+        url
+      );
+
+
+      hapticSuccess();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        error.message ||
+        "Не удалось выгрузить CSV."
+      );
+
+    } finally {
+
+      csvBtn.disabled =
+        false;
+    }
+  }
+
+
+  // ============================================================
   // ОБНОВЛЕНИЕ
   // ============================================================
 
   async function refreshAll() {
 
-    /*
-     * Если предыдущий запрос ещё выполняется,
-     * новый не запускаем.
-     */
     if (refreshing) {
       return;
     }
@@ -1301,6 +1932,8 @@
       await loadOpenSession();
 
       await loadStats();
+
+      await loadEventStats();
 
       firstLoad = false;
 
@@ -1330,6 +1963,9 @@
 
 
         historyList.innerHTML =
+          '<div class="empty">Ошибка загрузки</div>';
+
+        eventsList.innerHTML =
           '<div class="empty">Ошибка загрузки</div>';
       }
 
@@ -1368,10 +2004,28 @@
   );
 
 
-  /*
-   * Закрытие окна по нажатию
-   * на затемнённый фон.
-   */
+  peeBtn.addEventListener(
+    "click",
+    () => {
+      addBabyEvent("pee");
+    }
+  );
+
+
+  poopBtn.addEventListener(
+    "click",
+    () => {
+      addBabyEvent("poop");
+    }
+  );
+
+
+  csvBtn.addEventListener(
+    "click",
+    downloadCSV
+  );
+
+
   editModal.addEventListener(
     "click",
     event => {
@@ -1387,24 +2041,22 @@
 
 
   // ============================================================
-  // ПЕРВИЧЕСКАЯ ЗАГРУЗКА
+  // ПЕРВИЧНАЯ ЗАГРУЗКА
   // ============================================================
 
   refreshAll();
 
 
   // Обновляем данные каждые 30 секунд.
+
   setInterval(
     refreshAll,
     30000
   );
 
 
-  /*
-   * Если ребёнок сейчас спит,
-   * обновляем длительность каждую минуту
-   * без обращения к Supabase.
-   */
+  // Обновляем длительность текущего сна каждую минуту.
+
   setInterval(
     () => {
 
@@ -1416,7 +2068,5 @@
     60000
   );
 
-</script>
-
-</body>
+</script></body>
 </html>
