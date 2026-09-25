@@ -5,7 +5,7 @@ name="viewport"
 content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
 />
 
-  <title>Сон малыша</title>  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <style>
+  <title>Сон малыша</title>  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>  <style>
     :root {
       --bg: var(--tg-theme-bg-color, #ffffff);
       --text: var(--tg-theme-text-color, #1c1c1e);
@@ -275,6 +275,21 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
     .save-btn:disabled {
       opacity: 0.5;
     }
+
+    /* ===== ОКНО CSV (ПОКАЗ ТЕКСТА ДЛЯ КОПИРОВАНИЯ) ===== */
+
+    .csv-textarea {
+      width: 100%;
+      height: 180px;
+      border-radius: 10px;
+      border: none;
+      background: var(--secondary-bg);
+      color: var(--text);
+      font-family: monospace;
+      font-size: 12px;
+      padding: 10px;
+      resize: none;
+    }
   </style></head><body>  <h1>😴 Сон малыша</h1>  <!-- ТЕКУЩИЙ СОН -->  <div class="card"><div class="status-line" id="statusLine">
   Загрузка...
 </div>
@@ -339,6 +354,18 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 </div>
 
+  </div>  <!-- ГРАФИКИ -->  <div class="card"><div class="hint" style="margin-bottom: 8px;">
+  Сегодня: сон и бодрствование
+</div>
+
+<canvas id="todayChart" height="200"></canvas>
+
+  </div>  <div class="card"><div class="hint" style="margin-bottom: 8px;">
+  За 7 дней: сон и бодрствование
+</div>
+
+<canvas id="weekChart" height="220"></canvas>
+
   </div>  <!-- ИСТОРИЯ СНА -->  <div class="card"><div class="hint" style="margin-bottom: 8px;">
   Последние записи сна
 </div>
@@ -363,8 +390,19 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
   class="secondary-button csv-button"
   id="csvBtn"
 >
-  📊 Выгрузить статистику в CSV
+  📊 Скопировать статистику (CSV)
 </button>
+
+<textarea
+  class="csv-textarea"
+  id="csvOutput"
+  style="display: none; margin-top: 10px;"
+  readonly
+></textarea>
+
+<div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">
+  Текст скопирован в буфер обмена. Если копирование не сработало автоматически — выдели текст выше вручную и скопируй.
+</div>
 
   </div>  <!-- ОКНО РЕДАКТИРОВАНИЯ СНА -->  <div class="modal-backdrop" id="editModal"><div class="modal">
 
@@ -508,6 +546,12 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
   const csvBtn =
     document.getElementById("csvBtn");
 
+  const csvOutput =
+    document.getElementById("csvOutput");
+
+  const csvHint =
+    document.getElementById("csvHint");
+
   const editModal =
     document.getElementById("editModal");
 
@@ -530,11 +574,17 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
   let openSession = null;
 
+  let lastCompletedEnd = null;
+
   let editingSessionId = null;
 
   let refreshing = false;
 
   let firstLoad = true;
+
+  let todayChartInstance = null;
+
+  let weekChartInstance = null;
 
 
   // ============================================================
@@ -748,6 +798,47 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 
   // ============================================================
+  // ЗАГРУЗКА ВРЕМЕНИ ОКОНЧАНИЯ ПОСЛЕДНЕГО СНА
+  // (нужно, чтобы показывать "не спит уже ...")
+  // ============================================================
+
+  async function loadLastCompletedEnd() {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from(TABLE)
+        .select("end_time")
+        .not(
+          "end_time",
+          "is",
+          null
+        )
+        .order(
+          "end_time",
+          {
+            ascending: false
+          }
+        )
+        .limit(1);
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    lastCompletedEnd =
+      data &&
+      data.length > 0
+        ? data[0].end_time
+        : null;
+  }
+
+
+  // ============================================================
   // ОТОБРАЖЕНИЕ ТЕКУЩЕГО СОСТОЯНИЯ
   // ============================================================
 
@@ -782,6 +873,36 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
       editCurrentBtn.style.display =
         "block";
+
+    } else if (lastCompletedEnd) {
+
+      const since =
+        new Date(
+          lastCompletedEnd
+        ).getTime();
+
+      const duration =
+        Date.now() - since;
+
+
+      statusLine.textContent =
+        `Не спит уже ` +
+        `${formatDuration(duration)} ` +
+        `(с ${formatTime(
+          lastCompletedEnd
+        )})`;
+
+
+      actionBtn.textContent =
+        "😴 Начать сон";
+
+
+      actionBtn.disabled =
+        false;
+
+
+      editCurrentBtn.style.display =
+        "none";
 
     } else {
 
@@ -1055,6 +1176,287 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 
     renderHistory(data);
+
+    renderCharts(data);
+  }
+
+
+  // ============================================================
+  // РАЗБИВКА СНА/БОДРСТВОВАНИЯ ПО ДНЯМ (для графиков)
+  // ============================================================
+
+  function buildDailySeries(weekSessions) {
+
+    const now =
+      new Date();
+
+    const days = [];
+
+
+    for (
+      let i = 6;
+      i >= 0;
+      i--
+    ) {
+
+      const dayDate =
+        new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate() - i
+        );
+
+      const dayStart =
+        dayDate.getTime();
+
+      const dayEnd =
+        i === 0
+          ? now.getTime()
+          : dayStart +
+            24 * 60 * 60 * 1000;
+
+      const totalMs =
+        Math.max(
+          dayEnd - dayStart,
+          0
+        );
+
+
+      let sleepMs = 0;
+
+      weekSessions.forEach(
+        session => {
+
+          const st =
+            new Date(
+              session.start_time
+            ).getTime();
+
+          const et =
+            new Date(
+              session.end_time
+            ).getTime();
+
+          const overlapStart =
+            Math.max(
+              st,
+              dayStart
+            );
+
+          const overlapEnd =
+            Math.min(
+              et,
+              dayEnd
+            );
+
+          if (
+            overlapEnd >
+            overlapStart
+          ) {
+
+            sleepMs +=
+              overlapEnd -
+              overlapStart;
+          }
+        }
+      );
+
+
+      const awakeMs =
+        Math.max(
+          totalMs - sleepMs,
+          0
+        );
+
+
+      days.push({
+        label:
+          dayDate.toLocaleDateString(
+            "ru-RU",
+            {
+              day: "2-digit",
+              month: "2-digit"
+            }
+          ),
+
+        sleepHours:
+          sleepMs / 3600000,
+
+        awakeHours:
+          awakeMs / 3600000
+      });
+    }
+
+
+    return days;
+  }
+
+
+  // ============================================================
+  // ГРАФИКИ: СЕГОДНЯ (КРУГОВОЙ) И 7 ДНЕЙ (СТОЛБЧАТЫЙ)
+  // ============================================================
+
+  function renderCharts(weekSessions) {
+
+    if (
+      typeof Chart ===
+      "undefined"
+    ) {
+      return;
+    }
+
+
+    const days =
+      buildDailySeries(
+        weekSessions
+      );
+
+    const today =
+      days[days.length - 1];
+
+
+    const todayCanvas =
+      document.getElementById(
+        "todayChart"
+      );
+
+    const weekCanvas =
+      document.getElementById(
+        "weekChart"
+      );
+
+
+    if (
+      todayCanvas
+    ) {
+
+      if (
+        todayChartInstance
+      ) {
+        todayChartInstance.destroy();
+      }
+
+
+      todayChartInstance =
+        new Chart(
+          todayCanvas.getContext(
+            "2d"
+          ),
+          {
+            type: "doughnut",
+            data: {
+              labels: [
+                "Сон",
+                "Бодрствование"
+              ],
+              datasets: [
+                {
+                  data: [
+                    Number(
+                      today.sleepHours.toFixed(
+                        1
+                      )
+                    ),
+                    Number(
+                      today.awakeHours.toFixed(
+                        1
+                      )
+                    )
+                  ],
+                  backgroundColor: [
+                    "#2481cc",
+                    "#f2a154"
+                  ]
+                }
+              ]
+            },
+            options: {
+              plugins: {
+                legend: {
+                  position: "bottom"
+                }
+              }
+            }
+          }
+        );
+    }
+
+
+    if (
+      weekCanvas
+    ) {
+
+      if (
+        weekChartInstance
+      ) {
+        weekChartInstance.destroy();
+      }
+
+
+      weekChartInstance =
+        new Chart(
+          weekCanvas.getContext(
+            "2d"
+          ),
+          {
+            type: "bar",
+            data: {
+              labels: days.map(
+                d => d.label
+              ),
+              datasets: [
+                {
+                  label: "Сон",
+                  data: days.map(
+                    d =>
+                      Number(
+                        d.sleepHours.toFixed(
+                          1
+                        )
+                      )
+                  ),
+                  backgroundColor:
+                    "#2481cc"
+                },
+                {
+                  label:
+                    "Бодрствование",
+                  data: days.map(
+                    d =>
+                      Number(
+                        d.awakeHours.toFixed(
+                          1
+                        )
+                      )
+                  ),
+                  backgroundColor:
+                    "#f2a154"
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                x: {
+                  stacked: true
+                },
+                y: {
+                  stacked: true,
+                  title: {
+                    display: true,
+                    text: "часы"
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  position: "bottom"
+                }
+              }
+            }
+          }
+        );
+    }
   }
 
 
@@ -1621,7 +2023,8 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 
   // ============================================================
-  // CSV
+  // CSV (копирование в буфер обмена вместо скачивания —
+  // скачивание файлов не работает внутри WebView Telegram)
   // ============================================================
 
   function csvEscape(value) {
@@ -1650,6 +2053,9 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
       true;
 
     hideError();
+
+    csvHint.style.display =
+      "none";
 
 
     try {
@@ -1843,54 +2249,69 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 
       /*
-       * BOM нужен, чтобы Excel
-       * нормально открыл русский текст.
+       * Вместо скачивания файла (не работает в WebView
+       * Telegram) — показываем текст и пробуем скопировать
+       * его в буфер обмена.
        */
 
-      const blob =
-        new Blob(
-          [
-            "\uFEFF" +
+      csvOutput.value =
+        csv;
+
+      csvOutput.style.display =
+        "block";
+
+      csvHint.style.display =
+        "block";
+
+
+      let copied = false;
+
+
+      try {
+
+        if (
+          navigator.clipboard &&
+          navigator.clipboard.writeText
+        ) {
+
+          await navigator.clipboard.writeText(
             csv
-          ],
-          {
-            type:
-              "text/csv;charset=utf-8;"
-          }
-        );
+          );
+
+          copied = true;
+        }
+
+      } catch (clipboardError) {
+
+        copied = false;
+      }
 
 
-      const url =
-        URL.createObjectURL(
-          blob
-        );
+      if (!copied) {
+
+        try {
+
+          csvOutput.focus();
+
+          csvOutput.select();
+
+          document.execCommand(
+            "copy"
+          );
+
+          copied = true;
+
+        } catch (fallbackError) {
+
+          copied = false;
+        }
+      }
 
 
-      const link =
-        document.createElement(
-          "a"
-        );
-
-      link.href =
-        url;
-
-      link.download =
-        `ivan_sleep_${new Date()
-          .toISOString()
-          .slice(0, 10)}.csv`;
-
-
-      document.body.appendChild(
-        link
-      );
-
-      link.click();
-
-      link.remove();
-
-      URL.revokeObjectURL(
-        url
-      );
+      csvHint.textContent =
+        copied
+          ? "Текст скопирован в буфер обмена — можно вставить его в чат, заметки или таблицу."
+          : "Не удалось скопировать автоматически. Выдели текст выше вручную и скопируй.";
 
 
       hapticSuccess();
@@ -1902,7 +2323,7 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
       showError(
         error.message ||
-        "Не удалось выгрузить CSV."
+        "Не удалось подготовить CSV."
       );
 
     } finally {
@@ -1928,6 +2349,8 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 
     try {
+
+      await loadLastCompletedEnd();
 
       await loadOpenSession();
 
@@ -2055,15 +2478,11 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
   );
 
 
-  // Обновляем длительность текущего сна каждую минуту.
+  // Обновляем счётчик времени (сна или бодрствования) каждую минуту.
 
   setInterval(
     () => {
-
-      if (openSession) {
-        renderStatus();
-      }
-
+      renderStatus();
     },
     60000
   );
