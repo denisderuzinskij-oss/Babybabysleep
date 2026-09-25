@@ -186,6 +186,72 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
       margin-top: 0;
     }
 
+    .photo-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .photo-month-input {
+      width: 110px;
+      height: 44px;
+      padding: 0 10px;
+      border: none;
+      border-radius: 10px;
+      background: rgba(128, 128, 128, 0.12);
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+    }
+
+    .photo-file-input {
+      flex: 1;
+      font-size: 13px;
+      color: var(--hint);
+    }
+
+    .photo-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .photo-item {
+      width: calc(33.333% - 7px);
+      position: relative;
+    }
+
+    .photo-item img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 12px;
+      display: block;
+    }
+
+    .photo-label {
+      text-align: center;
+      font-size: 12px;
+      color: var(--hint);
+      margin-top: 4px;
+    }
+
+    .photo-delete {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
     /* ===== ОКНО РЕДАКТИРОВАНИЯ ===== */
 
     .modal-backdrop {
@@ -412,6 +478,44 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
   </div>
 </div>
 
+  </div>  <!-- ФОТО ПО МЕСЯЦАМ -->  <div class="card"><div class="hint" style="margin-bottom: 8px;">
+  📷 Фото по месяцам
+</div>
+
+<div class="photo-input-row">
+
+  <input
+    type="number"
+    class="photo-month-input"
+    id="photoMonthInput"
+    placeholder="Месяц"
+    min="0"
+  />
+
+  <input
+    type="file"
+    class="photo-file-input"
+    id="photoFileInput"
+    accept="image/*"
+  />
+
+</div>
+
+<button
+  class="secondary-button"
+  id="uploadPhotoBtn"
+>
+  Добавить фото
+</button>
+
+<div
+  class="hint"
+  id="photoHint"
+  style="margin-top: 8px; display: none;"
+></div>
+
+<div class="photo-grid" id="photoGrid"></div>
+
   </div>  <!-- CSV -->  <div class="card"><button
   class="secondary-button csv-button"
   id="csvBtn"
@@ -504,6 +608,12 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
   const EVENTS_TABLE =
     "baby_events";
 
+  const PHOTOS_TABLE =
+    "baby_photos";
+
+  const PHOTOS_BUCKET =
+    "baby-photos";
+
 
   // ============================================================
   // TELEGRAM
@@ -583,6 +693,21 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
   const csvBtn =
     document.getElementById("csvBtn");
+
+  const photoMonthInput =
+    document.getElementById("photoMonthInput");
+
+  const photoFileInput =
+    document.getElementById("photoFileInput");
+
+  const uploadPhotoBtn =
+    document.getElementById("uploadPhotoBtn");
+
+  const photoHint =
+    document.getElementById("photoHint");
+
+  const photoGrid =
+    document.getElementById("photoGrid");
 
   const csvOutput =
     document.getElementById("csvOutput");
@@ -1319,6 +1444,13 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
           }
         }
       );
+
+
+      sleepMs =
+        Math.min(
+          sleepMs,
+          totalMs
+        );
 
 
       const awakeMs =
@@ -2389,6 +2521,348 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 
   // ============================================================
+  // ФОТО ПО МЕСЯЦАМ
+  // ============================================================
+
+  async function loadPhotos() {
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from(PHOTOS_TABLE)
+        .select(
+          "id,month_number,storage_path,photo_url"
+        )
+        .order(
+          "month_number",
+          {
+            ascending: true
+          }
+        )
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    renderPhotos(data);
+  }
+
+
+  function renderPhotos(data) {
+
+    photoGrid.innerHTML =
+      "";
+
+
+    if (
+      !data ||
+      data.length === 0
+    ) {
+      return;
+    }
+
+
+    data.forEach(
+      photo => {
+
+        const item =
+          document.createElement(
+            "div"
+          );
+
+        item.className =
+          "photo-item";
+
+
+        const img =
+          document.createElement(
+            "img"
+          );
+
+        img.src =
+          photo.photo_url;
+
+        img.alt =
+          `${photo.month_number} мес.`;
+
+
+        const label =
+          document.createElement(
+            "div"
+          );
+
+        label.className =
+          "photo-label";
+
+        label.textContent =
+          `${photo.month_number} мес.`;
+
+
+        const deleteButton =
+          document.createElement(
+            "button"
+          );
+
+        deleteButton.className =
+          "photo-delete";
+
+        deleteButton.textContent =
+          "✕";
+
+        deleteButton.addEventListener(
+          "click",
+          () => {
+            deletePhoto(photo);
+          }
+        );
+
+
+        item.appendChild(img);
+
+        item.appendChild(
+          deleteButton
+        );
+
+        photoGrid.appendChild(
+          item
+        );
+
+        photoGrid.appendChild(
+          label
+        );
+      }
+    );
+  }
+
+
+  async function uploadPhoto() {
+
+    const monthValue =
+      photoMonthInput.value;
+
+    const file =
+      photoFileInput.files &&
+      photoFileInput.files[0];
+
+
+    photoHint.style.display =
+      "none";
+
+    hideError();
+
+
+    if (
+      monthValue === "" ||
+      Number.isNaN(
+        Number(monthValue)
+      )
+    ) {
+
+      alert(
+        "Укажи номер месяца (например, 1)."
+      );
+
+      return;
+    }
+
+
+    if (!file) {
+
+      alert(
+        "Выбери фото для загрузки."
+      );
+
+      return;
+    }
+
+
+    uploadPhotoBtn.disabled =
+      true;
+
+    photoHint.style.display =
+      "block";
+
+    photoHint.textContent =
+      "Загрузка...";
+
+
+    try {
+
+      const monthNumber =
+        Math.round(
+          Number(monthValue)
+        );
+
+      const extension =
+        (file.name.split(
+          "."
+        ).pop() ||
+        "jpg")
+          .toLowerCase();
+
+      const path =
+        `month-${monthNumber}-${Date.now()}.${extension}`;
+
+
+      const {
+        error: uploadError
+      } =
+        await supabaseClient
+          .storage
+          .from(
+            PHOTOS_BUCKET
+          )
+          .upload(
+            path,
+            file
+          );
+
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+
+      const {
+        data: publicUrlData
+      } =
+        supabaseClient
+          .storage
+          .from(
+            PHOTOS_BUCKET
+          )
+          .getPublicUrl(
+            path
+          );
+
+
+      const photoUrl =
+        publicUrlData
+          ?.publicUrl;
+
+
+      if (!photoUrl) {
+
+        throw new Error(
+          "Не удалось получить ссылку на фото."
+        );
+      }
+
+
+      const {
+        error: insertError
+      } =
+        await supabaseClient
+          .from(PHOTOS_TABLE)
+          .insert({
+            month_number:
+              monthNumber,
+
+            storage_path:
+              path,
+
+            photo_url:
+              photoUrl
+          });
+
+
+      if (insertError) {
+        throw insertError;
+      }
+
+
+      photoMonthInput.value =
+        "";
+
+      photoFileInput.value =
+        "";
+
+      photoHint.textContent =
+        "Фото добавлено.";
+
+      hapticSuccess();
+
+      await loadPhotos();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      photoHint.textContent =
+        error.message ||
+        "Не удалось загрузить фото.";
+
+    } finally {
+
+      uploadPhotoBtn.disabled =
+        false;
+    }
+  }
+
+
+  async function deletePhoto(photo) {
+
+    hideError();
+
+
+    try {
+
+      await supabaseClient
+        .storage
+        .from(
+          PHOTOS_BUCKET
+        )
+        .remove([
+          photo.storage_path
+        ]);
+
+
+      const {
+        error
+      } =
+        await supabaseClient
+          .from(PHOTOS_TABLE)
+          .delete()
+          .eq(
+            "id",
+            photo.id
+          );
+
+
+      if (error) {
+        throw error;
+      }
+
+
+      hapticSuccess();
+
+      await loadPhotos();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        error.message ||
+        "Не удалось удалить фото."
+      );
+    }
+  }
+
+
+  // ============================================================
   // ОБНОВЛЕНИЕ
   // ============================================================
 
@@ -2411,6 +2885,8 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
       await loadStats();
 
       await loadEventStats();
+
+      await loadPhotos();
 
       firstLoad = false;
 
@@ -2500,6 +2976,12 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
   csvBtn.addEventListener(
     "click",
     downloadCSV
+  );
+
+
+  uploadPhotoBtn.addEventListener(
+    "click",
+    uploadPhoto
   );
 
 
