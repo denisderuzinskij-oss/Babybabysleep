@@ -330,14 +330,40 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 </div>
 
-  </div>  <!-- СТАТИСТИКА -->  <div class="card"><div class="stats-row">
-  <span>Сегодня</span>
-  <span id="todayStats">—</span>
+  </div>  <!-- СТАТИСТИКА -->  <div class="card"><div class="hint" style="margin-bottom: 6px;">Сегодня</div>
+
+<div class="stats-row">
+  <span>😴 Сон</span>
+  <span id="todaySleepStats">—</span>
 </div>
 
 <div class="stats-row">
-  <span>За 7 дней</span>
-  <span id="weekStats">—</span>
+  <span>🙂 Бодрствование</span>
+  <span id="todayAwakeStats">—</span>
+</div>
+
+<div class="hint" style="margin: 14px 0 6px;">В среднем за 7 дней</div>
+
+<div class="stats-row">
+  <span>😴 Сон</span>
+  <span id="weekSleepStats">—</span>
+</div>
+
+<div class="stats-row">
+  <span>🙂 Бодрствование</span>
+  <span id="weekAwakeStats">—</span>
+</div>
+
+<div class="hint" style="margin: 14px 0 6px;">В среднем за 30 дней</div>
+
+<div class="stats-row">
+  <span>😴 Сон</span>
+  <span id="monthSleepStats">—</span>
+</div>
+
+<div class="stats-row">
+  <span>🙂 Бодрствование</span>
+  <span id="monthAwakeStats">—</span>
 </div>
 
 <div class="event-stats">
@@ -519,11 +545,23 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
   const errorDiv =
     document.getElementById("error");
 
-  const todayStats =
-    document.getElementById("todayStats");
+  const todaySleepStats =
+    document.getElementById("todaySleepStats");
 
-  const weekStats =
-    document.getElementById("weekStats");
+  const todayAwakeStats =
+    document.getElementById("todayAwakeStats");
+
+  const weekSleepStats =
+    document.getElementById("weekSleepStats");
+
+  const weekAwakeStats =
+    document.getElementById("weekAwakeStats");
+
+  const monthSleepStats =
+    document.getElementById("monthSleepStats");
+
+  const monthAwakeStats =
+    document.getElementById("monthAwakeStats");
 
   const peeStats =
     document.getElementById("peeStats");
@@ -1063,18 +1101,10 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
       new Date();
 
 
-    const todayStart =
-      new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate()
-      ).toISOString();
-
-
-    const weekStart =
+    const monthStart =
       new Date(
         now.getTime() -
-        7 * 24 * 60 * 60 * 1000
+        30 * 24 * 60 * 60 * 1000
       ).toISOString();
 
 
@@ -1094,7 +1124,7 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
         )
         .gte(
           "start_time",
-          weekStart
+          monthStart
         )
         .order(
           "start_time",
@@ -1109,75 +1139,101 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
     }
 
 
-    let todayMs = 0;
-    let todayCount = 0;
+    /*
+     * Разбивка по дням за 30 дней — на её основе
+     * считаем и "сегодня", и средние за 7/30 дней,
+     * и рисуем графики (без двойной работы).
+     */
 
-    let weekMs = 0;
-    let weekCount = 0;
+    const days30 =
+      buildDailySeries(
+        data,
+        30
+      );
 
+    const days7 =
+      days30.slice(-7);
 
-    data.forEach(
-      session => {
-
-        const start =
-          new Date(
-            session.start_time
-          );
-
-        const end =
-          new Date(
-            session.end_time
-          );
-
-        const duration =
-          end - start;
+    const today =
+      days30[
+        days30.length - 1
+      ];
 
 
-        if (
-          !Number.isFinite(
-            duration
-          ) ||
-          duration < 0
-        ) {
-          return;
-        }
+    function average(
+      list,
+      key
+    ) {
 
-
-        weekMs += duration;
-
-        weekCount++;
-
-
-        if (
-          session.start_time >=
-          todayStart
-        ) {
-
-          todayMs += duration;
-
-          todayCount++;
-        }
+      if (
+        !list.length
+      ) {
+        return 0;
       }
-    );
+
+      const sum =
+        list.reduce(
+          (acc, d) =>
+            acc + d[key],
+          0
+        );
+
+      return (
+        sum / list.length
+      );
+    }
 
 
-    todayStats.textContent =
-      `${todayCount} раз(а), ` +
-      `${formatDuration(
-        todayMs
-      )}`;
+    todaySleepStats.textContent =
+      formatDuration(
+        today.sleepHours *
+        3600000
+      );
+
+    todayAwakeStats.textContent =
+      formatDuration(
+        today.awakeHours *
+        3600000
+      );
 
 
-    weekStats.textContent =
-      `${weekCount} раз(а), ` +
-      `${formatDuration(
-        weekMs
-      )}`;
+    weekSleepStats.textContent =
+      formatDuration(
+        average(
+          days7,
+          "sleepHours"
+        ) * 3600000
+      ) + " / день";
+
+    weekAwakeStats.textContent =
+      formatDuration(
+        average(
+          days7,
+          "awakeHours"
+        ) * 3600000
+      ) + " / день";
+
+
+    monthSleepStats.textContent =
+      formatDuration(
+        average(
+          days30,
+          "sleepHours"
+        ) * 3600000
+      ) + " / день";
+
+    monthAwakeStats.textContent =
+      formatDuration(
+        average(
+          days30,
+          "awakeHours"
+        ) * 3600000
+      ) + " / день";
 
 
     renderHistory(data);
 
-    renderCharts(data);
+    renderCharts(days7);
   }
 
 
@@ -1185,7 +1241,10 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
   // РАЗБИВКА СНА/БОДРСТВОВАНИЯ ПО ДНЯМ (для графиков)
   // ============================================================
 
-  function buildDailySeries(weekSessions) {
+  function buildDailySeries(sessions, numDays) {
+
+    const daysCount =
+      numDays || 7;
 
     const now =
       new Date();
@@ -1194,7 +1253,7 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
 
     for (
-      let i = 6;
+      let i = daysCount - 1;
       i >= 0;
       i--
     ) {
@@ -1224,7 +1283,7 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
       let sleepMs = 0;
 
-      weekSessions.forEach(
+      sessions.forEach(
         session => {
 
           const st =
@@ -1296,7 +1355,7 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
   // ГРАФИКИ: СЕГОДНЯ (КРУГОВОЙ) И 7 ДНЕЙ (СТОЛБЧАТЫЙ)
   // ============================================================
 
-  function renderCharts(weekSessions) {
+  function renderCharts(days) {
 
     if (
       typeof Chart ===
@@ -1305,11 +1364,6 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
       return;
     }
 
-
-    const days =
-      buildDailySeries(
-        weekSessions
-      );
 
     const today =
       days[days.length - 1];
