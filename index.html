@@ -1,11 +1,20 @@
-<!DOCTYPE html><html lang="ru">
+<!DOCTYPE html>
+<html lang="ru">
 <head>
-  <meta charset="UTF-8" /><meta
-name="viewport"
-content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-/>
+  <meta charset="UTF-8" />
 
-  <title>Сон малыша</title>  <script src="https://telegram.org/js/telegram-web-app.js"></script>  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>  <style>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
+
+  <title>Сон малыша</title>
+
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+  <style>
     :root {
       --bg: var(--tg-theme-bg-color, #ffffff);
       --text: var(--tg-theme-text-color, #1c1c1e);
@@ -24,6 +33,7 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
     body {
       margin: 0;
       padding: 16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
       font-family:
         -apple-system,
         BlinkMacSystemFont,
@@ -186,10 +196,31 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
       margin-top: 0;
     }
 
+    /* =========================
+       НАВИГАЦИЯ
+       ========================= */
+
+    .nav-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .nav-button {
+      width: auto;
+      padding: 10px 16px;
+      margin-top: 0;
+    }
+
+    /* =========================
+       ГАЛЕРЕЯ
+       ========================= */
+
     .photo-input-row {
       display: flex;
       gap: 8px;
       margin-bottom: 10px;
+      align-items: center;
     }
 
     .photo-month-input {
@@ -206,20 +237,42 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
 
     .photo-file-input {
       flex: 1;
+      min-width: 0;
       font-size: 13px;
       color: var(--hint);
     }
 
+    .month-group {
+      margin-bottom: 22px;
+    }
+
+    .month-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .month-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .month-count {
+      color: var(--hint);
+      font-size: 13px;
+      font-weight: 400;
+      margin-left: 5px;
+    }
+
     .photo-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
     }
 
     .photo-item {
-      width: calc(33.333% - 7px);
       position: relative;
+      width: 100%;
+      cursor: pointer;
     }
 
     .photo-item img {
@@ -228,31 +281,125 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
       object-fit: cover;
       border-radius: 12px;
       display: block;
-    }
-
-    .photo-label {
-      text-align: center;
-      font-size: 12px;
-      color: var(--hint);
-      margin-top: 4px;
+      background: rgba(128, 128, 128, 0.08);
     }
 
     .photo-delete {
       position: absolute;
-      top: 4px;
-      right: 4px;
-      width: 22px;
-      height: 22px;
+      top: 5px;
+      right: 5px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       border: none;
-      background: rgba(0, 0, 0, 0.55);
+      background: rgba(0, 0, 0, 0.6);
       color: #fff;
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1;
       cursor: pointer;
+      z-index: 2;
     }
 
-    /* ===== ОКНО РЕДАКТИРОВАНИЯ ===== */
+    .photo-delete:active {
+      transform: scale(0.95);
+    }
+
+    /* =========================
+       ПРОСМОТР ФОТО
+       ========================= */
+
+    .lightbox-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.94);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      padding: 20px;
+    }
+
+    .lightbox-backdrop.visible {
+      display: flex;
+    }
+
+    .lightbox-content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .lightbox-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      user-select: none;
+    }
+
+    .lightbox-close {
+      position: fixed;
+      top: calc(14px + env(safe-area-inset-top));
+      right: 14px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      z-index: 3002;
+    }
+
+    .lightbox-prev,
+    .lightbox-next {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 42px;
+      height: 42px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 3002;
+    }
+
+    .lightbox-prev {
+      left: 12px;
+    }
+
+    .lightbox-next {
+      right: 12px;
+    }
+
+    .lightbox-prev.hidden,
+    .lightbox-next.hidden {
+      display: none;
+    }
+
+    .lightbox-counter {
+      position: fixed;
+      top: calc(18px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      color: #fff;
+      font-size: 14px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 6px 10px;
+      border-radius: 10px;
+      z-index: 3002;
+    }
+
+    /* =========================
+       ОКНО РЕДАКТИРОВАНИЯ
+       ========================= */
 
     .modal-backdrop {
       position: fixed;
@@ -342,7 +489,9 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
       opacity: 0.5;
     }
 
-    /* ===== ОКНО CSV (ПОКАЗ ТЕКСТА ДЛЯ КОПИРОВАНИЯ) ===== */
+    /* =========================
+       CSV
+       ========================= */
 
     .csv-textarea {
       width: 100%;
@@ -356,1903 +505,1164 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
       padding: 10px;
       resize: none;
     }
-  </style></head><body>  <h1>😴 Сон малыша</h1>  <!-- ТЕКУЩИЙ СОН -->  <div class="card"><div class="status-line" id="statusLine">
-  Загрузка...
-</div>
+  </style>
+</head>
 
-<button class="big-button" id="actionBtn" disabled>
-  ...
-</button>
+<body>
 
-<button
-  class="secondary-button"
-  id="editCurrentBtn"
-  style="display: none;"
->
-  ✏️ Изменить время
-</button>
+  <h1 id="pageTitle">😴 Сон малыша</h1>
 
-<div id="error"></div>
+  <!-- =========================
+       НАВИГАЦИЯ
+       ========================= -->
 
-  </div>  <!-- ПИСАЕТ / КАКАЕТ -->  <div class="card"><div class="hint" style="margin-bottom: 10px;">
-  Подгузник
-</div>
-
-<div class="diaper-buttons">
-
-  <button
-    class="diaper-button"
-    id="peeBtn"
-  >
-    💧 Пописал
-  </button>
-
-  <button
-    class="diaper-button"
-    id="poopBtn"
-  >
-    💩 Покакал
-  </button>
-
-</div>
-
-  </div>  <!-- СТАТИСТИКА -->  <div class="card"><div class="hint" style="margin-bottom: 6px;">Сегодня</div>
-
-<div class="stats-row">
-  <span>😴 Сон</span>
-  <span id="todaySleepStats">—</span>
-</div>
-
-<div class="stats-row">
-  <span>🙂 Бодрствование</span>
-  <span id="todayAwakeStats">—</span>
-</div>
-
-<div class="hint" style="margin: 14px 0 6px;">В среднем за 7 дней</div>
-
-<div class="stats-row">
-  <span>😴 Сон</span>
-  <span id="weekSleepStats">—</span>
-</div>
-
-<div class="stats-row">
-  <span>🙂 Бодрствование</span>
-  <span id="weekAwakeStats">—</span>
-</div>
-
-<div class="hint" style="margin: 14px 0 6px;">В среднем за 30 дней</div>
-
-<div class="stats-row">
-  <span>😴 Сон</span>
-  <span id="monthSleepStats">—</span>
-</div>
-
-<div class="stats-row">
-  <span>🙂 Бодрствование</span>
-  <span id="monthAwakeStats">—</span>
-</div>
-
-<div class="event-stats">
-
-  <div class="stats-row">
-    <span>💧 Пописал</span>
-    <span id="peeStats">—</span>
+  <div class="nav-row">
+    <button
+      class="secondary-button nav-button"
+      id="galleryToggleBtn"
+    >
+      📷 Галерея
+    </button>
   </div>
 
-  <div class="stats-row">
-    <span>💩 Покакал</span>
-    <span id="poopStats">—</span>
-  </div>
+  <!-- =========================
+       ОСНОВНОЙ ЭКРАН
+       ========================= -->
 
-</div>
+  <div id="mainView">
 
-  </div>  <!-- ГРАФИКИ -->  <div class="card"><div class="hint" style="margin-bottom: 8px;">
-  Сегодня: сон и бодрствование
-</div>
+    <!-- ТЕКУЩИЙ СОН -->
+    <div class="card">
 
-<canvas id="todayChart" height="200"></canvas>
+      <div
+        class="status-line"
+        id="statusLine"
+      >
+        Загрузка...
+      </div>
 
-  </div>  <div class="card"><div class="hint" style="margin-bottom: 8px;">
-  За 7 дней: сон и бодрствование
-</div>
+      <button
+        class="big-button"
+        id="actionBtn"
+        disabled
+      >
+        ...
+      </button>
 
-<canvas id="weekChart" height="220"></canvas>
+      <button
+        class="secondary-button"
+        id="editCurrentBtn"
+        style="display: none;"
+      >
+        ✏️ Изменить время
+      </button>
 
-  </div>  <!-- ИСТОРИЯ СНА -->  <div class="card"><div class="hint" style="margin-bottom: 8px;">
-  Последние записи сна
-</div>
+      <div id="error"></div>
 
-<div id="historyList">
-  <div class="empty">
-    Загрузка...
-  </div>
-</div>
+    </div>
 
-  </div>  <!-- ПОСЛЕДНИЕ СОБЫТИЯ -->  <div class="card"><div class="hint" style="margin-bottom: 8px;">
-  Последние события
-</div>
+    <!-- ПОДГУЗНИК -->
+    <div class="card">
 
-<div id="eventsList">
-  <div class="empty">
-    Загрузка...
-  </div>
-</div>
+      <div
+        class="hint"
+        style="margin-bottom: 10px;"
+      >
+        Подгузник
+      </div>
 
-  </div>  <!-- ФОТО ПО МЕСЯЦАМ -->  <div class="card"><div class="hint" style="margin-bottom: 8px;">
-  📷 Фото по месяцам
-</div>
+      <div class="diaper-buttons">
 
-<div class="photo-input-row">
+        <button
+          class="diaper-button"
+          id="peeBtn"
+        >
+          💧 Пописал
+        </button>
 
-  <input
-    type="number"
-    class="photo-month-input"
-    id="photoMonthInput"
-    placeholder="Месяц"
-    min="0"
-  />
+        <button
+          class="diaper-button"
+          id="poopBtn"
+        >
+          💩 Покакал
+        </button>
 
-  <input
-    type="file"
-    class="photo-file-input"
-    id="photoFileInput"
-    accept="image/*"
-  />
+      </div>
 
-</div>
+    </div>
 
-<button
-  class="secondary-button"
-  id="uploadPhotoBtn"
->
-  Добавить фото
-</button>
+    <!-- СТАТИСТИКА -->
+    <div class="card">
 
-<div
-  class="hint"
-  id="photoHint"
-  style="margin-top: 8px; display: none;"
-></div>
+      <div
+        class="hint"
+        style="margin-bottom: 6px;"
+      >
+        Сегодня
+      </div>
 
-<div class="photo-grid" id="photoGrid"></div>
+      <div class="stats-row">
+        <span>😴 Сон</span>
+        <span id="todaySleepStats">—</span>
+      </div>
 
-  </div>  <!-- CSV -->  <div class="card"><button
-  class="secondary-button csv-button"
-  id="csvBtn"
->
-  📊 Скопировать статистику (CSV)
-</button>
+      <div class="stats-row">
+        <span>🙂 Бодрствование</span>
+        <span id="todayAwakeStats">—</span>
+      </div>
 
-<textarea
-  class="csv-textarea"
-  id="csvOutput"
-  style="display: none; margin-top: 10px;"
-  readonly
-></textarea>
+      <div
+        class="hint"
+        style="margin: 14px 0 6px;"
+      >
+        В среднем за 7 дней
+      </div>
 
-<div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">
-  Текст скопирован в буфер обмена. Если копирование не сработало автоматически — выдели текст выше вручную и скопируй.
-</div>
+      <div class="stats-row">
+        <span>😴 Сон</span>
+        <span id="weekSleepStats">—</span>
+      </div>
 
-  </div>  <!-- ОКНО РЕДАКТИРОВАНИЯ СНА -->  <div class="modal-backdrop" id="editModal"><div class="modal">
+      <div class="stats-row">
+        <span>🙂 Бодрствование</span>
+        <span id="weekAwakeStats">—</span>
+      </div>
 
-  <div class="modal-title">
-    ✏️ Изменить сон
-  </div>
+      <div
+        class="hint"
+        style="margin: 14px 0 6px;"
+      >
+        В среднем за 30 дней
+      </div>
 
-  <div class="field">
+      <div class="stats-row">
+        <span>😴 Сон</span>
+        <span id="monthSleepStats">—</span>
+      </div>
 
-    <label for="editStart">
-      Начало сна
-    </label>
+      <div class="stats-row">
+        <span>🙂 Бодрствование</span>
+        <span id="monthAwakeStats">—</span>
+      </div>
 
-    <input
-      type="datetime-local"
-      id="editStart"
-    />
+      <div class="event-stats">
 
-  </div>
+        <div class="stats-row">
+          <span>💧 Пописал</span>
+          <span id="peeStats">—</span>
+        </div>
 
-  <div class="field">
+        <div class="stats-row">
+          <span>💩 Покакал</span>
+          <span id="poopStats">—</span>
+        </div>
 
-    <label for="editEnd">
-      Конец сна
-    </label>
+      </div>
 
-    <input
-      type="datetime-local"
-      id="editEnd"
-    />
+    </div>
 
-    <div class="modal-hint">
-      Если оставить пустым — сон останется незавершённым.
+    <!-- ГРАФИК СЕГОДНЯ -->
+    <div class="card">
+
+      <div
+        class="hint"
+        style="margin-bottom: 8px;"
+      >
+        Сегодня: сон и бодрствование
+      </div>
+
+      <canvas
+        id="todayChart"
+        height="200"
+      ></canvas>
+
+    </div>
+
+    <!-- ГРАФИК 7 ДНЕЙ -->
+    <div class="card">
+
+      <div
+        class="hint"
+        style="margin-bottom: 8px;"
+      >
+        За 7 дней: сон и бодрствование
+      </div>
+
+      <canvas
+        id="weekChart"
+        height="220"
+      ></canvas>
+
+    </div>
+
+    <!-- ИСТОРИЯ СНА -->
+    <div class="card">
+
+      <div
+        class="hint"
+        style="margin-bottom: 8px;"
+      >
+        Последние записи сна
+      </div>
+
+      <div id="historyList">
+        <div class="empty">
+          Загрузка...
+        </div>
+      </div>
+
+    </div>
+
+    <!-- СОБЫТИЯ -->
+    <div class="card">
+
+      <div
+        class="hint"
+        style="margin-bottom: 8px;"
+      >
+        Последние события
+      </div>
+
+      <div id="eventsList">
+        <div class="empty">
+          Загрузка...
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CSV -->
+    <div class="card">
+
+      <button
+        class="secondary-button csv-button"
+        id="csvBtn"
+      >
+        📊 Скопировать статистику (CSV)
+      </button>
+
+      <textarea
+        class="csv-textarea"
+        id="csvOutput"
+        style="display: none; margin-top: 10px;"
+        readonly
+      ></textarea>
+
+      <div
+        class="modal-hint"
+        id="csvHint"
+        style="display: none; margin-top: 6px;"
+      >
+        Текст скопирован в буфер обмена.
+      </div>
+
     </div>
 
   </div>
 
-  <div class="modal-buttons">
+  <!-- =========================
+       ГАЛЕРЕЯ
+       ========================= -->
+
+  <div
+    id="galleryView"
+    style="display: none;"
+  >
+
+    <div class="card">
+
+      <div
+        class="hint"
+        style="margin-bottom: 8px;"
+      >
+        📷 Добавить фото
+      </div>
+
+      <div class="photo-input-row">
+
+        <input
+          type="number"
+          class="photo-month-input"
+          id="photoMonthInput"
+          placeholder="Месяц"
+          min="1"
+          max="24"
+          step="1"
+        />
+
+        <input
+          type="file"
+          class="photo-file-input"
+          id="photoFileInput"
+          accept="image/*"
+        />
+
+      </div>
+
+      <button
+        class="secondary-button"
+        id="uploadPhotoBtn"
+      >
+        Добавить фото
+      </button>
+
+      <div
+        class="hint"
+        id="photoHint"
+        style="margin-top: 8px; display: none;"
+      ></div>
+
+    </div>
+
+    <div class="card">
+
+      <div
+        class="hint"
+        style="margin-bottom: 8px;"
+      >
+        Галерея по месяцам
+      </div>
+
+      <div id="photoGroups">
+        <div class="empty">
+          Загрузка...
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- =========================
+       LIGHTBOX
+       ========================= -->
+
+  <div
+    class="lightbox-backdrop"
+    id="lightbox"
+  >
+
+    <div
+      class="lightbox-content"
+      id="lightboxContent"
+    >
+
+      <img
+        class="lightbox-image"
+        id="lightboxImage"
+        alt="Фото"
+      />
+
+    </div>
+
+    <div
+      class="lightbox-counter"
+      id="lightboxCounter"
+    >
+      1 / 1
+    </div>
 
     <button
-      class="cancel-btn"
-      id="cancelEditBtn"
+      class="lightbox-close"
+      id="lightboxClose"
+      aria-label="Закрыть"
     >
-      Отмена
+      ✕
     </button>
 
     <button
-      class="save-btn"
-      id="saveEditBtn"
+      class="lightbox-prev"
+      id="lightboxPrev"
+      aria-label="Предыдущее фото"
     >
-      Сохранить
+      ‹
+    </button>
+
+    <button
+      class="lightbox-next"
+      id="lightboxNext"
+      aria-label="Следующее фото"
+    >
+      ›
     </button>
 
   </div>
 
-</div>
+  <!-- =========================
+       ОКНО РЕДАКТИРОВАНИЯ СНА
+       ========================= -->
 
-  </div><script>
+  <div
+    class="modal-backdrop"
+    id="editModal"
+  >
 
-  // ============================================================
-  // SUPABASE
-  // ============================================================
+    <div class="modal">
 
-  const SUPABASE_URL =
-    "https://zokqayumtpissabtofau.supabase.co";
+      <div class="modal-title">
+        ✏️ Изменить сон
+      </div>
 
-  const SUPABASE_ANON_KEY =
-    "sb_publishable_cLNOLRhZ7cyCUKFi1nhjVQ_4Dma0xXS";
+      <div class="field">
 
-  const TABLE =
-    "sleep_sessions";
+        <label for="editStart">
+          Начало сна
+        </label>
 
-  const EVENTS_TABLE =
-    "baby_events";
+        <input
+          type="datetime-local"
+          id="editStart"
+        />
 
-  const PHOTOS_TABLE =
-    "baby_photos";
+      </div>
 
-  const PHOTOS_BUCKET =
-    "baby-photos";
+      <div class="field">
 
+        <label for="editEnd">
+          Конец сна
+        </label>
 
-  // ============================================================
-  // TELEGRAM
-  // ============================================================
+        <input
+          type="datetime-local"
+          id="editEnd"
+        />
 
-  const tg =
-    window.Telegram?.WebApp;
+        <div class="modal-hint">
+          Если оставить пустым — сон останется незавершённым.
+        </div>
 
-  if (tg) {
-    tg.ready();
-    tg.expand();
-  }
+      </div>
 
+      <div class="modal-buttons">
 
-  // ============================================================
-  // SUPABASE CLIENT
-  // ============================================================
+        <button
+          class="cancel-btn"
+          id="cancelEditBtn"
+        >
+          Отмена
+        </button>
 
-  const supabaseClient =
-    supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
-    );
+        <button
+          class="save-btn"
+          id="saveEditBtn"
+        >
+          Сохранить
+        </button>
 
+      </div>
 
-  // ============================================================
-  // ELEMENTS
-  // ============================================================
+    </div>
 
-  const statusLine =
-    document.getElementById("statusLine");
+  </div>
 
-  const actionBtn =
-    document.getElementById("actionBtn");
 
-  const editCurrentBtn =
-    document.getElementById("editCurrentBtn");
+  <script>
 
-  const errorDiv =
-    document.getElementById("error");
+    // ============================================================
+    // SUPABASE
+    // ============================================================
 
-  const todaySleepStats =
-    document.getElementById("todaySleepStats");
+    const SUPABASE_URL =
+      "https://zokqayumtpissabtofau.supabase.co";
 
-  const todayAwakeStats =
-    document.getElementById("todayAwakeStats");
+    const SUPABASE_ANON_KEY =
+      "sb_publishable_cLNOLRhZ7cyCUKFi1nhjVQ_4Dma0xXS";
 
-  const weekSleepStats =
-    document.getElementById("weekSleepStats");
+    const TABLE =
+      "sleep_sessions";
 
-  const weekAwakeStats =
-    document.getElementById("weekAwakeStats");
+    const EVENTS_TABLE =
+      "baby_events";
 
-  const monthSleepStats =
-    document.getElementById("monthSleepStats");
+    const PHOTOS_TABLE =
+      "baby_photos";
 
-  const monthAwakeStats =
-    document.getElementById("monthAwakeStats");
+    const PHOTOS_BUCKET =
+      "baby-photos";
 
-  const peeStats =
-    document.getElementById("peeStats");
 
-  const poopStats =
-    document.getElementById("poopStats");
+    // ============================================================
+    // TELEGRAM
+    // ============================================================
 
-  const historyList =
-    document.getElementById("historyList");
-
-  const eventsList =
-    document.getElementById("eventsList");
-
-  const peeBtn =
-    document.getElementById("peeBtn");
-
-  const poopBtn =
-    document.getElementById("poopBtn");
-
-  const csvBtn =
-    document.getElementById("csvBtn");
-
-  const photoMonthInput =
-    document.getElementById("photoMonthInput");
-
-  const photoFileInput =
-    document.getElementById("photoFileInput");
-
-  const uploadPhotoBtn =
-    document.getElementById("uploadPhotoBtn");
-
-  const photoHint =
-    document.getElementById("photoHint");
-
-  const photoGrid =
-    document.getElementById("photoGrid");
-
-  const csvOutput =
-    document.getElementById("csvOutput");
-
-  const csvHint =
-    document.getElementById("csvHint");
-
-  const editModal =
-    document.getElementById("editModal");
-
-  const editStart =
-    document.getElementById("editStart");
-
-  const editEnd =
-    document.getElementById("editEnd");
-
-  const saveEditBtn =
-    document.getElementById("saveEditBtn");
-
-  const cancelEditBtn =
-    document.getElementById("cancelEditBtn");
-
-
-  // ============================================================
-  // STATE
-  // ============================================================
-
-  let openSession = null;
-
-  let lastCompletedEnd = null;
-
-  let editingSessionId = null;
-
-  let refreshing = false;
-
-  let firstLoad = true;
-
-  let todayChartInstance = null;
-
-  let weekChartInstance = null;
-
-
-  // ============================================================
-  // ERRORS
-  // ============================================================
-
-  function showError(message) {
-
-    errorDiv.textContent =
-      message;
-
-    errorDiv.style.display =
-      "block";
-  }
-
-
-  function hideError() {
-
-    errorDiv.textContent =
-      "";
-
-    errorDiv.style.display =
-      "none";
-  }
-
-
-  // ============================================================
-  // HAPTIC
-  // ============================================================
-
-  function hapticSuccess() {
+    const tg =
+      window.Telegram?.WebApp;
 
     if (tg) {
+      tg.ready();
+      tg.expand();
+    }
 
-      tg.HapticFeedback
-        ?.notificationOccurred(
-          "success"
+
+    // ============================================================
+    // SUPABASE CLIENT
+    // ============================================================
+
+    const supabaseClient =
+      supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+
+    // ============================================================
+    // ELEMENTS
+    // ============================================================
+
+    const pageTitle =
+      document.getElementById("pageTitle");
+
+    const galleryToggleBtn =
+      document.getElementById("galleryToggleBtn");
+
+    const mainView =
+      document.getElementById("mainView");
+
+    const galleryView =
+      document.getElementById("galleryView");
+
+    const statusLine =
+      document.getElementById("statusLine");
+
+    const actionBtn =
+      document.getElementById("actionBtn");
+
+    const editCurrentBtn =
+      document.getElementById("editCurrentBtn");
+
+    const errorDiv =
+      document.getElementById("error");
+
+    const todaySleepStats =
+      document.getElementById("todaySleepStats");
+
+    const todayAwakeStats =
+      document.getElementById("todayAwakeStats");
+
+    const weekSleepStats =
+      document.getElementById("weekSleepStats");
+
+    const weekAwakeStats =
+      document.getElementById("weekAwakeStats");
+
+    const monthSleepStats =
+      document.getElementById("monthSleepStats");
+
+    const monthAwakeStats =
+      document.getElementById("monthAwakeStats");
+
+    const peeStats =
+      document.getElementById("peeStats");
+
+    const poopStats =
+      document.getElementById("poopStats");
+
+    const historyList =
+      document.getElementById("historyList");
+
+    const eventsList =
+      document.getElementById("eventsList");
+
+    const peeBtn =
+      document.getElementById("peeBtn");
+
+    const poopBtn =
+      document.getElementById("poopBtn");
+
+    const csvBtn =
+      document.getElementById("csvBtn");
+
+    const photoMonthInput =
+      document.getElementById("photoMonthInput");
+
+    const photoFileInput =
+      document.getElementById("photoFileInput");
+
+    const uploadPhotoBtn =
+      document.getElementById("uploadPhotoBtn");
+
+    const photoHint =
+      document.getElementById("photoHint");
+
+    const photoGroups =
+      document.getElementById("photoGroups");
+
+    const csvOutput =
+      document.getElementById("csvOutput");
+
+    const csvHint =
+      document.getElementById("csvHint");
+
+    const editModal =
+      document.getElementById("editModal");
+
+    const editStart =
+      document.getElementById("editStart");
+
+    const editEnd =
+      document.getElementById("editEnd");
+
+    const saveEditBtn =
+      document.getElementById("saveEditBtn");
+
+    const cancelEditBtn =
+      document.getElementById("cancelEditBtn");
+
+    const lightbox =
+      document.getElementById("lightbox");
+
+    const lightboxImage =
+      document.getElementById("lightboxImage");
+
+    const lightboxClose =
+      document.getElementById("lightboxClose");
+
+    const lightboxPrev =
+      document.getElementById("lightboxPrev");
+
+    const lightboxNext =
+      document.getElementById("lightboxNext");
+
+    const lightboxCounter =
+      document.getElementById("lightboxCounter");
+
+    const lightboxContent =
+      document.getElementById("lightboxContent");
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    let openSession = null;
+
+    let lastCompletedEnd = null;
+
+    let editingSessionId = null;
+
+    let refreshing = false;
+
+    let firstLoad = true;
+
+    let todayChartInstance = null;
+
+    let weekChartInstance = null;
+
+    let galleryOpen = false;
+
+    let galleryPhotos = [];
+
+    let currentPhotoIndex = 0;
+
+
+    // ============================================================
+    // ERRORS
+    // ============================================================
+
+    function showError(message) {
+
+      errorDiv.textContent =
+        message;
+
+      errorDiv.style.display =
+        "block";
+    }
+
+
+    function hideError() {
+
+      errorDiv.textContent =
+        "";
+
+      errorDiv.style.display =
+        "none";
+    }
+
+
+    // ============================================================
+    // HAPTIC
+    // ============================================================
+
+    function hapticSuccess() {
+
+      if (tg) {
+        tg.HapticFeedback
+          ?.notificationOccurred(
+            "success"
+          );
+      }
+    }
+
+
+    // ============================================================
+    // FORMAT DURATION
+    // ============================================================
+
+    function formatDuration(ms) {
+
+      if (
+        !Number.isFinite(ms) ||
+        ms < 0
+      ) {
+        return "0 мин";
+      }
+
+      const totalMin =
+        Math.floor(ms / 60000);
+
+      const hours =
+        Math.floor(totalMin / 60);
+
+      const minutes =
+        totalMin % 60;
+
+      if (hours > 0) {
+
+        return (
+          `${hours} ч ` +
+          `${minutes} мин`
         );
-    }
-  }
+      }
 
-
-  // ============================================================
-  // FORMAT DURATION
-  // ============================================================
-
-  function formatDuration(ms) {
-
-    if (
-      !Number.isFinite(ms) ||
-      ms < 0
-    ) {
-      return "0 мин";
+      return `${minutes} мин`;
     }
 
-    const totalMin =
-      Math.floor(
-        ms / 60000
+
+    // ============================================================
+    // FORMAT DATE/TIME
+    // ============================================================
+
+    function formatTime(iso) {
+
+      const date =
+        new Date(iso);
+
+      return date.toLocaleString(
+        "ru-RU",
+        {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        }
       );
-
-    const hours =
-      Math.floor(
-        totalMin / 60
-      );
-
-    const minutes =
-      totalMin % 60;
+    }
 
 
-    if (hours > 0) {
+    // ============================================================
+    // ISO -> DATETIME-LOCAL
+    // ============================================================
+
+    function isoToLocalInput(iso) {
+
+      if (!iso) {
+        return "";
+      }
+
+      const date =
+        new Date(iso);
+
+      const year =
+        date.getFullYear();
+
+      const month =
+        String(
+          date.getMonth() + 1
+        ).padStart(2, "0");
+
+      const day =
+        String(
+          date.getDate()
+        ).padStart(2, "0");
+
+      const hours =
+        String(
+          date.getHours()
+        ).padStart(2, "0");
+
+      const minutes =
+        String(
+          date.getMinutes()
+        ).padStart(2, "0");
 
       return (
-        `${hours} ч ` +
-        `${minutes} мин`
+        `${year}-${month}-${day}` +
+        `T${hours}:${minutes}`
       );
     }
 
-    return `${minutes} мин`;
-  }
 
+    // ============================================================
+    // DATETIME-LOCAL -> ISO
+    // ============================================================
 
-  // ============================================================
-  // FORMAT DATE/TIME
-  // ============================================================
+    function localInputToISO(value) {
 
-  function formatTime(iso) {
-
-    const date =
-      new Date(iso);
-
-    return date.toLocaleString(
-      "ru-RU",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
+      if (!value) {
+        return null;
       }
-    );
-  }
 
+      const date =
+        new Date(value);
 
-  // ============================================================
-  // ISO -> DATETIME-LOCAL
-  // ============================================================
-
-  function isoToLocalInput(iso) {
-
-    if (!iso) {
-      return "";
-    }
-
-    const date =
-      new Date(iso);
-
-    const year =
-      date.getFullYear();
-
-    const month =
-      String(
-        date.getMonth() + 1
-      ).padStart(2, "0");
-
-    const day =
-      String(
-        date.getDate()
-      ).padStart(2, "0");
-
-    const hours =
-      String(
-        date.getHours()
-      ).padStart(2, "0");
-
-    const minutes =
-      String(
-        date.getMinutes()
-      ).padStart(2, "0");
-
-    return (
-      `${year}-${month}-${day}` +
-      `T${hours}:${minutes}`
-    );
-  }
-
-
-  // ============================================================
-  // DATETIME-LOCAL -> ISO
-  // ============================================================
-
-  function localInputToISO(value) {
-
-    if (!value) {
-      return null;
-    }
-
-    const date =
-      new Date(value);
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-      return null;
-    }
-
-    return date.toISOString();
-  }
-
-
-  // ============================================================
-  // ЗАГРУЗКА ТЕКУЩЕГО СНА
-  // ============================================================
-
-  async function loadOpenSession() {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from(TABLE)
-        .select("*")
-        .is(
-          "end_time",
-          null
+      if (
+        Number.isNaN(
+          date.getTime()
         )
-        .order(
-          "start_time",
-          {
-            ascending: false
-          }
-        )
-        .limit(1);
+      ) {
+        return null;
+      }
 
-
-    if (error) {
-      throw error;
+      return date.toISOString();
     }
 
 
-    openSession =
-      data &&
-      data.length > 0
-        ? data[0]
-        : null;
+    // ============================================================
+    // ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
+    // ============================================================
 
+    function setView(view) {
 
-    renderStatus();
-  }
+      if (view === "gallery") {
 
+        galleryOpen = true;
 
-  // ============================================================
-  // ЗАГРУЗКА ВРЕМЕНИ ОКОНЧАНИЯ ПОСЛЕДНЕГО СНА
-  // (нужно, чтобы показывать "не спит уже ...")
-  // ============================================================
+        mainView.style.display =
+          "none";
 
-  async function loadLastCompletedEnd() {
+        galleryView.style.display =
+          "block";
 
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from(TABLE)
-        .select("end_time")
-        .not(
-          "end_time",
-          "is",
-          null
-        )
-        .order(
-          "end_time",
-          {
-            ascending: false
-          }
-        )
-        .limit(1);
+        pageTitle.textContent =
+          "📷 Галерея малыша";
 
+        galleryToggleBtn.textContent =
+          "← Сон";
 
-    if (error) {
-      throw error;
-    }
+        loadPhotos();
 
-
-    lastCompletedEnd =
-      data &&
-      data.length > 0
-        ? data[0].end_time
-        : null;
-  }
-
-
-  // ============================================================
-  // ОТОБРАЖЕНИЕ ТЕКУЩЕГО СОСТОЯНИЯ
-  // ============================================================
-
-  function renderStatus() {
-
-    if (openSession) {
-
-      const start =
-        new Date(
-          openSession.start_time
-        ).getTime();
-
-      const duration =
-        Date.now() - start;
-
-
-      statusLine.textContent =
-        `Спит уже ` +
-        `${formatDuration(duration)} ` +
-        `(с ${formatTime(
-          openSession.start_time
-        )})`;
-
-
-      actionBtn.textContent =
-        "☀️ Закончить сон";
-
-
-      actionBtn.disabled =
-        false;
-
-
-      editCurrentBtn.style.display =
-        "block";
-
-    } else if (lastCompletedEnd) {
-
-      const since =
-        new Date(
-          lastCompletedEnd
-        ).getTime();
-
-      const duration =
-        Date.now() - since;
-
-
-      statusLine.textContent =
-        `Не спит уже ` +
-        `${formatDuration(duration)} ` +
-        `(с ${formatTime(
-          lastCompletedEnd
-        )})`;
-
-
-      actionBtn.textContent =
-        "😴 Начать сон";
-
-
-      actionBtn.disabled =
-        false;
-
-
-      editCurrentBtn.style.display =
-        "none";
-
-    } else {
-
-      statusLine.textContent =
-        "Сейчас не спит";
-
-
-      actionBtn.textContent =
-        "😴 Начать сон";
-
-
-      actionBtn.disabled =
-        false;
-
-
-      editCurrentBtn.style.display =
-        "none";
-    }
-  }
-
-
-  // ============================================================
-  // НАЧАТЬ / ЗАКОНЧИТЬ СОН
-  // ============================================================
-
-  async function toggleSleep() {
-
-    actionBtn.disabled =
-      true;
-
-    hideError();
-
-
-    try {
-
-      if (openSession) {
-
-        const {
-          error
-        } =
-          await supabaseClient
-            .from(TABLE)
-            .update({
-              end_time:
-                new Date()
-                  .toISOString()
-            })
-            .eq(
-              "id",
-              openSession.id
-            );
-
-
-        if (error) {
-          throw error;
-        }
+        window.scrollTo(
+          0,
+          0
+        );
 
       } else {
 
-        const {
-          error
-        } =
-          await supabaseClient
-            .from(TABLE)
-            .insert({
-              start_time:
-                new Date()
-                  .toISOString()
-            });
+        galleryOpen = false;
 
+        galleryView.style.display =
+          "none";
 
-        if (error) {
-          throw error;
-        }
+        mainView.style.display =
+          "block";
+
+        pageTitle.textContent =
+          "😴 Сон малыша";
+
+        galleryToggleBtn.textContent =
+          "📷 Галерея";
+
+        window.scrollTo(
+          0,
+          0
+        );
       }
-
-
-      hapticSuccess();
-
-      await refreshAll();
-
-    } catch (error) {
-
-      console.error(error);
-
-      showError(
-        error.message ||
-        "Ошибка. Попробуй ещё раз."
-      );
-
-      actionBtn.disabled =
-        false;
     }
-  }
 
 
-  // ============================================================
-  // ЗАПИСЬ ПОПИСАЛ / ПОКАКАЛ
-  // ============================================================
+    // ============================================================
+    // ЗАГРУЗКА ТЕКУЩЕГО СНА
+    // ============================================================
 
-  async function addBabyEvent(eventType) {
-
-    peeBtn.disabled = true;
-    poopBtn.disabled = true;
-
-    hideError();
-
-
-    try {
+    async function loadOpenSession() {
 
       const {
-        error
-      } =
-        await supabaseClient
-          .from(EVENTS_TABLE)
-          .insert({
-            event_type: eventType,
-            event_time:
-              new Date()
-                .toISOString()
-          });
-
-
-      if (error) {
-        throw error;
-      }
-
-
-      hapticSuccess();
-
-      await loadEventStats();
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      showError(
-        error.message ||
-        "Не удалось записать событие."
-      );
-
-    } finally {
-
-      peeBtn.disabled = false;
-      poopBtn.disabled = false;
-    }
-  }
-
-
-  // ============================================================
-  // СТАТИСТИКА СНА
-  // ============================================================
-
-  async function loadStats() {
-
-    const now =
-      new Date();
-
-
-    const monthStart =
-      new Date(
-        now.getTime() -
-        30 * 24 * 60 * 60 * 1000
-      ).toISOString();
-
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from(TABLE)
-        .select(
-          "id,start_time,end_time"
-        )
-        .not(
-          "end_time",
-          "is",
-          null
-        )
-        .gte(
-          "start_time",
-          monthStart
-        )
-        .order(
-          "start_time",
-          {
-            ascending: false
-          }
-        );
-
-
-    if (error) {
-      throw error;
-    }
-
-
-    /*
-     * Разбивка по дням за 30 дней — на её основе
-     * считаем и "сегодня", и средние за 7/30 дней,
-     * и рисуем графики (без двойной работы).
-     */
-
-    const days30 =
-      buildDailySeries(
         data,
-        30
-      );
-
-    const days7 =
-      days30.slice(-7);
-
-    const today =
-      days30[
-        days30.length - 1
-      ];
-
-
-    function average(
-      list,
-      key
-    ) {
-
-      if (
-        !list.length
-      ) {
-        return 0;
-      }
-
-      const sum =
-        list.reduce(
-          (acc, d) =>
-            acc + d[key],
-          0
-        );
-
-      return (
-        sum / list.length
-      );
-    }
-
-
-    todaySleepStats.textContent =
-      formatDuration(
-        today.sleepHours *
-        3600000
-      );
-
-    todayAwakeStats.textContent =
-      formatDuration(
-        today.awakeHours *
-        3600000
-      );
-
-
-    weekSleepStats.textContent =
-      formatDuration(
-        average(
-          days7,
-          "sleepHours"
-        ) * 3600000
-      ) + " / день";
-
-    weekAwakeStats.textContent =
-      formatDuration(
-        average(
-          days7,
-          "awakeHours"
-        ) * 3600000
-      ) + " / день";
-
-
-    monthSleepStats.textContent =
-      formatDuration(
-        average(
-          days30,
-          "sleepHours"
-        ) * 3600000
-      ) + " / день";
-
-    monthAwakeStats.textContent =
-      formatDuration(
-        average(
-          days30,
-          "awakeHours"
-        ) * 3600000
-      ) + " / день";
-
-
-    renderHistory(data);
-
-    renderCharts(days7);
-  }
-
-
-  // ============================================================
-  // РАЗБИВКА СНА/БОДРСТВОВАНИЯ ПО ДНЯМ (для графиков)
-  // ============================================================
-
-  function buildDailySeries(sessions, numDays) {
-
-    const daysCount =
-      numDays || 7;
-
-    const now =
-      new Date();
-
-    const days = [];
-
-
-    for (
-      let i = daysCount - 1;
-      i >= 0;
-      i--
-    ) {
-
-      const dayDate =
-        new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          now.getDate() - i
-        );
-
-      const dayStart =
-        dayDate.getTime();
-
-      const dayEnd =
-        i === 0
-          ? now.getTime()
-          : dayStart +
-            24 * 60 * 60 * 1000;
-
-      const totalMs =
-        Math.max(
-          dayEnd - dayStart,
-          0
-        );
-
-
-      let sleepMs = 0;
-
-      sessions.forEach(
-        session => {
-
-          const st =
-            new Date(
-              session.start_time
-            ).getTime();
-
-          const et =
-            new Date(
-              session.end_time
-            ).getTime();
-
-          const overlapStart =
-            Math.max(
-              st,
-              dayStart
-            );
-
-          const overlapEnd =
-            Math.min(
-              et,
-              dayEnd
-            );
-
-          if (
-            overlapEnd >
-            overlapStart
-          ) {
-
-            sleepMs +=
-              overlapEnd -
-              overlapStart;
-          }
-        }
-      );
-
-
-      sleepMs =
-        Math.min(
-          sleepMs,
-          totalMs
-        );
-
-
-      const awakeMs =
-        Math.max(
-          totalMs - sleepMs,
-          0
-        );
-
-
-      days.push({
-        label:
-          dayDate.toLocaleDateString(
-            "ru-RU",
-            {
-              day: "2-digit",
-              month: "2-digit"
-            }
-          ),
-
-        sleepHours:
-          sleepMs / 3600000,
-
-        awakeHours:
-          awakeMs / 3600000
-      });
-    }
-
-
-    return days;
-  }
-
-
-  // ============================================================
-  // ГРАФИКИ: СЕГОДНЯ (КРУГОВОЙ) И 7 ДНЕЙ (СТОЛБЧАТЫЙ)
-  // ============================================================
-
-  function renderCharts(days) {
-
-    if (
-      typeof Chart ===
-      "undefined"
-    ) {
-      return;
-    }
-
-
-    const today =
-      days[days.length - 1];
-
-
-    const todayCanvas =
-      document.getElementById(
-        "todayChart"
-      );
-
-    const weekCanvas =
-      document.getElementById(
-        "weekChart"
-      );
-
-
-    if (
-      todayCanvas
-    ) {
-
-      if (
-        todayChartInstance
-      ) {
-        todayChartInstance.destroy();
-      }
-
-
-      todayChartInstance =
-        new Chart(
-          todayCanvas.getContext(
-            "2d"
-          ),
-          {
-            type: "doughnut",
-            data: {
-              labels: [
-                "Сон",
-                "Бодрствование"
-              ],
-              datasets: [
-                {
-                  data: [
-                    Number(
-                      today.sleepHours.toFixed(
-                        1
-                      )
-                    ),
-                    Number(
-                      today.awakeHours.toFixed(
-                        1
-                      )
-                    )
-                  ],
-                  backgroundColor: [
-                    "#2481cc",
-                    "#f2a154"
-                  ]
-                }
-              ]
-            },
-            options: {
-              plugins: {
-                legend: {
-                  position: "bottom"
-                }
-              }
-            }
-          }
-        );
-    }
-
-
-    if (
-      weekCanvas
-    ) {
-
-      if (
-        weekChartInstance
-      ) {
-        weekChartInstance.destroy();
-      }
-
-
-      weekChartInstance =
-        new Chart(
-          weekCanvas.getContext(
-            "2d"
-          ),
-          {
-            type: "bar",
-            data: {
-              labels: days.map(
-                d => d.label
-              ),
-              datasets: [
-                {
-                  label: "Сон",
-                  data: days.map(
-                    d =>
-                      Number(
-                        d.sleepHours.toFixed(
-                          1
-                        )
-                      )
-                  ),
-                  backgroundColor:
-                    "#2481cc"
-                },
-                {
-                  label:
-                    "Бодрствование",
-                  data: days.map(
-                    d =>
-                      Number(
-                        d.awakeHours.toFixed(
-                          1
-                        )
-                      )
-                  ),
-                  backgroundColor:
-                    "#f2a154"
-                }
-              ]
-            },
-            options: {
-              responsive: true,
-              scales: {
-                x: {
-                  stacked: true
-                },
-                y: {
-                  stacked: true,
-                  title: {
-                    display: true,
-                    text: "часы"
-                  }
-                }
-              },
-              plugins: {
-                legend: {
-                  position: "bottom"
-                }
-              }
-            }
-          }
-        );
-    }
-  }
-
-
-  // ============================================================
-  // ИСТОРИЯ СНА
-  // ============================================================
-
-  function renderHistory(data) {
-
-    historyList.innerHTML =
-      "";
-
-
-    if (
-      !data ||
-      data.length === 0
-    ) {
-
-      const empty =
-        document.createElement(
-          "div"
-        );
-
-      empty.className =
-        "empty";
-
-      empty.textContent =
-        "Записей пока нет";
-
-      historyList.appendChild(
-        empty
-      );
-
-      return;
-    }
-
-
-    data
-      .slice(0, 10)
-      .forEach(
-        session => {
-
-          const start =
-            new Date(
-              session.start_time
-            );
-
-          const end =
-            new Date(
-              session.end_time
-            );
-
-          const duration =
-            end - start;
-
-
-          const row =
-            document.createElement(
-              "div"
-            );
-
-          row.className =
-            "history-item";
-
-
-          const info =
-            document.createElement(
-              "div"
-            );
-
-          info.className =
-            "history-info";
-
-
-          const time =
-            document.createElement(
-              "div"
-            );
-
-          time.className =
-            "history-time";
-
-          time.textContent =
-            `${formatTime(
-              session.start_time
-            )} → ${formatTime(
-              session.end_time
-            )}`;
-
-
-          const durationElement =
-            document.createElement(
-              "div"
-            );
-
-          durationElement.className =
-            "history-duration";
-
-          durationElement.textContent =
-            formatDuration(
-              duration
-            );
-
-
-          info.appendChild(time);
-
-          info.appendChild(
-            durationElement
-          );
-
-
-          const editButton =
-            document.createElement(
-              "button"
-            );
-
-          editButton.className =
-            "edit-btn";
-
-          editButton.textContent =
-            "Изменить";
-
-
-          editButton.addEventListener(
-            "click",
-            () => {
-              openEditModal(
-                session
-              );
-            }
-          );
-
-
-          row.appendChild(info);
-
-          row.appendChild(
-            editButton
-          );
-
-
-          historyList.appendChild(
-            row
-          );
-        }
-      );
-  }
-
-
-  // ============================================================
-  // СТАТИСТИКА ПОПИСАЛ / ПОКАКАЛ
-  // ============================================================
-
-  async function loadEventStats() {
-
-    const now =
-      new Date();
-
-
-    const todayStart =
-      new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate()
-      ).toISOString();
-
-
-    const weekStart =
-      new Date(
-        now.getTime() -
-        7 * 24 * 60 * 60 * 1000
-      ).toISOString();
-
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from(EVENTS_TABLE)
-        .select(
-          "id,event_type,event_time"
-        )
-        .gte(
-          "event_time",
-          weekStart
-        )
-        .order(
-          "event_time",
-          {
-            ascending: false
-          }
-        );
-
-
-    if (error) {
-      throw error;
-    }
-
-
-    let todayPee = 0;
-    let todayPoop = 0;
-
-    let weekPee = 0;
-    let weekPoop = 0;
-
-
-    data.forEach(
-      event => {
-
-        if (
-          event.event_type ===
-          "pee"
-        ) {
-
-          weekPee++;
-
-        } else if (
-          event.event_type ===
-          "poop"
-        ) {
-
-          weekPoop++;
-        }
-
-
-        if (
-          event.event_time >=
-          todayStart
-        ) {
-
-          if (
-            event.event_type ===
-            "pee"
-          ) {
-            todayPee++;
-
-          } else if (
-            event.event_type ===
-            "poop"
-          ) {
-            todayPoop++;
-          }
-        }
-      }
-    );
-
-
-    peeStats.textContent =
-      `${todayPee} сегодня / ${weekPee} за 7 дней`;
-
-
-    poopStats.textContent =
-      `${todayPoop} сегодня / ${weekPoop} за 7 дней`;
-
-
-    renderEvents(data);
-  }
-
-
-  // ============================================================
-  // ИСТОРИЯ СОБЫТИЙ
-  // ============================================================
-
-  function renderEvents(data) {
-
-    eventsList.innerHTML =
-      "";
-
-
-    if (
-      !data ||
-      data.length === 0
-    ) {
-
-      const empty =
-        document.createElement(
-          "div"
-        );
-
-      empty.className =
-        "empty";
-
-      empty.textContent =
-        "Событий пока нет";
-
-      eventsList.appendChild(
-        empty
-      );
-
-      return;
-    }
-
-
-    data
-      .slice(0, 10)
-      .forEach(
-        event => {
-
-          const row =
-            document.createElement(
-              "div"
-            );
-
-          row.className =
-            "history-item";
-
-
-          const info =
-            document.createElement(
-              "div"
-            );
-
-          info.className =
-            "history-info";
-
-
-          const time =
-            document.createElement(
-              "div"
-            );
-
-          time.className =
-            "history-time";
-
-
-          if (
-            event.event_type ===
-            "pee"
-          ) {
-
-            time.textContent =
-              `💧 Пописал — ${formatTime(
-                event.event_time
-              )}`;
-
-          } else {
-
-            time.textContent =
-              `💩 Покакал — ${formatTime(
-                event.event_time
-              )}`;
-          }
-
-
-          info.appendChild(time);
-
-          row.appendChild(info);
-
-          eventsList.appendChild(row);
-        }
-      );
-  }
-
-
-  // ============================================================
-  // ОТКРЫТЬ РЕДАКТИРОВАНИЕ
-  // ============================================================
-
-  function openEditModal(session) {
-
-    editingSessionId =
-      session.id;
-
-
-    editStart.value =
-      isoToLocalInput(
-        session.start_time
-      );
-
-
-    editEnd.value =
-      isoToLocalInput(
-        session.end_time
-      );
-
-
-    saveEditBtn.disabled =
-      false;
-
-
-    editModal.classList.add(
-      "visible"
-    );
-  }
-
-
-  // ============================================================
-  // РЕДАКТИРОВАНИЕ ТЕКУЩЕГО СНА
-  // ============================================================
-
-  function openEditCurrentModal() {
-
-    if (!openSession) {
-      return;
-    }
-
-
-    editingSessionId =
-      openSession.id;
-
-
-    editStart.value =
-      isoToLocalInput(
-        openSession.start_time
-      );
-
-
-    editEnd.value =
-      "";
-
-
-    saveEditBtn.disabled =
-      false;
-
-
-    editModal.classList.add(
-      "visible"
-    );
-  }
-
-
-  // ============================================================
-  // ЗАКРЫТЬ РЕДАКТИРОВАНИЕ
-  // ============================================================
-
-  function closeEditModal() {
-
-    editModal.classList.remove(
-      "visible"
-    );
-
-    editingSessionId =
-      null;
-  }
-
-
-  // ============================================================
-  // СОХРАНИТЬ РЕДАКТИРОВАНИЕ
-  // ============================================================
-
-  async function saveEdit() {
-
-    if (!editingSessionId) {
-      return;
-    }
-
-
-    const startValue =
-      editStart.value;
-
-    const endValue =
-      editEnd.value;
-
-
-    if (!startValue) {
-
-      alert(
-        "Укажи время начала сна."
-      );
-
-      return;
-    }
-
-
-    const startISO =
-      localInputToISO(
-        startValue
-      );
-
-    const endISO =
-      localInputToISO(
-        endValue
-      );
-
-
-    if (!startISO) {
-
-      alert(
-        "Некорректное время начала."
-      );
-
-      return;
-    }
-
-
-    if (
-      endValue &&
-      !endISO
-    ) {
-
-      alert(
-        "Некорректное время окончания."
-      );
-
-      return;
-    }
-
-
-    if (
-      endISO &&
-      new Date(endISO) <=
-      new Date(startISO)
-    ) {
-
-      alert(
-        "Конец сна должен быть позже начала."
-      );
-
-      return;
-    }
-
-
-    saveEditBtn.disabled =
-      true;
-
-    hideError();
-
-
-    try {
-
-      const {
         error
       } =
         await supabaseClient
           .from(TABLE)
-          .update({
-            start_time:
-              startISO,
-
-            end_time:
-              endISO
-          })
-          .eq(
-            "id",
-            editingSessionId
-          );
-
+          .select("*")
+          .is(
+            "end_time",
+            null
+          )
+          .order(
+            "start_time",
+            {
+              ascending: false
+            }
+          )
+          .limit(1);
 
       if (error) {
         throw error;
       }
 
+      openSession =
+        data &&
+        data.length > 0
+          ? data[0]
+          : null;
 
-      closeEditModal();
-
-      hapticSuccess();
-
-      await refreshAll();
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      showError(
-        error.message ||
-        "Не удалось сохранить изменения."
-      );
-
-      saveEditBtn.disabled =
-        false;
+      renderStatus();
     }
-  }
 
 
-  // ============================================================
-  // CSV (копирование в буфер обмена вместо скачивания —
-  // скачивание файлов не работает внутри WebView Telegram)
-  // ============================================================
+    // ============================================================
+    // ЗАГРУЗКА ВРЕМЕНИ ОКОНЧАНИЯ ПОСЛЕДНЕГО СНА
+    // ============================================================
 
-  function csvEscape(value) {
-
-    const stringValue =
-      String(
-        value ??
-        ""
-      );
-
-    return (
-      '"' +
-      stringValue
-        .replace(
-          /"/g,
-          '""'
-        ) +
-      '"'
-    );
-  }
-
-
-  async function downloadCSV() {
-
-    csvBtn.disabled =
-      true;
-
-    hideError();
-
-    csvHint.style.display =
-      "none";
-
-
-    try {
-
-      /*
-       * Загружаем все завершённые сны.
-       */
+    async function loadLastCompletedEnd() {
 
       const {
-        data: sleepData,
-        error: sleepError
+        data,
+        error
+      } =
+        await supabaseClient
+          .from(TABLE)
+          .select("end_time")
+          .not(
+            "end_time",
+            "is",
+            null
+          )
+          .order(
+            "end_time",
+            {
+              ascending: false
+            }
+          )
+          .limit(1);
+
+      if (error) {
+        throw error;
+      }
+
+      lastCompletedEnd =
+        data &&
+        data.length > 0
+          ? data[0].end_time
+          : null;
+    }
+
+
+    // ============================================================
+    // ОТОБРАЖЕНИЕ ТЕКУЩЕГО СОСТОЯНИЯ
+    // ============================================================
+
+    function renderStatus() {
+
+      if (openSession) {
+
+        const start =
+          new Date(
+            openSession.start_time
+          ).getTime();
+
+        const duration =
+          Date.now() - start;
+
+        statusLine.textContent =
+          `Спит уже ` +
+          `${formatDuration(duration)} ` +
+          `(с ${formatTime(
+            openSession.start_time
+          )})`;
+
+        actionBtn.textContent =
+          "☀️ Закончить сон";
+
+        actionBtn.disabled =
+          false;
+
+        editCurrentBtn.style.display =
+          "block";
+
+      } else if (lastCompletedEnd) {
+
+        const since =
+          new Date(
+            lastCompletedEnd
+          ).getTime();
+
+        const duration =
+          Date.now() - since;
+
+        statusLine.textContent =
+          `Не спит уже ` +
+          `${formatDuration(duration)} ` +
+          `(с ${formatTime(
+            lastCompletedEnd
+          )})`;
+
+        actionBtn.textContent =
+          "😴 Начать сон";
+
+        actionBtn.disabled =
+          false;
+
+        editCurrentBtn.style.display =
+          "none";
+
+      } else {
+
+        statusLine.textContent =
+          "Сейчас не спит";
+
+        actionBtn.textContent =
+          "😴 Начать сон";
+
+        actionBtn.disabled =
+          false;
+
+        editCurrentBtn.style.display =
+          "none";
+      }
+    }
+
+
+    // ============================================================
+    // НАЧАТЬ / ЗАКОНЧИТЬ СОН
+    // ============================================================
+
+    async function toggleSleep() {
+
+      actionBtn.disabled =
+        true;
+
+      hideError();
+
+      try {
+
+        if (openSession) {
+
+          const {
+            error
+          } =
+            await supabaseClient
+              .from(TABLE)
+              .update({
+                end_time:
+                  new Date()
+                    .toISOString()
+              })
+              .eq(
+                "id",
+                openSession.id
+              );
+
+          if (error) {
+            throw error;
+          }
+
+        } else {
+
+          const {
+            error
+          } =
+            await supabaseClient
+              .from(TABLE)
+              .insert({
+                start_time:
+                  new Date()
+                    .toISOString()
+              });
+
+          if (error) {
+            throw error;
+          }
+        }
+
+        hapticSuccess();
+
+        await refreshAll();
+
+      } catch (error) {
+
+        console.error(error);
+
+        showError(
+          error.message ||
+          "Ошибка. Попробуй ещё раз."
+        );
+
+        actionBtn.disabled =
+          false;
+      }
+    }
+
+
+    // ============================================================
+    // ПОДГУЗНИК
+    // ============================================================
+
+    async function addBabyEvent(eventType) {
+
+      peeBtn.disabled = true;
+      poopBtn.disabled = true;
+
+      hideError();
+
+      try {
+
+        const {
+          error
+        } =
+          await supabaseClient
+            .from(EVENTS_TABLE)
+            .insert({
+              event_type:
+                eventType,
+
+              event_time:
+                new Date()
+                  .toISOString()
+            });
+
+        if (error) {
+          throw error;
+        }
+
+        hapticSuccess();
+
+        await loadEventStats();
+
+      } catch (error) {
+
+        console.error(error);
+
+        showError(
+          error.message ||
+          "Не удалось записать событие."
+        );
+
+      } finally {
+
+        peeBtn.disabled = false;
+        poopBtn.disabled = false;
+      }
+    }
+
+
+    // ============================================================
+    // СТАТИСТИКА СНА
+    // ============================================================
+
+    async function loadStats() {
+
+      const now =
+        new Date();
+
+      const monthStart =
+        new Date(
+          now.getTime() -
+          30 * 24 * 60 * 60 * 1000
+        ).toISOString();
+
+      const {
+        data,
+        error
       } =
         await supabaseClient
           .from(TABLE)
@@ -2264,764 +1674,2220 @@ content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable
             "is",
             null
           )
+          .gte(
+            "start_time",
+            monthStart
+          )
           .order(
             "start_time",
             {
-              ascending: true
+              ascending: false
             }
           );
 
-
-      if (sleepError) {
-        throw sleepError;
+      if (error) {
+        throw error;
       }
 
+      const days30 =
+        buildDailySeries(
+          data,
+          30
+        );
 
-      /*
-       * Загружаем все события.
-       */
+      const days7 =
+        days30.slice(-7);
+
+      const today =
+        days30[
+          days30.length - 1
+        ];
+
+      function average(
+        list,
+        key
+      ) {
+
+        if (
+          !list.length
+        ) {
+          return 0;
+        }
+
+        const sum =
+          list.reduce(
+            (acc, d) =>
+              acc + d[key],
+            0
+          );
+
+        return sum / list.length;
+      }
+
+      todaySleepStats.textContent =
+        formatDuration(
+          today.sleepHours *
+          3600000
+        );
+
+      todayAwakeStats.textContent =
+        formatDuration(
+          today.awakeHours *
+          3600000
+        );
+
+      weekSleepStats.textContent =
+        formatDuration(
+          average(
+            days7,
+            "sleepHours"
+          ) * 3600000
+        ) + " / день";
+
+      weekAwakeStats.textContent =
+        formatDuration(
+          average(
+            days7,
+            "awakeHours"
+          ) * 3600000
+        ) + " / день";
+
+      monthSleepStats.textContent =
+        formatDuration(
+          average(
+            days30,
+            "sleepHours"
+          ) * 3600000
+        ) + " / день";
+
+      monthAwakeStats.textContent =
+        formatDuration(
+          average(
+            days30,
+            "awakeHours"
+          ) * 3600000
+        ) + " / день";
+
+      renderHistory(data);
+
+      renderCharts(days7);
+    }
+
+
+    // ============================================================
+    // РАЗБИВКА ПО ДНЯМ
+    // ============================================================
+
+    function buildDailySeries(
+      sessions,
+      numDays
+    ) {
+
+      const daysCount =
+        numDays || 7;
+
+      const now =
+        new Date();
+
+      const days = [];
+
+      for (
+        let i = daysCount - 1;
+        i >= 0;
+        i--
+      ) {
+
+        const dayDate =
+          new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() - i
+          );
+
+        const dayStart =
+          dayDate.getTime();
+
+        const dayEnd =
+          i === 0
+            ? now.getTime()
+            : dayStart +
+              24 *
+              60 *
+              60 *
+              1000;
+
+        const totalMs =
+          Math.max(
+            dayEnd - dayStart,
+            0
+          );
+
+        let sleepMs = 0;
+
+        sessions.forEach(
+          session => {
+
+            const st =
+              new Date(
+                session.start_time
+              ).getTime();
+
+            const et =
+              new Date(
+                session.end_time
+              ).getTime();
+
+            const overlapStart =
+              Math.max(
+                st,
+                dayStart
+              );
+
+            const overlapEnd =
+              Math.min(
+                et,
+                dayEnd
+              );
+
+            if (
+              overlapEnd >
+              overlapStart
+            ) {
+
+              sleepMs +=
+                overlapEnd -
+                overlapStart;
+            }
+          }
+        );
+
+        sleepMs =
+          Math.min(
+            sleepMs,
+            totalMs
+          );
+
+        const awakeMs =
+          Math.max(
+            totalMs - sleepMs,
+            0
+          );
+
+        days.push({
+
+          label:
+            dayDate.toLocaleDateString(
+              "ru-RU",
+              {
+                day: "2-digit",
+                month: "2-digit"
+              }
+            ),
+
+          sleepHours:
+            sleepMs / 3600000,
+
+          awakeHours:
+            awakeMs / 3600000
+        });
+      }
+
+      return days;
+    }
+
+
+    // ============================================================
+    // ГРАФИКИ
+    // ============================================================
+
+    function renderCharts(days) {
+
+      if (
+        typeof Chart ===
+        "undefined"
+      ) {
+        return;
+      }
+
+      const today =
+        days[
+          days.length - 1
+        ];
+
+      const todayCanvas =
+        document.getElementById(
+          "todayChart"
+        );
+
+      const weekCanvas =
+        document.getElementById(
+          "weekChart"
+        );
+
+      if (todayCanvas) {
+
+        if (
+          todayChartInstance
+        ) {
+          todayChartInstance.destroy();
+        }
+
+        todayChartInstance =
+          new Chart(
+            todayCanvas.getContext(
+              "2d"
+            ),
+            {
+              type: "doughnut",
+
+              data: {
+
+                labels: [
+                  "Сон",
+                  "Бодрствование"
+                ],
+
+                datasets: [
+                  {
+                    data: [
+                      Number(
+                        today.sleepHours.toFixed(
+                          1
+                        )
+                      ),
+
+                      Number(
+                        today.awakeHours.toFixed(
+                          1
+                        )
+                      )
+                    ],
+
+                    backgroundColor: [
+                      "#2481cc",
+                      "#f2a154"
+                    ]
+                  }
+                ]
+              },
+
+              options: {
+
+                plugins: {
+                  legend: {
+                    position: "bottom"
+                  }
+                }
+              }
+            }
+          );
+      }
+
+      if (weekCanvas) {
+
+        if (
+          weekChartInstance
+        ) {
+          weekChartInstance.destroy();
+        }
+
+        weekChartInstance =
+          new Chart(
+            weekCanvas.getContext(
+              "2d"
+            ),
+            {
+              type: "bar",
+
+              data: {
+
+                labels:
+                  days.map(
+                    d => d.label
+                  ),
+
+                datasets: [
+                  {
+                    label: "Сон",
+
+                    data:
+                      days.map(
+                        d =>
+                          Number(
+                            d.sleepHours.toFixed(
+                              1
+                            )
+                          )
+                      ),
+
+                    backgroundColor:
+                      "#2481cc"
+                  },
+
+                  {
+                    label:
+                      "Бодрствование",
+
+                    data:
+                      days.map(
+                        d =>
+                          Number(
+                            d.awakeHours.toFixed(
+                              1
+                            )
+                          )
+                      ),
+
+                    backgroundColor:
+                      "#f2a154"
+                  }
+                ]
+              },
+
+              options: {
+
+                responsive: true,
+
+                scales: {
+
+                  x: {
+                    stacked: true
+                  },
+
+                  y: {
+                    stacked: true,
+
+                    title: {
+                      display: true,
+                      text: "часы"
+                    }
+                  }
+                },
+
+                plugins: {
+
+                  legend: {
+                    position: "bottom"
+                  }
+                }
+              }
+            }
+          );
+      }
+    }
+
+
+    // ============================================================
+    // ИСТОРИЯ СНА
+    // ============================================================
+
+    function renderHistory(data) {
+
+      historyList.innerHTML = "";
+
+      if (
+        !data ||
+        data.length === 0
+      ) {
+
+        const empty =
+          document.createElement(
+            "div"
+          );
+
+        empty.className =
+          "empty";
+
+        empty.textContent =
+          "Записей пока нет";
+
+        historyList.appendChild(
+          empty
+        );
+
+        return;
+      }
+
+      data
+        .slice(0, 10)
+        .forEach(
+          session => {
+
+            const start =
+              new Date(
+                session.start_time
+              );
+
+            const end =
+              new Date(
+                session.end_time
+              );
+
+            const duration =
+              end - start;
+
+            const row =
+              document.createElement(
+                "div"
+              );
+
+            row.className =
+              "history-item";
+
+            const info =
+              document.createElement(
+                "div"
+              );
+
+            info.className =
+              "history-info";
+
+            const time =
+              document.createElement(
+                "div"
+              );
+
+            time.className =
+              "history-time";
+
+            time.textContent =
+              `${formatTime(
+                session.start_time
+              )} → ${formatTime(
+                session.end_time
+              )}`;
+
+            const durationElement =
+              document.createElement(
+                "div"
+              );
+
+            durationElement.className =
+              "history-duration";
+
+            durationElement.textContent =
+              formatDuration(
+                duration
+              );
+
+            info.appendChild(time);
+
+            info.appendChild(
+              durationElement
+            );
+
+            const editButton =
+              document.createElement(
+                "button"
+              );
+
+            editButton.className =
+              "edit-btn";
+
+            editButton.textContent =
+              "Изменить";
+
+            editButton.addEventListener(
+              "click",
+              () => {
+                openEditModal(
+                  session
+                );
+              }
+            );
+
+            row.appendChild(info);
+
+            row.appendChild(
+              editButton
+            );
+
+            historyList.appendChild(
+              row
+            );
+          }
+        );
+    }
+
+
+    // ============================================================
+    // СТАТИСТИКА СОБЫТИЙ
+    // ============================================================
+
+    async function loadEventStats() {
+
+      const now =
+        new Date();
+
+      const todayStart =
+        new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate()
+        ).toISOString();
+
+      const weekStart =
+        new Date(
+          now.getTime() -
+          7 *
+          24 *
+          60 *
+          60 *
+          1000
+        ).toISOString();
 
       const {
-        data: eventData,
-        error: eventError
+        data,
+        error
       } =
         await supabaseClient
           .from(EVENTS_TABLE)
           .select(
             "id,event_type,event_time"
           )
+          .gte(
+            "event_time",
+            weekStart
+          )
           .order(
             "event_time",
             {
-              ascending: true
+              ascending: false
             }
           );
-
-
-      if (eventError) {
-        throw eventError;
-      }
-
-
-      const rows = [];
-
-
-      /*
-       * Сны.
-       */
-
-      sleepData.forEach(
-        session => {
-
-          const start =
-            new Date(
-              session.start_time
-            );
-
-          const end =
-            new Date(
-              session.end_time
-            );
-
-          rows.push([
-            start.toLocaleDateString(
-              "ru-RU"
-            ),
-
-            start.toLocaleTimeString(
-              "ru-RU",
-              {
-                hour: "2-digit",
-                minute: "2-digit"
-              }
-            ),
-
-            "Сон",
-
-            formatDuration(
-              end - start
-            ),
-
-            start.toISOString(),
-
-            end.toISOString()
-          ]);
-        }
-      );
-
-
-      /*
-       * Пописал / покакал.
-       */
-
-      eventData.forEach(
-        event => {
-
-          const date =
-            new Date(
-              event.event_time
-            );
-
-
-          const eventName =
-            event.event_type ===
-            "pee"
-              ? "Пописал"
-              : "Покакал";
-
-
-          rows.push([
-            date.toLocaleDateString(
-              "ru-RU"
-            ),
-
-            date.toLocaleTimeString(
-              "ru-RU",
-              {
-                hour: "2-digit",
-                minute: "2-digit"
-              }
-            ),
-
-            eventName,
-
-            "",
-
-            date.toISOString(),
-
-            ""
-          ]);
-        }
-      );
-
-
-      /*
-       * Сортируем всё вместе
-       * по фактическому времени.
-       */
-
-      rows.sort(
-        (a, b) =>
-          new Date(a[4]) -
-          new Date(b[4])
-      );
-
-
-      const csvRows = [
-        [
-          "Дата",
-          "Время",
-          "Событие",
-          "Продолжительность",
-          "Начало / время события",
-          "Конец сна"
-        ],
-
-        ...rows
-      ];
-
-
-      const csv =
-        csvRows
-          .map(
-            row =>
-              row
-                .map(
-                  csvEscape
-                )
-                .join(";")
-          )
-          .join("\r\n");
-
-
-      /*
-       * Вместо скачивания файла (не работает в WebView
-       * Telegram) — показываем текст и пробуем скопировать
-       * его в буфер обмена.
-       */
-
-      csvOutput.value =
-        csv;
-
-      csvOutput.style.display =
-        "block";
-
-      csvHint.style.display =
-        "block";
-
-
-      let copied = false;
-
-
-      try {
-
-        if (
-          navigator.clipboard &&
-          navigator.clipboard.writeText
-        ) {
-
-          await navigator.clipboard.writeText(
-            csv
-          );
-
-          copied = true;
-        }
-
-      } catch (clipboardError) {
-
-        copied = false;
-      }
-
-
-      if (!copied) {
-
-        try {
-
-          csvOutput.focus();
-
-          csvOutput.select();
-
-          document.execCommand(
-            "copy"
-          );
-
-          copied = true;
-
-        } catch (fallbackError) {
-
-          copied = false;
-        }
-      }
-
-
-      csvHint.textContent =
-        copied
-          ? "Текст скопирован в буфер обмена — можно вставить его в чат, заметки или таблицу."
-          : "Не удалось скопировать автоматически. Выдели текст выше вручную и скопируй.";
-
-
-      hapticSuccess();
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      showError(
-        error.message ||
-        "Не удалось подготовить CSV."
-      );
-
-    } finally {
-
-      csvBtn.disabled =
-        false;
-    }
-  }
-
-
-  // ============================================================
-  // ФОТО ПО МЕСЯЦАМ
-  // ============================================================
-
-  async function loadPhotos() {
-
-    const {
-      data,
-      error
-    } =
-      await supabaseClient
-        .from(PHOTOS_TABLE)
-        .select(
-          "id,month_number,storage_path,photo_url"
-        )
-        .order(
-          "month_number",
-          {
-            ascending: true
-          }
-        )
-        .order(
-          "created_at",
-          {
-            ascending: true
-          }
-        );
-
-
-    if (error) {
-      throw error;
-    }
-
-
-    renderPhotos(data);
-  }
-
-
-  function renderPhotos(data) {
-
-    photoGrid.innerHTML =
-      "";
-
-
-    if (
-      !data ||
-      data.length === 0
-    ) {
-      return;
-    }
-
-
-    data.forEach(
-      photo => {
-
-        const item =
-          document.createElement(
-            "div"
-          );
-
-        item.className =
-          "photo-item";
-
-
-        const img =
-          document.createElement(
-            "img"
-          );
-
-        img.src =
-          photo.photo_url;
-
-        img.alt =
-          `${photo.month_number} мес.`;
-
-
-        const label =
-          document.createElement(
-            "div"
-          );
-
-        label.className =
-          "photo-label";
-
-        label.textContent =
-          `${photo.month_number} мес.`;
-
-
-        const deleteButton =
-          document.createElement(
-            "button"
-          );
-
-        deleteButton.className =
-          "photo-delete";
-
-        deleteButton.textContent =
-          "✕";
-
-        deleteButton.addEventListener(
-          "click",
-          () => {
-            deletePhoto(photo);
-          }
-        );
-
-
-        item.appendChild(img);
-
-        item.appendChild(
-          deleteButton
-        );
-
-        photoGrid.appendChild(
-          item
-        );
-
-        photoGrid.appendChild(
-          label
-        );
-      }
-    );
-  }
-
-
-  async function uploadPhoto() {
-
-    const monthValue =
-      photoMonthInput.value;
-
-    const file =
-      photoFileInput.files &&
-      photoFileInput.files[0];
-
-
-    photoHint.style.display =
-      "none";
-
-    hideError();
-
-
-    if (
-      monthValue === "" ||
-      Number.isNaN(
-        Number(monthValue)
-      )
-    ) {
-
-      alert(
-        "Укажи номер месяца (например, 1)."
-      );
-
-      return;
-    }
-
-
-    if (!file) {
-
-      alert(
-        "Выбери фото для загрузки."
-      );
-
-      return;
-    }
-
-
-    uploadPhotoBtn.disabled =
-      true;
-
-    photoHint.style.display =
-      "block";
-
-    photoHint.textContent =
-      "Загрузка...";
-
-
-    try {
-
-      const monthNumber =
-        Math.round(
-          Number(monthValue)
-        );
-
-      const extension =
-        (file.name.split(
-          "."
-        ).pop() ||
-        "jpg")
-          .toLowerCase();
-
-      const path =
-        `month-${monthNumber}-${Date.now()}.${extension}`;
-
-
-      const {
-        error: uploadError
-      } =
-        await supabaseClient
-          .storage
-          .from(
-            PHOTOS_BUCKET
-          )
-          .upload(
-            path,
-            file
-          );
-
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-
-      const {
-        data: publicUrlData
-      } =
-        supabaseClient
-          .storage
-          .from(
-            PHOTOS_BUCKET
-          )
-          .getPublicUrl(
-            path
-          );
-
-
-      const photoUrl =
-        publicUrlData
-          ?.publicUrl;
-
-
-      if (!photoUrl) {
-
-        throw new Error(
-          "Не удалось получить ссылку на фото."
-        );
-      }
-
-
-      const {
-        error: insertError
-      } =
-        await supabaseClient
-          .from(PHOTOS_TABLE)
-          .insert({
-            month_number:
-              monthNumber,
-
-            storage_path:
-              path,
-
-            photo_url:
-              photoUrl
-          });
-
-
-      if (insertError) {
-        throw insertError;
-      }
-
-
-      photoMonthInput.value =
-        "";
-
-      photoFileInput.value =
-        "";
-
-      photoHint.textContent =
-        "Фото добавлено.";
-
-      hapticSuccess();
-
-      await loadPhotos();
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      photoHint.textContent =
-        error.message ||
-        "Не удалось загрузить фото.";
-
-    } finally {
-
-      uploadPhotoBtn.disabled =
-        false;
-    }
-  }
-
-
-  async function deletePhoto(photo) {
-
-    hideError();
-
-
-    try {
-
-      await supabaseClient
-        .storage
-        .from(
-          PHOTOS_BUCKET
-        )
-        .remove([
-          photo.storage_path
-        ]);
-
-
-      const {
-        error
-      } =
-        await supabaseClient
-          .from(PHOTOS_TABLE)
-          .delete()
-          .eq(
-            "id",
-            photo.id
-          );
-
 
       if (error) {
         throw error;
       }
 
+      let todayPee = 0;
+      let todayPoop = 0;
 
-      hapticSuccess();
+      let weekPee = 0;
+      let weekPoop = 0;
 
-      await loadPhotos();
+      data.forEach(
+        event => {
 
+          if (
+            event.event_type ===
+            "pee"
+          ) {
+            weekPee++;
 
-    } catch (error) {
+          } else if (
+            event.event_type ===
+            "poop"
+          ) {
+            weekPoop++;
+          }
 
-      console.error(error);
+          if (
+            event.event_time >=
+            todayStart
+          ) {
 
-      showError(
-        error.message ||
-        "Не удалось удалить фото."
-      );
-    }
-  }
+            if (
+              event.event_type ===
+              "pee"
+            ) {
+              todayPee++;
 
-
-  // ============================================================
-  // ОБНОВЛЕНИЕ
-  // ============================================================
-
-  async function refreshAll() {
-
-    if (refreshing) {
-      return;
-    }
-
-
-    refreshing = true;
-
-
-    try {
-
-      await loadLastCompletedEnd();
-
-      await loadOpenSession();
-
-      await loadStats();
-
-      await loadEventStats();
-
-      await loadPhotos();
-
-      firstLoad = false;
-
-
-    } catch (error) {
-
-      console.error(error);
-
-      showError(
-        error.message ||
-        "Не удалось загрузить данные."
+            } else if (
+              event.event_type ===
+              "poop"
+            ) {
+              todayPoop++;
+            }
+          }
+        }
       );
 
+      peeStats.textContent =
+        `${todayPee} сегодня / ${weekPee} за 7 дней`;
 
-      if (firstLoad) {
+      poopStats.textContent =
+        `${todayPoop} сегодня / ${weekPoop} за 7 дней`;
 
-        statusLine.textContent =
-          "Не удалось загрузить данные";
-
-
-        actionBtn.textContent =
-          "Попробовать снова";
-
-
-        actionBtn.disabled =
-          false;
-
-
-        historyList.innerHTML =
-          '<div class="empty">Ошибка загрузки</div>';
-
-        eventsList.innerHTML =
-          '<div class="empty">Ошибка загрузки</div>';
-      }
-
-    } finally {
-
-      refreshing = false;
+      renderEvents(data);
     }
-  }
 
 
-  // ============================================================
-  // СОБЫТИЯ
-  // ============================================================
+    // ============================================================
+    // ИСТОРИЯ СОБЫТИЙ
+    // ============================================================
 
-  actionBtn.addEventListener(
-    "click",
-    toggleSleep
-  );
+    function renderEvents(data) {
 
-
-  editCurrentBtn.addEventListener(
-    "click",
-    openEditCurrentModal
-  );
-
-
-  cancelEditBtn.addEventListener(
-    "click",
-    closeEditModal
-  );
-
-
-  saveEditBtn.addEventListener(
-    "click",
-    saveEdit
-  );
-
-
-  peeBtn.addEventListener(
-    "click",
-    () => {
-      addBabyEvent("pee");
-    }
-  );
-
-
-  poopBtn.addEventListener(
-    "click",
-    () => {
-      addBabyEvent("poop");
-    }
-  );
-
-
-  csvBtn.addEventListener(
-    "click",
-    downloadCSV
-  );
-
-
-  uploadPhotoBtn.addEventListener(
-    "click",
-    uploadPhoto
-  );
-
-
-  editModal.addEventListener(
-    "click",
-    event => {
+      eventsList.innerHTML = "";
 
       if (
-        event.target ===
-        editModal
+        !data ||
+        data.length === 0
       ) {
+
+        const empty =
+          document.createElement(
+            "div"
+          );
+
+        empty.className =
+          "empty";
+
+        empty.textContent =
+          "Событий пока нет";
+
+        eventsList.appendChild(
+          empty
+        );
+
+        return;
+      }
+
+      data
+        .slice(0, 10)
+        .forEach(
+          event => {
+
+            const row =
+              document.createElement(
+                "div"
+              );
+
+            row.className =
+              "history-item";
+
+            const info =
+              document.createElement(
+                "div"
+              );
+
+            info.className =
+              "history-info";
+
+            const time =
+              document.createElement(
+                "div"
+              );
+
+            time.className =
+              "history-time";
+
+            if (
+              event.event_type ===
+              "pee"
+            ) {
+
+              time.textContent =
+                `💧 Пописал — ${formatTime(
+                  event.event_time
+                )}`;
+
+            } else {
+
+              time.textContent =
+                `💩 Покакал — ${formatTime(
+                  event.event_time
+                )}`;
+            }
+
+            info.appendChild(
+              time
+            );
+
+            row.appendChild(
+              info
+            );
+
+            eventsList.appendChild(
+              row
+            );
+          }
+        );
+    }
+
+
+    // ============================================================
+    // РЕДАКТИРОВАНИЕ СНА
+    // ============================================================
+
+    function openEditModal(session) {
+
+      editingSessionId =
+        session.id;
+
+      editStart.value =
+        isoToLocalInput(
+          session.start_time
+        );
+
+      editEnd.value =
+        isoToLocalInput(
+          session.end_time
+        );
+
+      saveEditBtn.disabled =
+        false;
+
+      editModal.classList.add(
+        "visible"
+      );
+    }
+
+
+    function openEditCurrentModal() {
+
+      if (!openSession) {
+        return;
+      }
+
+      editingSessionId =
+        openSession.id;
+
+      editStart.value =
+        isoToLocalInput(
+          openSession.start_time
+        );
+
+      editEnd.value =
+        "";
+
+      saveEditBtn.disabled =
+        false;
+
+      editModal.classList.add(
+        "visible"
+      );
+    }
+
+
+    function closeEditModal() {
+
+      editModal.classList.remove(
+        "visible"
+      );
+
+      editingSessionId =
+        null;
+    }
+
+
+    async function saveEdit() {
+
+      if (!editingSessionId) {
+        return;
+      }
+
+      const startValue =
+        editStart.value;
+
+      const endValue =
+        editEnd.value;
+
+      if (!startValue) {
+
+        alert(
+          "Укажи время начала сна."
+        );
+
+        return;
+      }
+
+      const startISO =
+        localInputToISO(
+          startValue
+        );
+
+      const endISO =
+        localInputToISO(
+          endValue
+        );
+
+      if (!startISO) {
+
+        alert(
+          "Некорректное время начала."
+        );
+
+        return;
+      }
+
+      if (
+        endValue &&
+        !endISO
+      ) {
+
+        alert(
+          "Некорректное время окончания."
+        );
+
+        return;
+      }
+
+      if (
+        endISO &&
+        new Date(endISO) <=
+        new Date(startISO)
+      ) {
+
+        alert(
+          "Конец сна должен быть позже начала."
+        );
+
+        return;
+      }
+
+      saveEditBtn.disabled =
+        true;
+
+      hideError();
+
+      try {
+
+        const {
+          error
+        } =
+          await supabaseClient
+            .from(TABLE)
+            .update({
+
+              start_time:
+                startISO,
+
+              end_time:
+                endISO
+
+            })
+            .eq(
+              "id",
+              editingSessionId
+            );
+
+        if (error) {
+          throw error;
+        }
+
         closeEditModal();
+
+        hapticSuccess();
+
+        await refreshAll();
+
+      } catch (error) {
+
+        console.error(error);
+
+        showError(
+          error.message ||
+          "Не удалось сохранить изменения."
+        );
+
+        saveEditBtn.disabled =
+          false;
       }
     }
-  );
 
 
-  // ============================================================
-  // ПЕРВИЧНАЯ ЗАГРУЗКА
-  // ============================================================
+    // ============================================================
+    // CSV
+    // ============================================================
 
-  refreshAll();
+    function csvEscape(value) {
+
+      const stringValue =
+        String(
+          value ??
+          ""
+        );
+
+      return (
+        '"' +
+        stringValue
+          .replace(
+            /"/g,
+            '""'
+          ) +
+        '"'
+      );
+    }
 
 
-  // Обновляем данные каждые 30 секунд.
+    async function downloadCSV() {
 
-  setInterval(
-    refreshAll,
-    30000
-  );
+      csvBtn.disabled =
+        true;
+
+      hideError();
+
+      csvHint.style.display =
+        "none";
+
+      try {
+
+        const {
+          data: sleepData,
+          error: sleepError
+        } =
+          await supabaseClient
+            .from(TABLE)
+            .select(
+              "id,start_time,end_time"
+            )
+            .not(
+              "end_time",
+              "is",
+              null
+            )
+            .order(
+              "start_time",
+              {
+                ascending: true
+              }
+            );
+
+        if (sleepError) {
+          throw sleepError;
+        }
+
+        const {
+          data: eventData,
+          error: eventError
+        } =
+          await supabaseClient
+            .from(EVENTS_TABLE)
+            .select(
+              "id,event_type,event_time"
+            )
+            .order(
+              "event_time",
+              {
+                ascending: true
+              }
+            );
+
+        if (eventError) {
+          throw eventError;
+        }
+
+        const rows = [];
+
+        sleepData.forEach(
+          session => {
+
+            const start =
+              new Date(
+                session.start_time
+              );
+
+            const end =
+              new Date(
+                session.end_time
+              );
+
+            rows.push([
+
+              start.toLocaleDateString(
+                "ru-RU"
+              ),
+
+              start.toLocaleTimeString(
+                "ru-RU",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                }
+              ),
+
+              "Сон",
+
+              formatDuration(
+                end - start
+              ),
+
+              start.toISOString(),
+
+              end.toISOString()
+
+            ]);
+          }
+        );
+
+        eventData.forEach(
+          event => {
+
+            const date =
+              new Date(
+                event.event_time
+              );
+
+            const eventName =
+              event.event_type ===
+              "pee"
+                ? "Пописал"
+                : "Покакал";
+
+            rows.push([
+
+              date.toLocaleDateString(
+                "ru-RU"
+              ),
+
+              date.toLocaleTimeString(
+                "ru-RU",
+                {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                }
+              ),
+
+              eventName,
+
+              "",
+
+              date.toISOString(),
+
+              ""
+
+            ]);
+          }
+        );
+
+        rows.sort(
+          (a, b) =>
+            new Date(a[4]) -
+            new Date(b[4])
+        );
+
+        const csvRows = [
+
+          [
+            "Дата",
+            "Время",
+            "Событие",
+            "Продолжительность",
+            "Начало / время события",
+            "Конец сна"
+          ],
+
+          ...rows
+
+        ];
+
+        const csv =
+          csvRows
+            .map(
+              row =>
+                row
+                  .map(
+                    csvEscape
+                  )
+                  .join(";")
+            )
+            .join("\r\n");
+
+        csvOutput.value =
+          csv;
+
+        csvOutput.style.display =
+          "block";
+
+        csvHint.style.display =
+          "block";
+
+        let copied =
+          false;
+
+        try {
+
+          if (
+            navigator.clipboard &&
+            navigator.clipboard.writeText
+          ) {
+
+            await navigator.clipboard.writeText(
+              csv
+            );
+
+            copied =
+              true;
+          }
+
+        } catch (clipboardError) {
+
+          copied =
+            false;
+        }
+
+        if (!copied) {
+
+          try {
+
+            csvOutput.focus();
+
+            csvOutput.select();
+
+            document.execCommand(
+              "copy"
+            );
+
+            copied =
+              true;
+
+          } catch (fallbackError) {
+
+            copied =
+              false;
+          }
+        }
+
+        csvHint.textContent =
+          copied
+            ? "Текст скопирован в буфер обмена — можно вставить его в чат, заметки или таблицу."
+            : "Не удалось скопировать автоматически. Выдели текст выше вручную и скопируй.";
+
+        hapticSuccess();
+
+      } catch (error) {
+
+        console.error(error);
+
+        showError(
+          error.message ||
+          "Не удалось подготовить CSV."
+        );
+
+      } finally {
+
+        csvBtn.disabled =
+          false;
+      }
+    }
 
 
-  // Обновляем счётчик времени (сна или бодрствования) каждую минуту.
+    // ============================================================
+    // НАЗВАНИЕ МЕСЯЦА
+    // ============================================================
 
-  setInterval(
-    () => {
-      renderStatus();
-    },
-    60000
-  );
+    function getMonthTitle(monthNumber) {
 
-</script></body>
+      const number =
+        Number(monthNumber);
+
+      if (number === 1) {
+        return "1 месяц";
+      }
+
+      if (
+        number >= 2 &&
+        number <= 4
+      ) {
+        return `${number} месяца`;
+      }
+
+      return `${number} месяцев`;
+    }
+
+
+    // ============================================================
+    // ЗАГРУЗКА ФОТО
+    // ============================================================
+
+    async function loadPhotos() {
+
+      const {
+        data,
+        error
+      } =
+        await supabaseClient
+          .from(PHOTOS_TABLE)
+          .select(
+            "id,month_number,storage_path,photo_url,created_at"
+          )
+          .order(
+            "month_number",
+            {
+              ascending: true
+            }
+          )
+          .order(
+            "created_at",
+            {
+              ascending: true
+            }
+          );
+
+      if (error) {
+        throw error;
+      }
+
+      galleryPhotos =
+        data || [];
+
+      renderPhotos(
+        galleryPhotos
+      );
+    }
+
+
+    // ============================================================
+    // РЕНДЕР ГАЛЕРЕИ
+    // ============================================================
+
+    function renderPhotos(data) {
+
+      photoGroups.innerHTML =
+        "";
+
+      if (
+        !data ||
+        data.length === 0
+      ) {
+
+        const empty =
+          document.createElement(
+            "div"
+          );
+
+        empty.className =
+          "empty";
+
+        empty.textContent =
+          "Пока ни одного фото нет";
+
+        photoGroups.appendChild(
+          empty
+        );
+
+        return;
+      }
+
+      /*
+       * Группируем фото по месяцу.
+       */
+
+      const grouped =
+        new Map();
+
+      data.forEach(
+        photo => {
+
+          const month =
+            Number(
+              photo.month_number
+            );
+
+          if (
+            !grouped.has(month)
+          ) {
+            grouped.set(
+              month,
+              []
+            );
+          }
+
+          grouped
+            .get(month)
+            .push(photo);
+        }
+      );
+
+      /*
+       * Сортируем месяцы:
+       * 1 → 2 → 3 → 4 ...
+       */
+
+      const sortedMonths =
+        Array.from(
+          grouped.keys()
+        ).sort(
+          (a, b) => a - b
+        );
+
+      /*
+       * Создаём отдельный блок
+       * для каждого месяца.
+       */
+
+      sortedMonths.forEach(
+        monthNumber => {
+
+          const photos =
+            grouped.get(
+              monthNumber
+            );
+
+          const monthGroup =
+            document.createElement(
+              "div"
+            );
+
+          monthGroup.className =
+            "month-group";
+
+          const title =
+            document.createElement(
+              "div"
+            );
+
+          title.className =
+            "month-title";
+
+          title.innerHTML =
+            `${getMonthTitle(
+              monthNumber
+            )} <span class="month-count">(${photos.length} фото)</span>`;
+
+          const grid =
+            document.createElement(
+              "div"
+            );
+
+          grid.className =
+            "photo-grid";
+
+          photos.forEach(
+            photo => {
+
+              const globalIndex =
+                galleryPhotos.findIndex(
+                  item =>
+                    item.id ===
+                    photo.id
+                );
+
+              const item =
+                document.createElement(
+                  "div"
+                );
+
+              item.className =
+                "photo-item";
+
+              /*
+               * Нажатие на фото —
+               * полноэкранный просмотр.
+               */
+
+              item.addEventListener(
+                "click",
+                () => {
+
+                  openLightbox(
+                    globalIndex
+                  );
+                }
+              );
+
+              const img =
+                document.createElement(
+                  "img"
+                );
+
+              img.src =
+                photo.photo_url;
+
+              img.alt =
+                `${getMonthTitle(
+                  monthNumber
+                )}`;
+
+              img.loading =
+                "lazy";
+
+              const deleteButton =
+                document.createElement(
+                  "button"
+                );
+
+              deleteButton.className =
+                "photo-delete";
+
+              deleteButton.textContent =
+                "✕";
+
+              deleteButton.title =
+                "Удалить фото";
+
+              deleteButton.addEventListener(
+                "click",
+                event => {
+
+                  event.stopPropagation();
+
+                  deletePhoto(
+                    photo
+                  );
+                }
+              );
+
+              item.appendChild(
+                img
+              );
+
+              item.appendChild(
+                deleteButton
+              );
+
+              grid.appendChild(
+                item
+              );
+            }
+          );
+
+          monthGroup.appendChild(
+            title
+          );
+
+          monthGroup.appendChild(
+            grid
+          );
+
+          photoGroups.appendChild(
+            monthGroup
+          );
+        }
+      );
+    }
+
+
+    // ============================================================
+    // ДОБАВЛЕНИЕ ФОТО
+    // ============================================================
+
+    async function uploadPhoto() {
+
+      const monthValue =
+        photoMonthInput.value.trim();
+
+      const file =
+        photoFileInput.files &&
+        photoFileInput.files[0];
+
+      photoHint.style.display =
+        "none";
+
+      hideError();
+
+      if (
+        monthValue === ""
+      ) {
+
+        alert(
+          "Укажи номер месяца."
+        );
+
+        return;
+      }
+
+      const monthNumber =
+        Number(
+          monthValue
+        );
+
+      if (
+        !Number.isInteger(
+          monthNumber
+        ) ||
+        monthNumber < 1 ||
+        monthNumber > 24
+      ) {
+
+        alert(
+          "Месяц должен быть целым числом от 1 до 24."
+        );
+
+        return;
+      }
+
+      if (!file) {
+
+        alert(
+          "Выбери фото для загрузки."
+        );
+
+        return;
+      }
+
+      if (
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
+
+        alert(
+          "Можно загружать только изображения."
+        );
+
+        return;
+      }
+
+      uploadPhotoBtn.disabled =
+        true;
+
+      photoHint.style.display =
+        "block";
+
+      photoHint.textContent =
+        "Загрузка...";
+
+      try {
+
+        /*
+         * Генерируем уникальный путь.
+         */
+
+        const extension =
+          (
+            file.name
+              .split(".")
+              .pop() ||
+            "jpg"
+          ).toLowerCase();
+
+        const safeExtension =
+          extension.replace(
+            /[^a-z0-9]/gi,
+            ""
+          ) || "jpg";
+
+        const path =
+          `month-${monthNumber}-${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2, 8)}.${safeExtension}`;
+
+
+        /*
+         * Загружаем файл в Storage.
+         */
+
+        const {
+          error: uploadError
+        } =
+          await supabaseClient
+            .storage
+            .from(
+              PHOTOS_BUCKET
+            )
+            .upload(
+              path,
+              file
+            );
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+
+        /*
+         * Получаем публичную ссылку.
+         */
+
+        const {
+          data: publicUrlData
+        } =
+          supabaseClient
+            .storage
+            .from(
+              PHOTOS_BUCKET
+            )
+            .getPublicUrl(
+              path
+            );
+
+        const photoUrl =
+          publicUrlData
+            ?.publicUrl;
+
+        if (!photoUrl) {
+
+          throw new Error(
+            "Не удалось получить ссылку на фото."
+          );
+        }
+
+
+        /*
+         * Записываем фото в таблицу.
+         */
+
+        const {
+          error: insertError
+        } =
+          await supabaseClient
+            .from(
+              PHOTOS_TABLE
+            )
+            .insert({
+              month_number:
+                monthNumber,
+
+              storage_path:
+                path,
+
+              photo_url:
+                photoUrl
+            });
+
+        if (insertError) {
+          throw insertError;
+        }
+
+        photoMonthInput.value =
+          "";
+
+        photoFileInput.value =
+          "";
+
+        photoHint.textContent =
+          `${getMonthTitle(
+            monthNumber
+          )}: фото добавлено.`;
+
+        hapticSuccess();
+
+        await loadPhotos();
+
+      } catch (error) {
+
+        console.error(error);
+
+        photoHint.textContent =
+          error.message ||
+          "Не удалось загрузить фото.";
+
+      } finally {
+
+        uploadPhotoBtn.disabled =
+          false;
+      }
+    }
+
+
+    // ============================================================
+    // УДАЛЕНИЕ ФОТО
+    // ============================================================
+
+    async function deletePhoto(photo) {
+
+      const confirmed =
+        confirm(
+          `Удалить это фото из раздела «${getMonthTitle(
+            photo.month_number
+          )}»?`
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      hideError();
+
+      try {
+
+        const {
+          error: storageError
+        } =
+          await supabaseClient
+            .storage
+            .from(
+              PHOTOS_BUCKET
+            )
+            .remove([
+              photo.storage_path
+            ]);
+
+        if (storageError) {
+          throw storageError;
+        }
+
+        const {
+          error
+        } =
+          await supabaseClient
+            .from(
+              PHOTOS_TABLE
+            )
+            .delete()
+            .eq(
+              "id",
+              photo.id
+            );
+
+        if (error) {
+          throw error;
+        }
+
+        hapticSuccess();
+
+        await loadPhotos();
+
+      } catch (error) {
+
+        console.error(error);
+
+        showError(
+          error.message ||
+          "Не удалось удалить фото."
+        );
+      }
+    }
+
+
+    // ============================================================
+    // LIGHTBOX
+    // ============================================================
+
+    function openLightbox(index) {
+
+      if (
+        !galleryPhotos.length
+      ) {
+        return;
+      }
+
+      currentPhotoIndex =
+        index;
+
+      renderLightboxPhoto();
+
+      lightbox.classList.add(
+        "visible"
+      );
+
+      document.body.style.overflow =
+        "hidden";
+    }
+
+
+    function closeLightbox() {
+
+      lightbox.classList.remove(
+        "visible"
+      );
+
+      document.body.style.overflow =
+        "";
+    }
+
+
+    function renderLightboxPhoto() {
+
+      const photo =
+        galleryPhotos[
+          currentPhotoIndex
+        ];
+
+      if (!photo) {
+        return;
+      }
+
+      lightboxImage.src =
+        photo.photo_url;
+
+      lightboxImage.alt =
+        `${getMonthTitle(
+          photo.month_number
+        )}`;
+
+      lightboxCounter.textContent =
+        `${currentPhotoIndex + 1} / ${galleryPhotos.length}`;
+
+      /*
+       * Если фото одно — кнопки навигации прячем.
+       */
+
+      if (
+        galleryPhotos.length <= 1
+      ) {
+
+        lightboxPrev.classList.add(
+          "hidden"
+        );
+
+        lightboxNext.classList.add(
+          "hidden"
+        );
+
+      } else {
+
+        lightboxPrev.classList.remove(
+          "hidden"
+        );
+
+        lightboxNext.classList.remove(
+          "hidden"
+        );
+      }
+    }
+
+
+    function showPreviousPhoto() {
+
+      if (
+        !galleryPhotos.length
+      ) {
+        return;
+      }
+
+      currentPhotoIndex--;
+
+      if (
+        currentPhotoIndex < 0
+      ) {
+        currentPhotoIndex =
+          galleryPhotos.length - 1;
+      }
+
+      renderLightboxPhoto();
+    }
+
+
+    function showNextPhoto() {
+
+      if (
+        !galleryPhotos.length
+      ) {
+        return;
+      }
+
+      currentPhotoIndex++;
+
+      if (
+        currentPhotoIndex >=
+        galleryPhotos.length
+      ) {
+        currentPhotoIndex =
+          0;
+      }
+
+      renderLightboxPhoto();
+    }
+
+
+    // ============================================================
+    // SWIPE В LIGHTBOX
+    // ============================================================
+
+    let touchStartX = null;
+
+    lightboxContent.addEventListener(
+      "touchstart",
+      event => {
+
+        if (
+          event.touches &&
+          event.touches.length === 1
+        ) {
+
+          touchStartX =
+            event.touches[0].clientX;
+        }
+      },
+      {
+        passive: true
+      }
+    );
+
+
+    lightboxContent.addEventListener(
+      "touchend",
+      event => {
+
+        if (
+          touchStartX === null
+        ) {
+          return;
+        }
+
+        const endX =
+          event.changedTouches &&
+          event.changedTouches[0]
+            ? event.changedTouches[0].clientX
+            : touchStartX;
+
+        const diff =
+          endX -
+          touchStartX;
+
+        touchStartX =
+          null;
+
+        if (
+          Math.abs(diff) < 50
+        ) {
+          return;
+        }
+
+        if (diff > 0) {
+
+          showPreviousPhoto();
+
+        } else {
+
+          showNextPhoto();
+        }
+      },
+      {
+        passive: true
+      }
+    );
+
+
+    // ============================================================
+    // ОБНОВЛЕНИЕ
+    // ============================================================
+
+    async function refreshAll() {
+
+      if (refreshing) {
+        return;
+      }
+
+      refreshing =
+        true;
+
+      try {
+
+        await loadLastCompletedEnd();
+
+        await loadOpenSession();
+
+        await loadStats();
+
+        await loadEventStats();
+
+        /*
+         * Фото обновляем тоже,
+         * но только если пользователь
+         * сейчас находится в галерее.
+         */
+
+        if (galleryOpen) {
+          await loadPhotos();
+        }
+
+        firstLoad =
+          false;
+
+      } catch (error) {
+
+        console.error(error);
+
+        showError(
+          error.message ||
+          "Не удалось загрузить данные."
+        );
+
+        if (firstLoad) {
+
+          statusLine.textContent =
+            "Не удалось загрузить данные";
+
+          actionBtn.textContent =
+            "Попробовать снова";
+
+          actionBtn.disabled =
+            false;
+
+          historyList.innerHTML =
+            '<div class="empty">Ошибка загрузки</div>';
+
+          eventsList.innerHTML =
+            '<div class="empty">Ошибка загрузки</div>';
+        }
+
+      } finally {
+
+        refreshing =
+          false;
+      }
+    }
+
+
+    // ============================================================
+    // СОБЫТИЯ
+    // ============================================================
+
+    galleryToggleBtn.addEventListener(
+      "click",
+      () => {
+
+        if (galleryOpen) {
+          setView("main");
+        } else {
+          setView("gallery");
+        }
+      }
+    );
+
+
+    actionBtn.addEventListener(
+      "click",
+      toggleSleep
+    );
+
+
+    editCurrentBtn.addEventListener(
+      "click",
+      openEditCurrentModal
+    );
+
+
+    cancelEditBtn.addEventListener(
+      "click",
+      closeEditModal
+    );
+
+
+    saveEditBtn.addEventListener(
+      "click",
+      saveEdit
+    );
+
+
+    peeBtn.addEventListener(
+      "click",
+      () => {
+        addBabyEvent("pee");
+      }
+    );
+
+
+    poopBtn.addEventListener(
+      "click",
+      () => {
+        addBabyEvent("poop");
+      }
+    );
+
+
+    csvBtn.addEventListener(
+      "click",
+      downloadCSV
+    );
+
+
+    uploadPhotoBtn.addEventListener(
+      "click",
+      uploadPhoto
+    );
+
+
+    editModal.addEventListener(
+      "click",
+      event => {
+
+        if (
+          event.target ===
+          editModal
+        ) {
+          closeEditModal();
+        }
+      }
+    );
+
+
+    lightboxClose.addEventListener(
+      "click",
+      closeLightbox
+    );
+
+
+    lightboxPrev.addEventListener(
+      "click",
+      showPreviousPhoto
+    );
+
+
+    lightboxNext.addEventListener(
+      "click",
+      showNextPhoto
+    );
+
+
+    lightbox.addEventListener(
+      "click",
+      event => {
+
+        /*
+         * Закрываем просмотр,
+         * если тапнули по тёмному фону.
+         */
+
+        if (
+          event.target ===
+          lightbox
+        ) {
+          closeLightbox();
+        }
+      }
+    );
+
+
+    // Клавиатура для просмотра
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          !lightbox.classList.contains(
+            "visible"
+          )
+        ) {
+          return;
+        }
+
+        if (
+          event.key ===
+          "Escape"
+        ) {
+
+          closeLightbox();
+
+        } else if (
+          event.key ===
+          "ArrowLeft"
+        ) {
+
+          showPreviousPhoto();
+
+        } else if (
+          event.key ===
+          "ArrowRight"
+        ) {
+
+          showNextPhoto();
+        }
+      }
+    );
+
+
+    // ============================================================
+    // ПЕРВИЧНАЯ ЗАГРУЗКА
+    // ============================================================
+
+    refreshAll();
+
+
+    // Обновляем данные каждые 30 секунд
+
+    setInterval(
+      refreshAll,
+      30000
+    );
+
+
+    // Обновляем счётчик времени
+    // сна / бодрствования каждую минуту
+
+    setInterval(
+      () => {
+        renderStatus();
+      },
+      60000
+    );
+
+  </script>
+
+</body>
 </html>
