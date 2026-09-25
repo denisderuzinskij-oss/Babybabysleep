@@ -286,19 +286,34 @@
       overflow: hidden;
     }
 
+    .timeline-gridline {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.6);
+      z-index: 1;
+    }
+
+    .timeline-tick-labels {
+      position: relative;
+      height: 14px;
+      margin-top: 3px;
+    }
+
+    .timeline-tick-label {
+      position: absolute;
+      transform: translateX(-50%);
+      font-size: 9px;
+      color: var(--hint);
+      white-space: nowrap;
+    }
+
     .timeline-segment {
       position: absolute;
       top: 0;
       bottom: 0;
       background: #2481cc;
-    }
-
-    .timeline-ticks {
-      display: flex;
-      justify-content: space-between;
-      font-size: 10px;
-      color: var(--hint);
-      margin-top: 3px;
     }
 
     .timeline-legend {
@@ -1689,24 +1704,81 @@
           track.appendChild(segment);
         });
 
-        const ticks = document.createElement("div");
-        ticks.className = "timeline-ticks";
+        /*
+         * Часовые метки: раз в 3 часа, привязаны к реальным
+         * часам (00, 03, 06, ...), а не просто к краям полосы.
+         */
 
-        const tickStart = document.createElement("span");
-        tickStart.textContent = row.startLabel;
+        const hourTicks = buildHourTicks(rowStartMs, rowEndMs);
 
-        const tickEnd = document.createElement("span");
-        tickEnd.textContent = row.endLabel;
+        hourTicks.forEach(tick => {
 
-        ticks.appendChild(tickStart);
-        ticks.appendChild(tickEnd);
+          const leftPercent = ((tick.time - rowStartMs) / rowTotalMs) * 100;
+
+          const gridline = document.createElement("div");
+          gridline.className = "timeline-gridline";
+          gridline.style.left = `${leftPercent}%`;
+
+          track.appendChild(gridline);
+        });
+
+        const tickLabels = document.createElement("div");
+        tickLabels.className = "timeline-tick-labels";
+
+        hourTicks.forEach(tick => {
+
+          const leftPercent = ((tick.time - rowStartMs) / rowTotalMs) * 100;
+
+          const tickLabel = document.createElement("div");
+          tickLabel.className = "timeline-tick-label";
+          tickLabel.style.left = `${leftPercent}%`;
+          tickLabel.textContent = tick.label;
+
+          tickLabels.appendChild(tickLabel);
+        });
 
         wrapper.appendChild(label);
         wrapper.appendChild(track);
-        wrapper.appendChild(ticks);
+        wrapper.appendChild(tickLabels);
 
         timelineContainer.appendChild(wrapper);
       });
+    }
+
+
+    // ============================================================
+    // ЧАСОВЫЕ МЕТКИ ДЛЯ ШКАЛЫ (раз в 3 часа, по реальным часам)
+    // ============================================================
+
+    function buildHourTicks(rowStartMs, rowEndMs, intervalHours) {
+
+      const step = (intervalHours || 3) * 60 * 60 * 1000;
+
+      const tickDate = new Date(rowStartMs);
+      tickDate.setMinutes(0, 0, 0);
+
+      const startHour = tickDate.getHours();
+      const remainder = startHour % (intervalHours || 3);
+
+      tickDate.setHours(startHour - remainder);
+
+      if (tickDate.getTime() < rowStartMs) {
+        tickDate.setTime(tickDate.getTime() + step);
+      }
+
+      const ticks = [];
+
+      while (tickDate.getTime() <= rowEndMs) {
+
+        ticks.push({
+          time: tickDate.getTime(),
+          label: formatClock(tickDate)
+        });
+
+        tickDate.setTime(tickDate.getTime() + step);
+      }
+
+      return ticks;
     }
 
 
