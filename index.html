@@ -208,7 +208,22 @@
       overflow: hidden;
     }
 
-    .timeline-segment { position: absolute; top: 0; bottom: 0; }
+    .timeline-segment { position: absolute; top: 0; bottom: 0; cursor: pointer; }
+    .timeline-segment.awake { background: transparent; }
+
+    .timeline-tooltip {
+      position: fixed;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      z-index: 2500;
+      pointer-events: none;
+      display: none;
+      white-space: nowrap;
+      transform: translate(-50%, -100%);
+    }
     .timeline-segment.day { background: var(--day); }
     .timeline-segment.night { background: var(--night); }
 
@@ -526,6 +541,16 @@
       </div>
 
       <div class="stats-row">
+        <span>Средняя длительность дневного сна</span>
+        <span id="rangeAvgDaySleep">—</span>
+      </div>
+
+      <div class="stats-row">
+        <span>Средняя длительность ночного сна</span>
+        <span id="rangeAvgNightSleep">—</span>
+      </div>
+
+      <div class="stats-row" style="display: none;">
         <span>Средняя длительность сна</span>
         <span id="rangeAvgSleep">—</span>
       </div>
@@ -596,6 +621,8 @@
   </div>
 
   <!-- ОКНО РЕДАКТИРОВАНИЯ СНА -->
+  <div class="timeline-tooltip" id="timelineTooltip"></div>
+
   <div class="modal-backdrop" id="editModal">
     <div class="modal">
       <div class="modal-title">✏️ Изменить сон</div>
@@ -683,6 +710,7 @@
     const rangePoopCount = document.getElementById("rangePoopCount");
 
     const timelineContainer = document.getElementById("timelineContainer");
+    const timelineTooltip = document.getElementById("timelineTooltip");
 
     const csvBtn = document.getElementById("csvBtn");
     const csvOutput = document.getElementById("csvOutput");
@@ -1571,6 +1599,43 @@
     // ХРОНОЛОГИЯ (ДИАГРАММА ГАНТА)
     // ============================================================
 
+    // ============================================================
+    // ПОДСКАЗКА НАД СЕГМЕНТОМ ХРОНОЛОГИИ (по тапу, как у Chart.js)
+    // ============================================================
+
+    function showTimelineTooltip(event, text) {
+
+      timelineTooltip.textContent = text;
+      timelineTooltip.style.display = "block";
+
+      const x = event.clientX ??
+        (event.changedTouches && event.changedTouches[0]
+          ? event.changedTouches[0].clientX
+          : window.innerWidth / 2);
+
+      const y = event.clientY ??
+        (event.changedTouches && event.changedTouches[0]
+          ? event.changedTouches[0].clientY
+          : window.innerHeight / 2);
+
+      // Не даём подсказке вылезти за края экрана по горизонтали.
+      const margin = 8;
+      const maxX = window.innerWidth - margin;
+      const minX = margin;
+
+      timelineTooltip.style.left = `${Math.min(Math.max(x, minX), maxX)}px`;
+      timelineTooltip.style.top = `${Math.max(y - 10, margin)}px`;
+    }
+
+    function hideTimelineTooltip() {
+      timelineTooltip.style.display = "none";
+    }
+
+    document.addEventListener("click", () => {
+      hideTimelineTooltip();
+    });
+
+
     function buildTimelineRows(rangeStartDate, rangeEndDate) {
 
       if (periodMode === "rolling") {
@@ -1658,20 +1723,62 @@
         const track = document.createElement("div");
         track.className = "timeline-track";
 
-        sleepPieces.forEach(interval => {
+        // Сегменты сна для этой строки, обрезанные по её границам,
+        // отсортированные по времени начала.
+        const rowSleepSegments = sleepPieces
+          .map(interval => ({
+            start: Math.max(interval.start, rowStartMs),
+            end: Math.min(interval.end, rowEndMs),
+            type: interval.type
+          }))
+          .filter(seg => seg.end > seg.start)
+          .sort((a, b) => a.start - b.start);
 
-          const segStart = Math.max(interval.start, rowStartMs);
-          const segEnd = Math.min(interval.end, rowEndMs);
+        // Между и вокруг сегментов сна достраиваем сегменты бодрствования,
+        // чтобы по ним тоже можно было тапнуть и увидеть время.
+        const allSegments = [];
+        let cursor = rowStartMs;
 
-          if (segEnd <= segStart) return;
+        rowSleepSegments.forEach(seg => {
 
-          const leftPercent = ((segStart - rowStartMs) / rowTotalMs) * 100;
-          const widthPercent = ((segEnd - segStart) / rowTotalMs) * 100;
+          if (seg.start > cursor) {
+            allSegments.push({ start: cursor, end: seg.start, type: "awake" });
+          }
+
+          allSegments.push(seg);
+          cursor = seg.end;
+        });
+
+        if (cursor < rowEndMs) {
+          allSegments.push({ start: cursor, end: rowEndMs, type: "awake" });
+        }
+
+        const segmentLabels = {
+          day: "☀️ Дневной сон",
+          night: "🌙 Ночной сон",
+          awake: "🙂 Бодрствование"
+        };
+
+        allSegments.forEach(seg => {
+
+          const leftPercent = ((seg.start - rowStartMs) / rowTotalMs) * 100;
+          const widthPercent = ((seg.end - seg.start) / rowTotalMs) * 100;
 
           const segment = document.createElement("div");
-          segment.className = `timeline-segment ${interval.type}`;
+          segment.className = `timeline-segment ${seg.type}`;
           segment.style.left = `${leftPercent}%`;
           segment.style.width = `${widthPercent}%`;
+
+          segment.addEventListener("click", event => {
+
+            event.stopPropagation();
+
+            const text =
+              `${segmentLabels[seg.type]}: ${formatClock(new Date(seg.start))} → ` +
+              `${formatClock(new Date(seg.end))} (${formatDuration(seg.end - seg.start)})`;
+
+            showTimelineTooltip(event, text);
+          });
 
           track.appendChild(segment);
         });
