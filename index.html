@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Режим Ивана</title>
+  <title>Режим Вани</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -475,8 +475,8 @@
       <div class="hint" style="margin-bottom: 8px;">Период</div>
 
       <div class="period-buttons">
-        <button class="secondary-button active" id="modeRollingBtn">Последние 24 часа</button>
-        <button class="secondary-button" id="modeDayBtn">День</button>
+        <button class="secondary-button active" id="modeTodayBtn">Сегодня</button>
+        <button class="secondary-button" id="modeDayBtn">Дата</button>
         <button class="secondary-button" id="modeRangeBtn">Период</button>
       </div>
 
@@ -654,7 +654,7 @@
     const peeBtn = document.getElementById("peeBtn");
     const poopBtn = document.getElementById("poopBtn");
 
-    const modeRollingBtn = document.getElementById("modeRollingBtn");
+    const modeTodayBtn = document.getElementById("modeTodayBtn");
     const modeDayBtn = document.getElementById("modeDayBtn");
     const modeRangeBtn = document.getElementById("modeRangeBtn");
 
@@ -713,9 +713,10 @@
 
     let currentView = "main";
 
-    // Явные режимы периода статистики: "rolling" | "day" | "range"
-    let periodMode = "rolling";
-    let rangeStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    // Явные режимы периода статистики: "today" | "day" | "range"
+    let periodMode = "today";
+    let rangeStart = new Date();
+    rangeStart.setHours(0, 0, 0, 0);
     let rangeEnd = new Date();
 
     let rangeChartInstance = null;
@@ -1568,7 +1569,7 @@
 
     function buildTimelineRows(rangeStartDate, rangeEndDate) {
 
-      if (periodMode === "rolling") {
+      if (periodMode === "today") {
         return [{
           label: `${formatDateTime(rangeStartDate)} — ${formatDateTime(rangeEndDate)}`,
           start: rangeStartDate,
@@ -1710,17 +1711,18 @@
 
       periodMode = mode;
 
-      modeRollingBtn.classList.toggle("active", mode === "rolling");
+      modeTodayBtn.classList.toggle("active", mode === "today");
       modeDayBtn.classList.toggle("active", mode === "day");
       modeRangeBtn.classList.toggle("active", mode === "range");
 
       singleDateRow.style.display = mode === "day" ? "flex" : "none";
       rangeDateRow.style.display = mode === "range" ? "flex" : "none";
-      applyRangeBtn.style.display = mode === "rolling" ? "none" : "block";
+      applyRangeBtn.style.display = mode === "today" ? "none" : "block";
 
-      if (mode === "rolling") {
-        rangeStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        rangeEnd = new Date();
+      if (mode === "today") {
+        const now = new Date();
+        rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        rangeEnd = now;
         safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       }
     }
@@ -2207,7 +2209,7 @@
     peeBtn.addEventListener("click", () => addBabyEvent("pee"));
     poopBtn.addEventListener("click", () => addBabyEvent("poop"));
 
-    modeRollingBtn.addEventListener("click", () => setPeriodMode("rolling"));
+    modeTodayBtn.addEventListener("click", () => setPeriodMode("today"));
     modeDayBtn.addEventListener("click", () => setPeriodMode("day"));
     modeRangeBtn.addEventListener("click", () => setPeriodMode("range"));
     applyRangeBtn.addEventListener("click", applyCustomRange);
