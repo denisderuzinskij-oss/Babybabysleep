@@ -822,12 +822,12 @@
           <span id="rangeNightSleep">—</span>
         </div>
 
-        <div class="stats-row" id="avgDayRow">
+        <div class="stats-row" id="avgDayRow" style="display: none;">
           <span>Средний дневной сон</span>
           <span id="rangeAvgDaySleep">—</span>
         </div>
 
-        <div class="stats-row" id="avgNightRow">
+        <div class="stats-row" id="avgNightRow" style="display: none;">
           <span>Средний ночной сон</span>
           <span id="rangeAvgNightSleep">—</span>
         </div>
@@ -981,7 +981,7 @@
 
   <script>
 
-    const APP_VERSION = "4.2";
+    const APP_VERSION = "4.2.1";
 
     const BOT_USERNAME = "Ivanregimebot";
     const MINIAPP_SHORT_NAME = "Babybabysleep";
@@ -2478,8 +2478,8 @@
       if (isRange) {
         labelSleepTotal.textContent = "😴 Сон (в среднем в сутки)";
         labelAwakeTotal.textContent = "🙂 Бодрствование (в среднем в сутки)";
-        labelDaySleep.textContent = "☀️ Дневной сон в среднем";
-        labelNightSleep.textContent = "🌙 Ночной сон в среднем";
+        labelDaySleep.textContent = "☀️ Средний дневной сон";
+        labelNightSleep.textContent = "🌙 Средний ночной сон";
 
         rangeSleepTotal.textContent = formatDuration(stats.avgSleepPerDayMs);
         rangeAwakeTotal.textContent = formatDuration(stats.avgAwakePerDayMs);
@@ -2500,11 +2500,8 @@
         rangeDaySleep.textContent = `${formatDuration(stats.daySleepMs)} (${stats.daySleepCount})`;
         rangeNightSleep.textContent = `${formatDuration(stats.nightSleepMs)} (${stats.nightSleepCount})`;
 
-        avgDayRow.style.display = "";
-        avgNightRow.style.display = "";
-
-        rangeAvgDaySleep.textContent = stats.daySleepCount > 0 ? formatDuration(stats.avgDaySleepMs) : "—";
-        rangeAvgNightSleep.textContent = stats.nightSleepCount > 0 ? formatDuration(stats.avgNightSleepMs) : "—";
+        avgDayRow.style.display = "none";
+        avgNightRow.style.display = "none";
       }
     }
 
