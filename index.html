@@ -781,7 +781,7 @@
         <div class="hint" style="margin-bottom: 8px;">Период</div>
 
         <div class="period-buttons">
-          <button class="secondary-button active" id="modeTodayBtn">Сегодня</button>
+          <button class="secondary-button active" id="modeYesterdayBtn">Вчера</button>
           <button class="secondary-button" id="modeDayBtn">Дата</button>
           <button class="secondary-button" id="modeRangeBtn">Период</button>
         </div>
@@ -981,7 +981,7 @@
 
   <script>
 
-    const APP_VERSION = "4.1";
+    const APP_VERSION = "4.2";
 
     const BOT_USERNAME = "Ivanregimebot";
     const MINIAPP_SHORT_NAME = "Babybabysleep";
@@ -1041,7 +1041,7 @@
     const peeBtn = document.getElementById("peeBtn");
     const poopBtn = document.getElementById("poopBtn");
 
-    const modeTodayBtn = document.getElementById("modeTodayBtn");
+    const modeYesterdayBtn = document.getElementById("modeYesterdayBtn");
     const modeDayBtn = document.getElementById("modeDayBtn");
     const modeRangeBtn = document.getElementById("modeRangeBtn");
 
@@ -1135,7 +1135,7 @@
 
     let currentView = "main";
 
-    let periodMode = "today";
+    let periodMode = "yesterday";
     let rangeStart = new Date(); rangeStart.setHours(0, 0, 0, 0);
     let rangeEnd = new Date();
 
@@ -1866,11 +1866,12 @@
     // ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
     // ============================================================
 
-    function refreshTodayRangeIfNeeded() {
-      if (periodMode === "today") {
+    function refreshYesterdayRangeIfNeeded() {
+      if (periodMode === "yesterday") {
         const now = new Date();
-        rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-        rangeEnd = now;
+        const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        rangeStart = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0);
+        rangeEnd = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999);
       }
     }
 
@@ -1887,7 +1888,7 @@
       navGalleryBtn.classList.toggle("active", view === "gallery");
 
       if (view === "stats") {
-        refreshTodayRangeIfNeeded();
+        refreshYesterdayRangeIfNeeded();
         safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       } else if (view === "gallery") {
         safeCall(loadPhotos, "Не удалось загрузить галерею.");
@@ -2477,8 +2478,8 @@
       if (isRange) {
         labelSleepTotal.textContent = "😴 Сон (в среднем в сутки)";
         labelAwakeTotal.textContent = "🙂 Бодрствование (в среднем в сутки)";
-        labelDaySleep.textContent = "☀️ Дневной сон (в среднем в сутки)";
-        labelNightSleep.textContent = "🌙 Ночной сон (в среднем в сутки)";
+        labelDaySleep.textContent = "☀️ Дневной сон в среднем";
+        labelNightSleep.textContent = "🌙 Ночной сон в среднем";
 
         rangeSleepTotal.textContent = formatDuration(stats.avgSleepPerDayMs);
         rangeAwakeTotal.textContent = formatDuration(stats.avgAwakePerDayMs);
@@ -2549,7 +2550,7 @@
 
     function buildTimelineRows(rangeStartDate, rangeEndDate) {
 
-      if (periodMode === "today") {
+      if (periodMode === "yesterday") {
         return [{
           label: `${formatDateTime(rangeStartDate)} — ${formatDateTime(rangeEndDate)}`,
           start: rangeStartDate, end: rangeEndDate
@@ -2725,16 +2726,16 @@
 
       periodMode = mode;
 
-      modeTodayBtn.classList.toggle("active", mode === "today");
+      modeYesterdayBtn.classList.toggle("active", mode === "yesterday");
       modeDayBtn.classList.toggle("active", mode === "day");
       modeRangeBtn.classList.toggle("active", mode === "range");
 
       singleDateRow.style.display = mode === "day" ? "flex" : "none";
       rangeDateRow.style.display = mode === "range" ? "flex" : "none";
-      applyRangeBtn.style.display = mode === "today" ? "none" : "block";
+      applyRangeBtn.style.display = mode === "yesterday" ? "none" : "block";
 
-      if (mode === "today") {
-        refreshTodayRangeIfNeeded();
+      if (mode === "yesterday") {
+        refreshYesterdayRangeIfNeeded();
         safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       }
     }
@@ -3139,7 +3140,7 @@
       await safeCall(loadRecentEvents);
 
       if (currentView === "stats") {
-        refreshTodayRangeIfNeeded();
+        refreshYesterdayRangeIfNeeded();
         await safeCall(() => loadRangeStats(false));
       }
       if (currentView === "gallery") {
@@ -3180,7 +3181,7 @@
     peeBtn.addEventListener("click", () => addBabyEvent("pee"));
     poopBtn.addEventListener("click", () => addBabyEvent("poop"));
 
-    modeTodayBtn.addEventListener("click", () => setPeriodMode("today"));
+    modeYesterdayBtn.addEventListener("click", () => setPeriodMode("yesterday"));
     modeDayBtn.addEventListener("click", () => setPeriodMode("day"));
     modeRangeBtn.addEventListener("click", () => setPeriodMode("range"));
     applyRangeBtn.addEventListener("click", applyCustomRange);
@@ -3312,4 +3313,4 @@
   </script>
 
 </body>
-  </html>
+</html>
