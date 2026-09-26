@@ -1252,20 +1252,69 @@
       return { clippedIntervals, rawRecordCount };
     }
 
-    // Ночной сон — любой объединённый интервал, который переходит на следующие
-    // календарные сутки (start и end приходятся на разные даты).
-    // Дневной сон — интервал целиком в пределах одних суток.
-    function classifyDayNight(interval) {
+    // Ночь — фиксированное окно времени суток: с 20:00 до 09:00 следующего дня.
+    // Проверяем, попадает ли момент времени (мс) в это окно.
+    function isNightMoment(ms) {
+      const date = new Date(ms);
+      const hour = date.getHours() + date.getMinutes() / 60;
+      return hour >= 20 || hour < 9;
+    }
 
-      const startDate = new Date(interval.start);
-      const endDate = new Date(interval.end);
+    // Границы дневных/ночных окон (все моменты вида "20:00" и "09:00"),
+    // которые попадают строго внутрь интервала — по ним режем интервал на куски.
+    function getDayNightBoundaries(intervalStart, intervalEnd) {
 
-      const sameCalendarDay =
-        startDate.getFullYear() === endDate.getFullYear() &&
-        startDate.getMonth() === endDate.getMonth() &&
-        startDate.getDate() === endDate.getDate();
+      const boundaries = [];
+      const dayMs = 24 * 60 * 60 * 1000;
 
-      return sameCalendarDay ? "day" : "night";
+      // На день раньше начала интервала — с запасом, чтобы не пропустить границу.
+      const cursor = new Date(intervalStart - dayMs);
+      cursor.setHours(0, 0, 0, 0);
+
+      while (cursor.getTime() <= intervalEnd + dayMs) {
+
+        const eveningBoundary = new Date(cursor);
+        eveningBoundary.setHours(20, 0, 0, 0);
+
+        const morningBoundary = new Date(cursor);
+        morningBoundary.setHours(9, 0, 0, 0);
+
+        if (eveningBoundary.getTime() > intervalStart && eveningBoundary.getTime() < intervalEnd) {
+          boundaries.push(eveningBoundary.getTime());
+        }
+
+        if (morningBoundary.getTime() > intervalStart && morningBoundary.getTime() < intervalEnd) {
+          boundaries.push(morningBoundary.getTime());
+        }
+
+        cursor.setTime(cursor.getTime() + dayMs);
+      }
+
+      return boundaries.sort((a, b) => a - b);
+    }
+
+    // Режет один интервал сна на куски "день"/"ночь" по фактическому времени суток.
+    // Например, сон 19:00-22:00 даёт кусок 19:00-20:00 (день) и 20:00-22:00 (ночь).
+    function splitIntervalByDayNight(interval) {
+
+      const boundaries = getDayNightBoundaries(interval.start, interval.end);
+      const points = [interval.start, ...boundaries, interval.end];
+      const pieces = [];
+
+      for (let i = 0; i < points.length - 1; i++) {
+
+        const segmentStart = points[i];
+        const segmentEnd = points[i + 1];
+
+        if (segmentEnd <= segmentStart) continue;
+
+        const midpoint = (segmentStart + segmentEnd) / 2;
+        const type = isNightMoment(midpoint) ? "night" : "day";
+
+        pieces.push({ start: segmentStart, end: segmentEnd, type });
+      }
+
+      return pieces;
     }
 
     // Главная чистая функция: сырые сессии + границы диапазона -> готовая статистика.
@@ -1277,26 +1326,32 @@
       const { clippedIntervals, rawRecordCount } =
         clipRawSessionsToRange(rawSessions, rangeStartMs, effectiveEndMs, nowMs);
 
-      const mergedSleepIntervals = mergeIntervals(clippedIntervals)
-        .map(interval => ({ ...interval, type: classifyDayNight(interval) }));
+      const mergedSleepIntervals = mergeIntervals(clippedIntervals);
+
+      // Каждый объединённый интервал сна режем на дневные/ночные куски —
+      // они и используются и для сумм, и для раскраски таймлайна.
+      const sleepPieces = [];
+      mergedSleepIntervals.forEach(interval => {
+        sleepPieces.push(...splitIntervalByDayNight(interval));
+      });
 
       let sleepMs = 0;
       let daySleepMs = 0;
-      let dayIntervalCount = 0;
+      let dayPieceCount = 0;
       let nightSleepMs = 0;
-      let nightIntervalCount = 0;
+      let nightPieceCount = 0;
 
-      mergedSleepIntervals.forEach(interval => {
+      sleepPieces.forEach(piece => {
 
-        const duration = interval.end - interval.start;
+        const duration = piece.end - piece.start;
         sleepMs += duration;
 
-        if (interval.type === "night") {
+        if (piece.type === "night") {
           nightSleepMs += duration;
-          nightIntervalCount++;
+          nightPieceCount++;
         } else {
           daySleepMs += duration;
-          dayIntervalCount++;
+          dayPieceCount++;
         }
       });
 
@@ -1313,15 +1368,16 @@
         effectiveEndMs,
         totalRangeMs,
         mergedSleepIntervals,
+        sleepPieces,
         mergedIntervalCount,
         rawRecordCount,
         sleepMs,
         awakeMs,
         avgSleepMs,
         daySleepMs,
-        dayIntervalCount,
+        dayPieceCount,
         nightSleepMs,
-        nightIntervalCount
+        nightPieceCount
       };
     }
 
@@ -1399,7 +1455,7 @@
       renderRangeLabel(stats);
       renderEventCounts(events);
       renderRangeChart(stats.sleepMs, stats.awakeMs);
-      renderTimeline(stats.mergedSleepIntervals, rangeStart, new Date(stats.effectiveEndMs));
+      renderTimeline(stats.sleepPieces, rangeStart, new Date(stats.effectiveEndMs));
     }
 
 
@@ -1426,10 +1482,10 @@
       rangeAwakeTotal.textContent = formatDuration(stats.awakeMs);
 
       rangeDaySleep.textContent =
-        `${formatDuration(stats.daySleepMs)} (${stats.dayIntervalCount})`;
+        `${formatDuration(stats.daySleepMs)} (${stats.dayPieceCount})`;
 
       rangeNightSleep.textContent =
-        `${formatDuration(stats.nightSleepMs)} (${stats.nightIntervalCount})`;
+        `${formatDuration(stats.nightSleepMs)} (${stats.nightPieceCount})`;
 
       rangeAvgSleep.textContent =
         stats.mergedIntervalCount > 0 ? formatDuration(stats.avgSleepMs) : "—";
@@ -1547,7 +1603,7 @@
     }
 
     // Чистая отрисовка: получает уже объединённые интервалы и просто рисует их.
-    function renderTimeline(mergedSleepIntervals, rangeStartDate, rangeEndDate) {
+    function renderTimeline(sleepPieces, rangeStartDate, rangeEndDate) {
 
       timelineContainer.innerHTML = "";
 
@@ -1574,7 +1630,7 @@
         const track = document.createElement("div");
         track.className = "timeline-track";
 
-        mergedSleepIntervals.forEach(interval => {
+        sleepPieces.forEach(interval => {
 
           const segStart = Math.max(interval.start, rowStartMs);
           const segEnd = Math.min(interval.end, rowEndMs);
