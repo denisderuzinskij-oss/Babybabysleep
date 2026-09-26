@@ -35,12 +35,11 @@
       color: var(--text);
     }
 
-    /* ЗАГОЛОВОК С КНОПКОЙ ОБНОВЛЕНИЯ */
     .title-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 16px;
     }
 
@@ -51,6 +50,7 @@
       align-items: baseline;
       flex-wrap: wrap;
       gap: 5px;
+      min-width: 0;
     }
 
     .name-button {
@@ -63,33 +63,46 @@
       cursor: pointer;
       border-bottom: 1px dashed rgba(128, 128, 128, 0.45);
       line-height: 1.1;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .name-button:active { opacity: 0.7; }
 
-    .refresh-btn {
+    .icon-buttons {
+      display: flex;
+      gap: 6px;
       flex-shrink: 0;
+    }
+
+    .icon-btn {
       width: 40px;
       height: 40px;
       border: none;
       border-radius: 50%;
       background: rgba(128, 128, 128, 0.12);
       color: var(--text);
-      font-size: 18px;
-      line-height: 1;
       cursor: pointer;
-      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
     }
 
-    .refresh-btn:disabled { opacity: 0.6; cursor: default; }
-    .refresh-btn.spinning { animation: refresh-spin 0.8s linear infinite; }
+    .icon-btn:disabled { opacity: 0.6; cursor: default; }
+    .icon-btn svg { display: block; }
+
+    .icon-btn.spinning svg {
+      animation: refresh-spin 0.8s linear infinite;
+    }
 
     @keyframes refresh-spin {
       from { transform: rotate(0deg); }
       to   { transform: rotate(360deg); }
     }
 
-    /* НАДПИСЬ ВЕРСИИ */
     .version-label {
       text-align: center;
       color: var(--hint);
@@ -218,9 +231,7 @@
       touch-action: manipulation;
     }
 
-    .timeline-segment:active {
-      opacity: 0.78;
-    }
+    .timeline-segment:active { opacity: 0.78; }
 
     .timeline-tooltip {
       margin-top: 5px;
@@ -232,9 +243,7 @@
       display: none;
     }
 
-    .timeline-tooltip.visible {
-      display: block;
-    }
+    .timeline-tooltip.visible { display: block; }
 
     .edit-btn {
       flex-shrink: 0;
@@ -256,14 +265,10 @@
 
     .empty { color: var(--hint); font-size: 14px; padding: 4px 0; }
 
-    .csv-button { margin-top: 0; }
-
-    /* НАВИГАЦИЯ */
     .nav-row { display: flex; gap: 8px; margin-bottom: 12px; }
     .nav-button { flex: 1; padding: 10px 4px; margin-top: 0; font-size: 13px; }
     .nav-button.active { background: var(--button); color: var(--button-text); }
 
-    /* ПЕРИОД */
     .period-buttons { display: flex; gap: 8px; margin-bottom: 10px; }
     .period-buttons .secondary-button { margin-top: 0; font-size: 13px; }
     .period-buttons .secondary-button.active { background: var(--button); color: var(--button-text); }
@@ -295,7 +300,6 @@
       margin-bottom: 10px;
     }
 
-    /* ХРОНОЛОГИЯ (ГАНТ) */
     .timeline-row { margin-bottom: 14px; }
     .timeline-row:last-child { margin-bottom: 0; }
     .timeline-row-label { font-size: 12px; color: var(--hint); margin-bottom: 4px; }
@@ -344,8 +348,7 @@
     .timeline-legend span { display: inline-flex; align-items: center; gap: 5px; }
     .legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
-    /* СПИСОК ДЕТЕЙ */
-    .child-row {
+    .list-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -355,23 +358,30 @@
       font-size: 16px;
     }
 
-    .child-row:last-child { border-bottom: none; }
+    .list-row:last-child { border-bottom: none; }
 
-    .child-row-name {
+    .list-row-name {
       flex: 1;
       min-width: 0;
       padding: 10px 4px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    .child-row.active .child-row-name {
+    .list-row.active .list-row-name {
       font-weight: 600;
       color: var(--button);
     }
 
-    .child-row-name .check { margin-left: 6px; }
+    .list-row-sub {
+      font-size: 12px;
+      color: var(--hint);
+      font-weight: 400;
+    }
 
-    .child-edit-btn {
+    .list-edit-btn {
       flex-shrink: 0;
       border: none;
       border-radius: 9px;
@@ -382,7 +392,6 @@
       cursor: pointer;
     }
 
-    /* ГАЛЕРЕЯ */
     .photo-input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
 
     .photo-month-input {
@@ -432,7 +441,6 @@
 
     .photo-delete:active { transform: scale(0.95); }
 
-    /* ПРОСМОТР ФОТО */
     .lightbox-backdrop {
       position: fixed; inset: 0;
       background: rgba(0, 0, 0, 0.94);
@@ -505,7 +513,6 @@
       z-index: 3002;
     }
 
-    /* ОКНО РЕДАКТИРОВАНИЯ */
     .modal-backdrop {
       position: fixed; inset: 0;
       background: rgba(0, 0, 0, 0.45);
@@ -544,6 +551,14 @@
       font-family: inherit;
     }
 
+    .field input.code-input {
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 20px;
+      text-align: center;
+    }
+
     .modal-hint { color: var(--hint); font-size: 12px; margin-top: 5px; }
     .modal-buttons { display: flex; gap: 8px; margin-top: 18px; }
 
@@ -560,7 +575,101 @@
     .save-btn { background: var(--button); color: var(--button-text); }
     .save-btn:disabled { opacity: 0.5; }
 
-    /* CSV */
+    .setup-screen {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 70vh;
+      max-width: 460px;
+      margin: 0 auto;
+    }
+
+    .setup-title {
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .setup-sub {
+      text-align: center;
+      color: var(--hint);
+      font-size: 14px;
+      line-height: 1.45;
+      margin-bottom: 22px;
+    }
+
+    .or-divider {
+      text-align: center;
+      color: var(--hint);
+      font-size: 12px;
+      margin: 18px 0 14px;
+      position: relative;
+    }
+
+    .or-divider::before,
+    .or-divider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .or-divider::before { left: 0; }
+    .or-divider::after { right: 0; }
+
+    .invite-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(128, 128, 128, 0.12);
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .invite-code {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: var(--button);
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .invite-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .invite-copy {
+      border: none;
+      border-radius: 9px;
+      padding: 8px 12px;
+      background: var(--button);
+      color: var(--button-text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .invite-share {
+      border: none;
+      border-radius: 9px;
+      padding: 8px 12px;
+      background: rgba(128, 128, 128, 0.18);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
     .csv-textarea {
       width: 100%;
       height: 180px;
@@ -573,166 +682,207 @@
       padding: 10px;
       resize: none;
     }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 
 <body>
 
-  <div class="title-row">
-    <h1>Режим дня <button class="name-button" id="childSelectorBtn" title="Выбрать ребёнка">…</button></h1>
-    <button class="refresh-btn" id="refreshBtn" aria-label="Обновить данные" title="Обновить">🔄</button>
+  <!-- ЭКРАН НАСТРОЙКИ СЕМЬИ -->
+  <div class="setup-screen hidden" id="setupView">
+    <div class="setup-title">👨‍👩‍👧 Семейный доступ</div>
+    <div class="setup-sub" id="setupSubtitle">
+      Создайте новую семью или присоединитесь к существующей по коду приглашения.
+    </div>
+
+    <div class="card">
+      <button class="big-button" id="createFamilyBtn">Создать семью</button>
+
+      <div class="or-divider">или</div>
+
+      <div class="field" style="margin-bottom: 10px;">
+        <label for="joinCodeInput">Код приглашения</label>
+        <input type="text" id="joinCodeInput" class="code-input"
+               placeholder="ABC123" maxlength="6" autocomplete="off" />
+      </div>
+      <button class="secondary-button" id="joinFamilyBtn">Присоединиться к семье</button>
+    </div>
+
+    <div class="version-label" id="versionLabelSetup"></div>
   </div>
 
-  <div class="nav-row">
-    <button class="secondary-button nav-button active" id="navMainBtn">😴 Сон</button>
-    <button class="secondary-button nav-button" id="navStatsBtn">📊 Статистика</button>
-    <button class="secondary-button nav-button" id="navGalleryBtn">📷 Галерея</button>
-  </div>
+  <!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
+  <div id="appRoot" class="hidden">
 
-  <!-- Общая ошибка — видна на всех вкладках -->
-  <div id="error"></div>
-
-  <!-- ОСНОВНОЙ ЭКРАН -->
-  <div id="mainView">
-
-    <div class="card">
-      <div class="status-line" id="statusLine">Загрузка...</div>
-      <button class="big-button" id="actionBtn" disabled>...</button>
-      <button class="secondary-button" id="editCurrentBtn" style="display: none;">✏️ Изменить время</button>
-    </div>
-
-    <div class="card">
-      <div class="hint" style="margin-bottom: 10px;">Подгузник</div>
-      <div class="diaper-buttons">
-        <button class="diaper-button" id="peeBtn">💧 Пописал</button>
-        <button class="diaper-button" id="poopBtn">💩 Покакал</button>
+    <div class="title-row">
+      <h1>Режим дня <button class="name-button" id="childSelectorBtn" title="Выбрать ребёнка">…</button></h1>
+      <div class="icon-buttons">
+        <button class="icon-btn" id="familySettingsBtn" aria-label="Настройки семьи" title="Семья">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="refreshBtn" aria-label="Обновить данные" title="Обновить">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+            <polyline points="21 4 21 10 15 10"/>
+          </svg>
+        </button>
       </div>
     </div>
 
-    <div class="card">
-      <div class="hint" style="margin-bottom: 8px;">Последние записи сна</div>
-      <div id="historyList"><div class="empty">Загрузка...</div></div>
+    <div class="nav-row">
+      <button class="secondary-button nav-button active" id="navMainBtn">😴 Сон</button>
+      <button class="secondary-button nav-button" id="navStatsBtn">📊 Статистика</button>
+      <button class="secondary-button nav-button" id="navGalleryBtn">📷 Галерея</button>
     </div>
 
-    <div class="card">
-      <div class="hint" style="margin-bottom: 8px;">Последние события</div>
-      <div id="eventsList"><div class="empty">Загрузка...</div></div>
-    </div>
+    <div id="error"></div>
 
-  </div>
+    <!-- ОСНОВНОЙ ЭКРАН -->
+    <div id="mainView">
 
-  <!-- СТАТИСТИКА -->
-  <div id="statsView" style="display: none;">
-
-    <div class="card">
-
-      <div class="hint" style="margin-bottom: 8px;">Период</div>
-
-      <div class="period-buttons">
-        <button class="secondary-button active" id="modeTodayBtn">Сегодня</button>
-        <button class="secondary-button" id="modeDayBtn">Дата</button>
-        <button class="secondary-button" id="modeRangeBtn">Период</button>
+      <div class="card">
+        <div class="status-line" id="statusLine">Загрузка...</div>
+        <button class="big-button" id="actionBtn" disabled>...</button>
+        <button class="secondary-button" id="editCurrentBtn" style="display: none;">✏️ Изменить время</button>
       </div>
 
-      <div class="date-row" id="singleDateRow" style="display: none;">
-        <input type="date" class="date-input" id="statsSingleDate" />
+      <div class="card">
+        <div class="hint" style="margin-bottom: 10px;">Подгузник</div>
+        <div class="diaper-buttons">
+          <button class="diaper-button" id="peeBtn">💧 Пописал</button>
+          <button class="diaper-button" id="poopBtn">💩 Покакал</button>
+        </div>
       </div>
 
-      <div class="date-row" id="rangeDateRow" style="display: none;">
-        <input type="date" class="date-input" id="statsFromDate" />
-        <input type="date" class="date-input" id="statsToDate" />
+      <div class="card">
+        <div class="hint" style="margin-bottom: 8px;">Последние записи сна</div>
+        <div id="historyList"><div class="empty">Загрузка...</div></div>
       </div>
 
-      <button class="secondary-button" id="applyRangeBtn" style="display: none;">Показать</button>
-
-    </div>
-
-    <div class="card">
-
-      <div class="range-label" id="rangeLabel">—</div>
-      <div class="range-sublabel" id="rangeSublabel"></div>
-
-      <div class="stats-row">
-        <span id="labelSleepTotal">😴 Сон всего</span>
-        <span id="rangeSleepTotal">—</span>
-      </div>
-
-      <div class="stats-row">
-        <span id="labelAwakeTotal">🙂 Бодрствование всего</span>
-        <span id="rangeAwakeTotal">—</span>
-      </div>
-
-      <div class="stats-row">
-        <span id="labelDaySleep">☀️ Дневной сон</span>
-        <span id="rangeDaySleep">—</span>
-      </div>
-
-      <div class="stats-row">
-        <span id="labelNightSleep">🌙 Ночной сон</span>
-        <span id="rangeNightSleep">—</span>
-      </div>
-
-      <div class="stats-row" id="avgDayRow">
-        <span>Средний дневной сон</span>
-        <span id="rangeAvgDaySleep">—</span>
-      </div>
-
-      <div class="stats-row" id="avgNightRow">
-        <span>Средний ночной сон</span>
-        <span id="rangeAvgNightSleep">—</span>
-      </div>
-
-      <div class="event-stats">
-        <div class="stats-row"><span>💧 Пописал</span><span id="rangePeeCount">—</span></div>
-        <div class="stats-row"><span>💩 Покакал</span><span id="rangePoopCount">—</span></div>
+      <div class="card">
+        <div class="hint" style="margin-bottom: 8px;">Последние события</div>
+        <div id="eventsList"><div class="empty">Загрузка...</div></div>
       </div>
 
     </div>
 
-    <div class="card">
-      <div class="hint" style="margin-bottom: 8px;">Соотношение за период</div>
-      <canvas id="rangeChart" height="200"></canvas>
-    </div>
+    <!-- СТАТИСТИКА -->
+    <div id="statsView" style="display: none;">
 
-    <div class="card">
+      <div class="card">
+        <div class="hint" style="margin-bottom: 8px;">Период</div>
 
-      <div class="hint" style="margin-bottom: 8px;">Хронология сна</div>
+        <div class="period-buttons">
+          <button class="secondary-button active" id="modeTodayBtn">Сегодня</button>
+          <button class="secondary-button" id="modeDayBtn">Дата</button>
+          <button class="secondary-button" id="modeRangeBtn">Период</button>
+        </div>
 
-      <div id="timelineContainer"><div class="empty">Загрузка...</div></div>
+        <div class="date-row" id="singleDateRow" style="display: none;">
+          <input type="date" class="date-input" id="statsSingleDate" />
+        </div>
 
-      <div class="timeline-legend">
-        <span><span class="legend-dot" style="background:var(--day);"></span>Дневной сон</span>
-        <span><span class="legend-dot" style="background:var(--night);"></span>Ночной сон</span>
-        <span><span class="legend-dot" style="background:var(--awake);"></span>Бодрствование</span>
+        <div class="date-row" id="rangeDateRow" style="display: none;">
+          <input type="date" class="date-input" id="statsFromDate" />
+          <input type="date" class="date-input" id="statsToDate" />
+        </div>
+
+        <button class="secondary-button" id="applyRangeBtn" style="display: none;">Показать</button>
+      </div>
+
+      <div class="card">
+        <div class="range-label" id="rangeLabel">—</div>
+        <div class="range-sublabel" id="rangeSublabel"></div>
+
+        <div class="stats-row">
+          <span id="labelSleepTotal">😴 Сон всего</span>
+          <span id="rangeSleepTotal">—</span>
+        </div>
+
+        <div class="stats-row">
+          <span id="labelAwakeTotal">🙂 Бодрствование всего</span>
+          <span id="rangeAwakeTotal">—</span>
+        </div>
+
+        <div class="stats-row">
+          <span id="labelDaySleep">☀️ Дневной сон</span>
+          <span id="rangeDaySleep">—</span>
+        </div>
+
+        <div class="stats-row">
+          <span id="labelNightSleep">🌙 Ночной сон</span>
+          <span id="rangeNightSleep">—</span>
+        </div>
+
+        <div class="stats-row" id="avgDayRow">
+          <span>Средний дневной сон</span>
+          <span id="rangeAvgDaySleep">—</span>
+        </div>
+
+        <div class="stats-row" id="avgNightRow">
+          <span>Средний ночной сон</span>
+          <span id="rangeAvgNightSleep">—</span>
+        </div>
+
+        <div class="event-stats">
+          <div class="stats-row"><span>💧 Пописал</span><span id="rangePeeCount">—</span></div>
+          <div class="stats-row"><span>💩 Покакал</span><span id="rangePoopCount">—</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hint" style="margin-bottom: 8px;">Соотношение за период</div>
+        <canvas id="rangeChart" height="200"></canvas>
+      </div>
+
+      <div class="card">
+        <div class="hint" style="margin-bottom: 8px;">Хронология сна</div>
+        <div id="timelineContainer"><div class="empty">Загрузка...</div></div>
+
+        <div class="timeline-legend">
+          <span><span class="legend-dot" style="background:var(--day);"></span>Дневной сон</span>
+          <span><span class="legend-dot" style="background:var(--night);"></span>Ночной сон</span>
+          <span><span class="legend-dot" style="background:var(--awake);"></span>Бодрствование</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <button class="secondary-button" id="csvBtn" style="margin-top: 0;">📊 Скопировать всю статистику (CSV)</button>
+        <textarea class="csv-textarea" id="csvOutput" style="display: none; margin-top: 10px;" readonly></textarea>
+        <div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">Текст скопирован в буфер обмена.</div>
       </div>
 
     </div>
 
-    <div class="card">
-      <button class="secondary-button csv-button" id="csvBtn">📊 Скопировать всю статистику (CSV)</button>
-      <textarea class="csv-textarea" id="csvOutput" style="display: none; margin-top: 10px;" readonly></textarea>
-      <div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">Текст скопирован в буфер обмена.</div>
-    </div>
+    <!-- ГАЛЕРЕЯ -->
+    <div id="galleryView" style="display: none;">
 
-  </div>
-
-  <!-- ГАЛЕРЕЯ -->
-  <div id="galleryView" style="display: none;">
-
-    <div class="card">
-      <div class="hint" style="margin-bottom: 8px;">📷 Добавить фото</div>
-      <div class="photo-input-row">
-        <input type="number" class="photo-month-input" id="photoMonthInput" placeholder="Месяц" min="1" max="24" step="1" />
-        <input type="file" class="photo-file-input" id="photoFileInput" accept="image/*" />
+      <div class="card">
+        <div class="hint" style="margin-bottom: 8px;">📷 Добавить фото</div>
+        <div class="photo-input-row">
+          <input type="number" class="photo-month-input" id="photoMonthInput" placeholder="Месяц" min="1" max="24" step="1" />
+          <input type="file" class="photo-file-input" id="photoFileInput" accept="image/*" />
+        </div>
+        <button class="secondary-button" id="uploadPhotoBtn">Добавить фото</button>
+        <div class="hint" id="photoHint" style="margin-top: 8px; display: none;"></div>
       </div>
-      <button class="secondary-button" id="uploadPhotoBtn">Добавить фото</button>
-      <div class="hint" id="photoHint" style="margin-top: 8px; display: none;"></div>
+
+      <div class="card">
+        <div class="hint" style="margin-bottom: 8px;">Галерея по месяцам</div>
+        <div id="photoGroups"><div class="empty">Загрузка...</div></div>
+      </div>
+
     </div>
 
-    <div class="card">
-      <div class="hint" style="margin-bottom: 8px;">Галерея по месяцам</div>
-      <div id="photoGroups"><div class="empty">Загрузка...</div></div>
-    </div>
+    <div class="version-label" id="versionLabel"></div>
 
   </div>
 
@@ -747,7 +897,7 @@
     <button class="lightbox-next" id="lightboxNext" aria-label="Следующее фото">›</button>
   </div>
 
-  <!-- ОКНО РЕДАКТИРОВАНИЯ СНА -->
+  <!-- РЕДАКТИРОВАНИЕ СНА -->
   <div class="modal-backdrop" id="editModal">
     <div class="modal">
       <div class="modal-title">✏️ Изменить сон</div>
@@ -779,7 +929,7 @@
     </div>
   </div>
 
-  <!-- ФОРМА РЕБЁНКА (ДОБАВИТЬ / ПЕРЕИМЕНОВАТЬ) -->
+  <!-- ФОРМА РЕБЁНКА -->
   <div class="modal-backdrop" id="childFormModal">
     <div class="modal">
       <div class="modal-title" id="childFormTitle">👶 Добавить ребёнка</div>
@@ -796,20 +946,45 @@
     </div>
   </div>
 
-  <div class="version-label" id="versionLabel">Режим дня</div>
+  <!-- НАСТРОЙКИ СЕМЬИ -->
+  <div class="modal-backdrop" id="familyModal">
+    <div class="modal">
+      <div class="modal-title">👨‍👩‍👧 Семья</div>
+
+      <div class="field" style="margin-bottom: 14px;">
+        <label for="familyNameInput">Название семьи</label>
+        <input type="text" id="familyNameInput" maxlength="40" placeholder="Наша семья" />
+      </div>
+
+      <div class="hint" style="margin-bottom: 8px;">Код приглашения — передай его тому, кого хочешь пригласить:</div>
+      <div class="invite-box">
+        <span class="invite-code" id="inviteCodeText">——————</span>
+        <div class="invite-actions">
+          <button class="invite-copy" id="copyInviteBtn">Копировать</button>
+          <button class="invite-share" id="shareInviteBtn">Поделиться</button>
+        </div>
+      </div>
+      <div class="modal-hint" style="margin-bottom: 14px;">
+        Кнопка «Поделиться» отправит ссылку, при открытии которой приложение сразу присоединится к вашей семье.
+      </div>
+
+      <div class="hint" style="margin: 8px 0 8px;">Участники</div>
+      <div id="familyMembersContainer"><div class="empty">Загрузка...</div></div>
+
+      <div class="modal-buttons">
+        <button class="cancel-btn" id="closeFamilyBtn">Закрыть</button>
+      </div>
+      <button class="danger-button" id="leaveFamilyBtn">🚪 Выйти из семьи</button>
+    </div>
+  </div>
 
 
   <script>
 
-    // ============================================================
-    // ВЕРСИЯ
-    // ============================================================
+    const APP_VERSION = "4.1";
 
-    const APP_VERSION = "3.0.2";
-
-    // ============================================================
-    // SUPABASE
-    // ============================================================
+    const BOT_USERNAME = "Ivanregimebot";
+    const MINIAPP_SHORT_NAME = "Babybabysleep";
 
     const SUPABASE_URL = "https://zokqayumtpissabtofau.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_cLNOLRhZ7cyCUKFi1nhjVQ_4Dma0xXS";
@@ -819,11 +994,13 @@
     const PHOTOS_TABLE = "baby_photos";
     const PHOTOS_BUCKET = "baby-photos";
     const CHILDREN_TABLE = "children";
-
-    const ACTIVE_CHILD_KEY = "activeChildId";
+    const FAMILIES_TABLE = "families";
+    const MEMBERS_TABLE = "family_members";
 
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
+
+    const tgUser = tg?.initDataUnsafe?.user || null;
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -832,9 +1009,18 @@
     // ELEMENTS
     // ============================================================
 
-    const refreshBtn = document.getElementById("refreshBtn");
+    const setupView = document.getElementById("setupView");
+    const setupSubtitle = document.getElementById("setupSubtitle");
+    const createFamilyBtn = document.getElementById("createFamilyBtn");
+    const joinCodeInput = document.getElementById("joinCodeInput");
+    const joinFamilyBtn = document.getElementById("joinFamilyBtn");
+    const versionLabelSetup = document.getElementById("versionLabelSetup");
+
+    const appRoot = document.getElementById("appRoot");
     const versionLabel = document.getElementById("versionLabel");
     const childSelectorBtn = document.getElementById("childSelectorBtn");
+    const familySettingsBtn = document.getElementById("familySettingsBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
 
     const navMainBtn = document.getElementById("navMainBtn");
     const navStatsBtn = document.getElementById("navStatsBtn");
@@ -921,10 +1107,23 @@
     const saveChildBtn = document.getElementById("saveChildBtn");
     const deleteChildBtn = document.getElementById("deleteChildBtn");
 
+    const familyModal = document.getElementById("familyModal");
+    const familyNameInput = document.getElementById("familyNameInput");
+    const inviteCodeText = document.getElementById("inviteCodeText");
+    const copyInviteBtn = document.getElementById("copyInviteBtn");
+    const shareInviteBtn = document.getElementById("shareInviteBtn");
+    const familyMembersContainer = document.getElementById("familyMembersContainer");
+    const closeFamilyBtn = document.getElementById("closeFamilyBtn");
+    const leaveFamilyBtn = document.getElementById("leaveFamilyBtn");
+
 
     // ============================================================
     // STATE
     // ============================================================
+
+    let familyId = null;
+    let familyInfo = null;
+    let familyMembers = [];
 
     let children = [];
     let activeChildId = null;
@@ -937,8 +1136,7 @@
     let currentView = "main";
 
     let periodMode = "today";
-    let rangeStart = new Date();
-    rangeStart.setHours(0, 0, 0, 0);
+    let rangeStart = new Date(); rangeStart.setHours(0, 0, 0, 0);
     let rangeEnd = new Date();
 
     let rangeChartInstance = null;
@@ -948,7 +1146,7 @@
 
 
     // ============================================================
-    // ОШИБКИ / УТИЛИТЫ
+    // УТИЛИТЫ
     // ============================================================
 
     function showError(message) {
@@ -971,45 +1169,42 @@
     }
 
     function hapticSuccess() {
-      if (tg) {
-        tg.HapticFeedback?.notificationOccurred("success");
-      }
+      tg?.HapticFeedback?.notificationOccurred("success");
     }
 
     function hapticLight() {
-      if (tg) {
-        tg.HapticFeedback?.impactOccurred("light");
+      tg?.HapticFeedback?.impactOccurred("light");
+    }
+
+    function generateInviteCode() {
+      const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let code = "";
+      for (let i = 0; i < 6; i++) {
+        code += alphabet[Math.floor(Math.random() * alphabet.length)];
       }
+      return code;
     }
 
     async function fetchAllPages(table, columns, applyFilters, orderColumn, ascending) {
-
       const pageSize = 1000;
       const all = [];
       let from = 0;
 
       while (true) {
-
         let query = supabaseClient
           .from(table)
           .select(columns)
           .order(orderColumn, { ascending })
           .range(from, from + pageSize - 1);
 
-        if (applyFilters) {
-          query = applyFilters(query);
-        }
+        if (applyFilters) query = applyFilters(query);
 
         const { data, error } = await query;
-
         if (error) throw error;
-
         if (!data || data.length === 0) break;
 
         all.push(...data);
-
         if (data.length < pageSize) break;
-
         from += pageSize;
       }
 
@@ -1022,15 +1217,11 @@
     // ============================================================
 
     function formatDuration(ms) {
-      if (!Number.isFinite(ms) || ms < 0) {
-        return "0 мин";
-      }
+      if (!Number.isFinite(ms) || ms < 0) return "0 мин";
       const totalMin = Math.floor(ms / 60000);
       const hours = Math.floor(totalMin / 60);
       const minutes = totalMin % 60;
-      if (hours > 0) {
-        return `${hours} ч ${minutes} мин`;
-      }
+      if (hours > 0) return `${hours} ч ${minutes} мин`;
       return `${minutes} мин`;
     }
 
@@ -1085,6 +1276,235 @@
 
 
     // ============================================================
+    // АУТЕНТИФИКАЦИЯ: СЕМЬЯ
+    // ============================================================
+
+    function showSetupScreen(options = {}) {
+      appRoot.classList.add("hidden");
+      setupView.classList.remove("hidden");
+      versionLabelSetup.textContent = `Режим дня · ${APP_VERSION}`;
+
+      if (options.prefillCode) {
+        joinCodeInput.value = options.prefillCode;
+      }
+
+      if (options.subtitle) {
+        setupSubtitle.textContent = options.subtitle;
+      } else if (options.hasFamilies) {
+        setupSubtitle.textContent =
+          "Приложение уже используется. Введите код приглашения, чтобы присоединиться к семье, или создайте свою.";
+        createFamilyBtn.textContent = "Создать новую семью";
+      } else {
+        setupSubtitle.textContent =
+          "Создайте новую семью или присоединитесь к существующей по коду приглашения.";
+      }
+    }
+
+    function showAppScreen() {
+      setupView.classList.add("hidden");
+      appRoot.classList.remove("hidden");
+    }
+
+    async function bootstrapFamily() {
+
+      if (!tgUser || !tgUser.id) {
+        setupView.classList.remove("hidden");
+        setupSubtitle.textContent =
+          "Откройте приложение через Telegram — так мы сможем распознать вас и привязать к семье.";
+        createFamilyBtn.disabled = true;
+        joinFamilyBtn.disabled = true;
+        joinCodeInput.disabled = true;
+        versionLabelSetup.textContent = `Режим дня · ${APP_VERSION}`;
+        return;
+      }
+
+      const startParam = String(tg?.initDataUnsafe?.start_param || "").toUpperCase();
+      const INVITE_RE = /^[A-Z0-9]{6}$/;
+      const incomingCode = INVITE_RE.test(startParam) ? startParam : null;
+
+      const { data: member, error: memberError } = await supabaseClient
+        .from(MEMBERS_TABLE)
+        .select("family_id")
+        .eq("telegram_id", tgUser.id)
+        .maybeSingle();
+
+      if (memberError) throw memberError;
+
+      if (member) {
+        familyId = member.family_id;
+        await loadFamilyInfo();
+        showAppScreen();
+        return;
+      }
+
+      if (incomingCode) {
+        try {
+          await joinFamily(incomingCode);
+          showAppScreen();
+          return;
+        } catch (error) {
+          console.error(error);
+          showSetupScreen({
+            hasFamilies: true,
+            prefillCode: incomingCode,
+            subtitle:
+              "Не удалось присоединиться по ссылке: " +
+              (error.message || "неизвестная ошибка") +
+              ". Проверьте код или создайте свою семью."
+          });
+          return;
+        }
+      }
+
+      const { count, error: countError } = await supabaseClient
+        .from(FAMILIES_TABLE)
+        .select("*", { count: "exact", head: true });
+
+      if (countError) throw countError;
+
+      if (!count || count === 0) {
+        await createFamilyInternal("Наша семья", { attachOrphans: true });
+        showAppScreen();
+        return;
+      }
+
+      showSetupScreen({ hasFamilies: true });
+    }
+
+    async function createFamilyInternal(name, { attachOrphans }) {
+
+      let code = generateInviteCode();
+
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { data, error } = await supabaseClient
+          .from(FAMILIES_TABLE)
+          .insert({ name, invite_code: code })
+          .select()
+          .single();
+
+        if (!error) {
+          familyId = data.id;
+          familyInfo = data;
+          break;
+        }
+
+        if (error.code === "23505") {
+          code = generateInviteCode();
+          continue;
+        }
+        throw error;
+      }
+
+      if (!familyId) throw new Error("Не удалось сгенерировать код приглашения.");
+
+      if (attachOrphans) {
+        await supabaseClient.from(CHILDREN_TABLE).update({ family_id: familyId }).is("family_id", null);
+        await supabaseClient.from(TABLE).update({ family_id: familyId }).is("family_id", null);
+        await supabaseClient.from(EVENTS_TABLE).update({ family_id: familyId }).is("family_id", null);
+        await supabaseClient.from(PHOTOS_TABLE).update({ family_id: familyId }).is("family_id", null);
+      }
+
+      const displayName = [tgUser.first_name, tgUser.last_name]
+        .filter(Boolean).join(" ") || tgUser.username || "Родитель";
+
+      const { error: memberError } = await supabaseClient
+        .from(MEMBERS_TABLE)
+        .insert({
+          family_id: familyId,
+          telegram_id: tgUser.id,
+          display_name: displayName,
+          role: "owner"
+        });
+
+      if (memberError) throw memberError;
+    }
+
+    async function joinFamily(code) {
+
+      const normalized = String(code || "").trim().toUpperCase();
+      if (normalized.length !== 6) throw new Error("Код должен содержать 6 символов.");
+
+      const { data: family, error: findError } = await supabaseClient
+        .from(FAMILIES_TABLE)
+        .select("*")
+        .eq("invite_code", normalized)
+        .maybeSingle();
+
+      if (findError) throw findError;
+      if (!family) throw new Error("семья с таким кодом не найдена");
+
+      const displayName = [tgUser.first_name, tgUser.last_name]
+        .filter(Boolean).join(" ") || tgUser.username || "Родитель";
+
+      const { error: joinError } = await supabaseClient
+        .from(MEMBERS_TABLE)
+        .insert({
+          family_id: family.id,
+          telegram_id: tgUser.id,
+          display_name: displayName,
+          role: "member"
+        });
+
+      if (joinError) {
+        if (joinError.code === "23505") throw new Error("вы уже входите в семью");
+        throw joinError;
+      }
+
+      familyId = family.id;
+      familyInfo = family;
+    }
+
+    async function loadFamilyInfo() {
+      const { data, error } = await supabaseClient
+        .from(FAMILIES_TABLE)
+        .select("id,name,invite_code")
+        .eq("id", familyId)
+        .single();
+
+      if (error) throw error;
+      familyInfo = data;
+    }
+
+    async function loadFamilyMembers() {
+      const { data, error } = await supabaseClient
+        .from(MEMBERS_TABLE)
+        .select("id,telegram_id,display_name,role,joined_at")
+        .eq("family_id", familyId)
+        .order("joined_at", { ascending: true });
+
+      if (error) throw error;
+      familyMembers = data || [];
+    }
+
+    async function leaveFamily() {
+
+      if (!familyId || !tgUser?.id) return;
+
+      const confirmed = confirm(
+        "Выйти из семьи? Вы потеряете доступ к её данным. Другие участники останутся."
+      );
+      if (!confirmed) return;
+
+      hideError();
+
+      try {
+        const { error } = await supabaseClient
+          .from(MEMBERS_TABLE)
+          .delete()
+          .eq("telegram_id", tgUser.id);
+
+        if (error) throw error;
+
+        location.reload();
+
+      } catch (error) {
+        console.error(error);
+        showError(error.message || "Не удалось выйти из семьи.");
+      }
+    }
+
+
+    // ============================================================
     // ДЕТИ
     // ============================================================
 
@@ -1101,78 +1521,44 @@
       childSelectorBtn.textContent = `${getActiveChildName()} ▾`;
     }
 
-    function saveActiveChildId() {
-      try {
-        if (activeChildId) {
-          localStorage.setItem(ACTIVE_CHILD_KEY, activeChildId);
-        } else {
-          localStorage.removeItem(ACTIVE_CHILD_KEY);
-        }
-      } catch (e) {
-        // localStorage недоступен — просто игнорируем.
-      }
-    }
-
-    function readStoredChildId() {
-      try {
-        return localStorage.getItem(ACTIVE_CHILD_KEY);
-      } catch (e) {
-        return null;
-      }
-    }
-
     async function loadChildren() {
+
+      if (!familyId) { children = []; return; }
 
       const { data, error } = await supabaseClient
         .from(CHILDREN_TABLE)
         .select("id,name,created_at")
+        .eq("family_id", familyId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
 
       children = data || [];
 
-      // Если детей нет — создаём первого автоматически.
       if (children.length === 0) {
-
         const { data: created, error: createError } = await supabaseClient
           .from(CHILDREN_TABLE)
-          .insert({ name: "Малыш" })
+          .insert({ name: "Малыш", family_id: familyId })
           .select()
           .single();
 
         if (createError) throw createError;
-
         children = [created];
       }
 
-      const stored = readStoredChildId();
-      const found = children.find(c => c.id === stored);
-
+      const found = children.find(c => c.id === activeChildId);
       activeChildId = found ? found.id : children[0].id;
-      saveActiveChildId();
-
       renderActiveChildName();
     }
 
     async function selectChild(childId) {
-
-      if (childId === activeChildId) {
-        closeChildPicker();
-        return;
-      }
-
+      if (childId === activeChildId) { closeChildPicker(); return; }
       activeChildId = childId;
-      saveActiveChildId();
       renderActiveChildName();
-
       closeChildPicker();
       hideError();
-
-      // Сбрасываем открытую сессию, чтобы не тянуть чужое состояние.
       openSession = null;
       lastCompletedEnd = null;
-
       await refreshAll();
       hapticLight();
     }
@@ -1201,25 +1587,21 @@
       children.forEach(child => {
 
         const row = document.createElement("div");
-        row.className = "child-row" + (child.id === activeChildId ? " active" : "");
+        row.className = "list-row" + (child.id === activeChildId ? " active" : "");
 
         const nameEl = document.createElement("div");
-        nameEl.className = "child-row-name";
+        nameEl.className = "list-row-name";
         nameEl.textContent = child.name;
-
         if (child.id === activeChildId) {
           const check = document.createElement("span");
-          check.className = "check";
           check.textContent = "✓";
           nameEl.appendChild(check);
         }
-
         nameEl.addEventListener("click", () => selectChild(child.id));
 
         const editBtn = document.createElement("button");
-        editBtn.className = "child-edit-btn";
+        editBtn.className = "list-edit-btn";
         editBtn.textContent = "✏️";
-        editBtn.title = "Изменить";
         editBtn.addEventListener("click", event => {
           event.stopPropagation();
           openChildForm("edit", child);
@@ -1227,7 +1609,6 @@
 
         row.appendChild(nameEl);
         row.appendChild(editBtn);
-
         childListContainer.appendChild(row);
       });
     }
@@ -1246,9 +1627,7 @@
         deleteChildBtn.style.display = "none";
       }
 
-      // Прячем пикер, чтобы окна не накладывались.
       closeChildPicker();
-
       childFormModal.classList.add("visible");
       setTimeout(() => childNameInput.focus(), 80);
     }
@@ -1261,11 +1640,7 @@
     async function saveChildForm() {
 
       const name = childNameInput.value.trim();
-
-      if (!name) {
-        alert("Введи имя.");
-        return;
-      }
+      if (!name) { alert("Введи имя."); return; }
 
       saveChildBtn.disabled = true;
       hideError();
@@ -1273,50 +1648,40 @@
       try {
 
         if (editingChildId) {
-
           const { error } = await supabaseClient
             .from(CHILDREN_TABLE)
             .update({ name })
-            .eq("id", editingChildId);
+            .eq("id", editingChildId)
+            .eq("family_id", familyId);
 
           if (error) throw error;
 
           const child = children.find(c => c.id === editingChildId);
           if (child) child.name = name;
-
-          if (editingChildId === activeChildId) {
-            renderActiveChildName();
-          }
+          if (editingChildId === activeChildId) renderActiveChildName();
 
         } else {
 
           const { data, error } = await supabaseClient
             .from(CHILDREN_TABLE)
-            .insert({ name })
+            .insert({ name, family_id: familyId })
             .select()
             .single();
 
           if (error) throw error;
 
           children.push(data);
-
-          // Переключаемся на нового ребёнка.
           activeChildId = data.id;
-          saveActiveChildId();
           renderActiveChildName();
-
-          // Сбрасываем состояние предыдущего ребёнка.
           openSession = null;
           lastCompletedEnd = null;
         }
 
         closeChildForm();
         hapticSuccess();
-
         await refreshAll();
 
       } catch (error) {
-
         console.error(error);
         showError(error.message || "Не удалось сохранить.");
         saveChildBtn.disabled = false;
@@ -1326,25 +1691,18 @@
     async function deleteChild() {
 
       if (!editingChildId) return;
-
-      if (children.length <= 1) {
-        alert("Нельзя удалить единственного ребёнка.");
-        return;
-      }
+      if (children.length <= 1) { alert("Нельзя удалить единственного ребёнка."); return; }
 
       const child = children.find(c => c.id === editingChildId);
       if (!child) return;
 
-      const confirmed = confirm(
-        `Удалить ребёнка «${child.name}» и все его записи (сон, события, фото)? Действие необратимо.`
-      );
+      const confirmed = confirm(`Удалить ребёнка «${child.name}» и все его записи? Действие необратимо.`);
       if (!confirmed) return;
 
       hideError();
 
       try {
 
-        // Сначала — файлы фото из хранилища.
         try {
           const { data: photoRows } = await supabaseClient
             .from(PHOTOS_TABLE)
@@ -1357,30 +1715,22 @@
               await supabaseClient.storage.from(PHOTOS_BUCKET).remove(paths);
             }
           }
-        } catch (storageError) {
-          console.warn("Не удалось удалить файлы фото:", storageError);
-        }
+        } catch (e) { console.warn(e); }
 
-        // Удаляем данные.
         await supabaseClient.from(TABLE).delete().eq("child_id", editingChildId);
         await supabaseClient.from(EVENTS_TABLE).delete().eq("child_id", editingChildId);
         await supabaseClient.from(PHOTOS_TABLE).delete().eq("child_id", editingChildId);
 
-        // Удаляем самого ребёнка.
         const { error } = await supabaseClient
-          .from(CHILDREN_TABLE)
-          .delete()
-          .eq("id", editingChildId);
+          .from(CHILDREN_TABLE).delete().eq("id", editingChildId);
 
         if (error) throw error;
 
         const wasActive = (editingChildId === activeChildId);
-
         children = children.filter(c => c.id !== editingChildId);
 
         if (wasActive) {
           activeChildId = children[0].id;
-          saveActiveChildId();
           renderActiveChildName();
           openSession = null;
           lastCompletedEnd = null;
@@ -1388,14 +1738,127 @@
 
         closeChildForm();
         hapticSuccess();
-
         await refreshAll();
 
       } catch (error) {
-
         console.error(error);
         showError(error.message || "Не удалось удалить.");
       }
+    }
+
+
+    // ============================================================
+    // НАСТРОЙКИ СЕМЬИ
+    // ============================================================
+
+    function openFamilyModal() {
+      if (!familyInfo) return;
+      familyNameInput.value = familyInfo.name || "";
+      inviteCodeText.textContent = familyInfo.invite_code || "——————";
+      renderFamilyMembers();
+      familyModal.classList.add("visible");
+      loadFamilyMembers().then(renderFamilyMembers).catch(console.error);
+    }
+
+    function closeFamilyModal() {
+      familyModal.classList.remove("visible");
+    }
+
+    function renderFamilyMembers() {
+
+      familyMembersContainer.innerHTML = "";
+
+      if (!familyMembers.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Пока только вы.";
+        familyMembersContainer.appendChild(empty);
+        return;
+      }
+
+      familyMembers.forEach(member => {
+        const row = document.createElement("div");
+        row.className = "list-row";
+
+        const nameEl = document.createElement("div");
+        nameEl.className = "list-row-name";
+        nameEl.textContent = member.display_name || `ID ${member.telegram_id}`;
+
+        if (member.role === "owner") {
+          const sub = document.createElement("span");
+          sub.className = "list-row-sub";
+          sub.textContent = "(владелец)";
+          nameEl.appendChild(sub);
+        }
+
+        row.appendChild(nameEl);
+        familyMembersContainer.appendChild(row);
+      });
+    }
+
+    async function saveFamilyName() {
+
+      const name = familyNameInput.value.trim();
+      if (!name || name === familyInfo?.name) return;
+
+      try {
+        const { error } = await supabaseClient
+          .from(FAMILIES_TABLE).update({ name }).eq("id", familyId);
+
+        if (error) throw error;
+
+        familyInfo.name = name;
+        hapticSuccess();
+
+      } catch (error) {
+        console.error(error);
+        showError(error.message || "Не удалось переименовать.");
+      }
+    }
+
+    async function copyInviteCode() {
+
+      const code = familyInfo?.invite_code;
+      if (!code) return;
+
+      let copied = false;
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(code);
+          copied = true;
+        }
+      } catch (e) { copied = false; }
+
+      if (!copied) {
+        prompt("Скопируйте код:", code);
+        return;
+      }
+
+      copyInviteBtn.textContent = "✓";
+      setTimeout(() => { copyInviteBtn.textContent = "Копировать"; }, 1500);
+      hapticSuccess();
+    }
+
+    function shareInviteLink() {
+
+      const code = familyInfo?.invite_code;
+      if (!code) return;
+
+      const appUrl =
+        `https://t.me/${BOT_USERNAME}/${MINIAPP_SHORT_NAME}?startapp=${code}`;
+
+      const shareUrl =
+        `https://t.me/share/url?url=${encodeURIComponent(appUrl)}` +
+        `&text=${encodeURIComponent("Присоединяйся к нашему приложению «Режим дня»")}`;
+
+      if (tg?.openTelegramLink) {
+        tg.openTelegramLink(shareUrl);
+      } else {
+        window.open(shareUrl, "_blank");
+      }
+
+      hapticLight();
     }
 
 
@@ -1440,11 +1903,7 @@
 
     async function loadOpenSession() {
 
-      if (!activeChildId) {
-        openSession = null;
-        renderStatus();
-        return;
-      }
+      if (!activeChildId) { openSession = null; renderStatus(); return; }
 
       const { data, error } = await supabaseClient
         .from(TABLE)
@@ -1457,16 +1916,12 @@
       if (error) throw error;
 
       openSession = (data && data.length > 0) ? data[0] : null;
-
       renderStatus();
     }
 
     async function loadLastCompletedEnd() {
 
-      if (!activeChildId) {
-        lastCompletedEnd = null;
-        return;
-      }
+      if (!activeChildId) { lastCompletedEnd = null; return; }
 
       const { data, error } = await supabaseClient
         .from(TABLE)
@@ -1518,10 +1973,7 @@
 
     async function toggleSleep() {
 
-      if (!activeChildId) {
-        showError("Сначала выбери или добавь ребёнка.");
-        return;
-      }
+      if (!activeChildId || !familyId) return;
 
       actionBtn.disabled = true;
       hideError();
@@ -1529,23 +1981,19 @@
       try {
 
         if (openSession) {
-
           const { error } = await supabaseClient
             .from(TABLE)
             .update({ end_time: new Date().toISOString() })
             .eq("id", openSession.id);
-
           if (error) throw error;
-
         } else {
-
           const { error } = await supabaseClient
             .from(TABLE)
             .insert({
               start_time: new Date().toISOString(),
-              child_id: activeChildId
+              child_id: activeChildId,
+              family_id: familyId
             });
-
           if (error) throw error;
         }
 
@@ -1553,7 +2001,6 @@
         await refreshAll();
 
       } catch (error) {
-
         console.error(error);
         showError(error.message || "Ошибка. Попробуй ещё раз.");
         actionBtn.disabled = false;
@@ -1567,10 +2014,7 @@
 
     async function addBabyEvent(eventType) {
 
-      if (!activeChildId) {
-        showError("Сначала выбери или добавь ребёнка.");
-        return;
-      }
+      if (!activeChildId || !familyId) return;
 
       peeBtn.disabled = true;
       poopBtn.disabled = true;
@@ -1583,25 +2027,20 @@
           .insert({
             event_type: eventType,
             event_time: new Date().toISOString(),
-            child_id: activeChildId
+            child_id: activeChildId,
+            family_id: familyId
           });
 
         if (error) throw error;
 
         hapticSuccess();
         await safeCall(loadRecentEvents);
-
-        if (currentView === "stats") {
-          await safeCall(() => loadRangeStats(false));
-        }
+        if (currentView === "stats") await safeCall(() => loadRangeStats(false));
 
       } catch (error) {
-
         console.error(error);
         showError(error.message || "Не удалось записать событие.");
-
       } finally {
-
         peeBtn.disabled = false;
         poopBtn.disabled = false;
       }
@@ -1614,10 +2053,7 @@
 
     async function loadRecentHistory() {
 
-      if (!activeChildId) {
-        renderHistory([]);
-        return;
-      }
+      if (!activeChildId) { renderHistory([]); return; }
 
       const { data, error } = await supabaseClient
         .from(TABLE)
@@ -1628,7 +2064,6 @@
         .limit(10);
 
       if (error) throw error;
-
       renderHistory(data);
     }
 
@@ -1674,15 +2109,12 @@
 
         row.appendChild(info);
         row.appendChild(editButton);
-
         historyList.appendChild(row);
 
         const nextSession = data[index + 1];
-
         if (nextSession) {
           const nextEnd = new Date(nextSession.end_time);
           const awakeMs = start.getTime() - nextEnd.getTime();
-
           if (awakeMs > 0) {
             const awakeRow = document.createElement("div");
             awakeRow.className = "awake-gap";
@@ -1695,10 +2127,7 @@
 
     async function loadRecentEvents() {
 
-      if (!activeChildId) {
-        renderEvents([]);
-        return;
-      }
+      if (!activeChildId) { renderEvents([]); return; }
 
       const { data, error } = await supabaseClient
         .from(EVENTS_TABLE)
@@ -1708,7 +2137,6 @@
         .limit(10);
 
       if (error) throw error;
-
       renderEvents(data);
     }
 
@@ -1725,7 +2153,6 @@
       }
 
       data.forEach(event => {
-
         const row = document.createElement("div");
         row.className = "history-item";
 
@@ -1734,16 +2161,12 @@
 
         const time = document.createElement("div");
         time.className = "history-time";
-
-        if (event.event_type === "pee") {
-          time.textContent = `💧 Пописал — ${formatTime(event.event_time)}`;
-        } else {
-          time.textContent = `💩 Покакал — ${formatTime(event.event_time)}`;
-        }
+        time.textContent = event.event_type === "pee"
+          ? `💧 Пописал — ${formatTime(event.event_time)}`
+          : `💩 Покакал — ${formatTime(event.event_time)}`;
 
         info.appendChild(time);
         row.appendChild(info);
-
         eventsList.appendChild(row);
       });
     }
@@ -1782,34 +2205,21 @@
       const startValue = editStart.value;
       const endValue = editEnd.value;
 
-      if (!startValue) {
-        alert("Укажи время начала сна.");
-        return;
-      }
+      if (!startValue) { alert("Укажи время начала сна."); return; }
 
       const startISO = localInputToISO(startValue);
       const endISO = localInputToISO(endValue);
 
-      if (!startISO) {
-        alert("Некорректное время начала.");
-        return;
-      }
-
-      if (endValue && !endISO) {
-        alert("Некорректное время окончания.");
-        return;
-      }
-
+      if (!startISO) { alert("Некорректное время начала."); return; }
+      if (endValue && !endISO) { alert("Некорректное время окончания."); return; }
       if (endISO && new Date(endISO) <= new Date(startISO)) {
-        alert("Конец сна должен быть позже начала.");
-        return;
+        alert("Конец сна должен быть позже начала."); return;
       }
 
       saveEditBtn.disabled = true;
       hideError();
 
       try {
-
         const { error } = await supabaseClient
           .from(TABLE)
           .update({ start_time: startISO, end_time: endISO })
@@ -1822,7 +2232,6 @@
         await refreshAll();
 
       } catch (error) {
-
         console.error(error);
         showError(error.message || "Не удалось сохранить изменения.");
         saveEditBtn.disabled = false;
@@ -1831,31 +2240,20 @@
 
 
     // ============================================================
-    // ЧИСТЫЙ РАСЧЁТ СТАТИСТИКИ
+    // СТАТИСТИКА
     // ============================================================
 
     function mergeIntervals(intervals) {
-
       if (!intervals.length) return [];
-
-      const sorted = intervals
-        .slice()
-        .sort((a, b) => a.start - b.start);
-
+      const sorted = intervals.slice().sort((a, b) => a.start - b.start);
       const merged = [{ start: sorted[0].start, end: sorted[0].end }];
 
       for (let i = 1; i < sorted.length; i++) {
-
         const last = merged[merged.length - 1];
         const current = sorted[i];
-
-        if (current.start <= last.end) {
-          last.end = Math.max(last.end, current.end);
-        } else {
-          merged.push({ start: current.start, end: current.end });
-        }
+        if (current.start <= last.end) last.end = Math.max(last.end, current.end);
+        else merged.push({ start: current.start, end: current.end });
       }
-
       return merged;
     }
 
@@ -1864,51 +2262,26 @@
       const clippedIntervals = [];
       const overlappingSessions = [];
 
-      let rawRecordCount = 0;
-
       rawSessions.forEach(session => {
-
         const sessionStartMs = new Date(session.start_time).getTime();
-
         if (!Number.isFinite(sessionStartMs)) return;
 
         const sessionEndMs = session.end_time
           ? new Date(session.end_time).getTime()
           : nowMs;
-
         if (!Number.isFinite(sessionEndMs)) return;
 
-        if (
-          sessionEndMs <= rangeStartMs ||
-          sessionStartMs >= rangeEndMs
-        ) {
-          return;
-        }
+        if (sessionEndMs <= rangeStartMs || sessionStartMs >= rangeEndMs) return;
 
         const start = Math.max(sessionStartMs, rangeStartMs);
         const end = Math.min(sessionEndMs, rangeEndMs);
-
         if (end <= start) return;
 
         clippedIntervals.push({ start, end });
-
-        overlappingSessions.push({
-          session,
-          sessionStartMs,
-          sessionEndMs,
-          start,
-          end
-        });
-
-        rawRecordCount++;
+        overlappingSessions.push({ session, sessionStartMs, sessionEndMs, start, end });
       });
 
-      return {
-        clippedIntervals,
-        overlappingSessions,
-        rawRecordCount,
-        fetchedRecordCount: rawSessions.length
-      };
+      return { clippedIntervals, overlappingSessions };
     }
 
     function isNightMoment(ms) {
@@ -1921,29 +2294,19 @@
 
       const boundaries = [];
       const dayMs = 24 * 60 * 60 * 1000;
-
       const cursor = new Date(intervalStart - dayMs);
       cursor.setHours(0, 0, 0, 0);
 
       while (cursor.getTime() <= intervalEnd + dayMs) {
 
-        const eveningBoundary = new Date(cursor);
-        eveningBoundary.setHours(20, 0, 0, 0);
+        const evening = new Date(cursor); evening.setHours(20, 0, 0, 0);
+        const morning = new Date(cursor); morning.setHours(9, 0, 0, 0);
 
-        const morningBoundary = new Date(cursor);
-        morningBoundary.setHours(9, 0, 0, 0);
-
-        if (eveningBoundary.getTime() > intervalStart && eveningBoundary.getTime() < intervalEnd) {
-          boundaries.push(eveningBoundary.getTime());
-        }
-
-        if (morningBoundary.getTime() > intervalStart && morningBoundary.getTime() < intervalEnd) {
-          boundaries.push(morningBoundary.getTime());
-        }
+        if (evening.getTime() > intervalStart && evening.getTime() < intervalEnd) boundaries.push(evening.getTime());
+        if (morning.getTime() > intervalStart && morning.getTime() < intervalEnd) boundaries.push(morning.getTime());
 
         cursor.setTime(cursor.getTime() + dayMs);
       }
-
       return boundaries.sort((a, b) => a - b);
     }
 
@@ -1954,18 +2317,14 @@
       const pieces = [];
 
       for (let i = 0; i < points.length - 1; i++) {
-
         const segmentStart = points[i];
         const segmentEnd = points[i + 1];
-
         if (segmentEnd <= segmentStart) continue;
 
         const midpoint = (segmentStart + segmentEnd) / 2;
         const type = isNightMoment(midpoint) ? "night" : "day";
-
         pieces.push({ start: segmentStart, end: segmentEnd, type });
       }
-
       return pieces;
     }
 
@@ -1974,103 +2333,53 @@
       const effectiveEndMs = Math.min(rangeEndMs, nowMs);
       const totalRangeMs = Math.max(effectiveEndMs - rangeStartMs, 0);
 
-      const {
-        clippedIntervals,
-        overlappingSessions,
-        rawRecordCount,
-        fetchedRecordCount
-      } = clipRawSessionsToRange(
-        rawSessions,
-        rangeStartMs,
-        effectiveEndMs,
-        nowMs
+      const { clippedIntervals, overlappingSessions } = clipRawSessionsToRange(
+        rawSessions, rangeStartMs, effectiveEndMs, nowMs
       );
 
       const mergedSleepIntervals = mergeIntervals(clippedIntervals);
-
       const sleepPieces = [];
-      mergedSleepIntervals.forEach(interval => {
-        sleepPieces.push(...splitIntervalByDayNight(interval));
-      });
+      mergedSleepIntervals.forEach(i => sleepPieces.push(...splitIntervalByDayNight(i)));
 
-      let sleepMs = 0;
-      let daySleepMs = 0;
-      let daySleepCount = 0;
-      let nightSleepMs = 0;
-      let nightSleepCount = 0;
+      let sleepMs = 0, daySleepMs = 0, daySleepCount = 0, nightSleepMs = 0, nightSleepCount = 0;
 
       overlappingSessions.forEach(({ sessionStartMs }) => {
-
-        if (
-          sessionStartMs >= rangeStartMs &&
-          sessionStartMs < effectiveEndMs
-        ) {
-          if (isNightMoment(sessionStartMs)) {
-            nightSleepCount++;
-          } else {
-            daySleepCount++;
-          }
+        if (sessionStartMs >= rangeStartMs && sessionStartMs < effectiveEndMs) {
+          if (isNightMoment(sessionStartMs)) nightSleepCount++;
+          else daySleepCount++;
         }
       });
 
       sleepPieces.forEach(piece => {
-
         const duration = Math.max(piece.end - piece.start, 0);
         sleepMs += duration;
-
-        if (piece.type === "night") {
-          nightSleepMs += duration;
-        } else {
-          daySleepMs += duration;
-        }
+        if (piece.type === "night") nightSleepMs += duration;
+        else daySleepMs += duration;
       });
 
       sleepMs = Math.min(sleepMs, totalRangeMs);
       const awakeMs = Math.max(totalRangeMs - sleepMs, 0);
 
-      const avgDaySleepMs = daySleepCount > 0
-        ? daySleepMs / daySleepCount
-        : 0;
+      const avgDaySleepMs = daySleepCount > 0 ? daySleepMs / daySleepCount : 0;
+      const avgNightSleepMs = nightSleepCount > 0 ? nightSleepMs / nightSleepCount : 0;
 
-      const avgNightSleepMs = nightSleepCount > 0
-        ? nightSleepMs / nightSleepCount
-        : 0;
-
-      // Средние «в сутки» для режима «Период».
       const dayMs = 24 * 60 * 60 * 1000;
       const daysInRange = totalRangeMs > 0 ? totalRangeMs / dayMs : 0;
 
-      const avgSleepPerDayMs = daysInRange > 0 ? sleepMs / daysInRange : 0;
-      const avgAwakePerDayMs = daysInRange > 0 ? awakeMs / daysInRange : 0;
-      const avgDaySleepPerDayMs = daysInRange > 0 ? daySleepMs / daysInRange : 0;
-      const avgNightSleepPerDayMs = daysInRange > 0 ? nightSleepMs / daysInRange : 0;
-
       return {
-        rangeStartMs,
-        effectiveEndMs,
-        totalRangeMs,
-        mergedSleepIntervals,
-        sleepPieces,
-        fetchedRecordCount,
-        rawRecordCount,
-        sleepMs,
-        awakeMs,
-        daySleepMs,
-        daySleepCount,
-        nightSleepMs,
-        nightSleepCount,
-        avgDaySleepMs,
-        avgNightSleepMs,
-        avgSleepPerDayMs,
-        avgAwakePerDayMs,
-        avgDaySleepPerDayMs,
-        avgNightSleepPerDayMs
+        rangeStartMs, effectiveEndMs, totalRangeMs, sleepPieces,
+        sleepMs, awakeMs, daySleepMs, daySleepCount, nightSleepMs, nightSleepCount,
+        avgDaySleepMs, avgNightSleepMs,
+        avgSleepPerDayMs: daysInRange > 0 ? sleepMs / daysInRange : 0,
+        avgAwakePerDayMs: daysInRange > 0 ? awakeMs / daysInRange : 0,
+        avgDaySleepPerDayMs: daysInRange > 0 ? daySleepMs / daysInRange : 0,
+        avgNightSleepPerDayMs: daysInRange > 0 ? nightSleepMs / daysInRange : 0
       };
     }
 
 
     // ============================================================
-    // ЗАГРУЗКА ДАННЫХ ИЗ SUPABASE
+    // ЗАГРУЗКА ДАННЫХ
     // ============================================================
 
     async function fetchSleepSessionsInRange(rangeStartMs, rangeEndMs) {
@@ -2081,19 +2390,15 @@
       const endIso = new Date(rangeEndMs).toISOString();
 
       const completed = await fetchAllPages(
-        TABLE,
-        "id,start_time,end_time",
+        TABLE, "id,start_time,end_time",
         q => q.eq("child_id", activeChildId).lt("start_time", endIso).gte("end_time", startIso),
-        "start_time",
-        true
+        "start_time", true
       );
 
       const open = await fetchAllPages(
-        TABLE,
-        "id,start_time,end_time",
+        TABLE, "id,start_time,end_time",
         q => q.eq("child_id", activeChildId).lt("start_time", endIso).is("end_time", null),
-        "start_time",
-        true
+        "start_time", true
       );
 
       return [...completed, ...open];
@@ -2111,7 +2416,6 @@
         .lte("event_time", endDate.toISOString());
 
       if (error) throw error;
-
       return data || [];
     }
 
@@ -2123,40 +2427,28 @@
     async function loadRangeStats(showLoading) {
 
       if (!activeChildId) {
-        timelineContainer.innerHTML = '<div class="empty">Сначала выбери или добавь ребёнка</div>';
+        timelineContainer.innerHTML = '<div class="empty">Сначала выбери ребёнка</div>';
         return;
       }
 
-      if (showLoading) {
-        timelineContainer.innerHTML = '<div class="empty">Загрузка...</div>';
-      }
+      if (showLoading) timelineContainer.innerHTML = '<div class="empty">Загрузка...</div>';
 
       const nowMs = Date.now();
 
       let rawSessions = [];
       try {
-        rawSessions = await fetchSleepSessionsInRange(
-          rangeStart.getTime(),
-          rangeEnd.getTime()
-        );
+        rawSessions = await fetchSleepSessionsInRange(rangeStart.getTime(), rangeEnd.getTime());
       } catch (error) {
         console.error(error);
         showError("Не удалось загрузить сон за период.");
       }
 
-      const stats = calculateSleepStats(
-        rawSessions,
-        rangeStart.getTime(),
-        rangeEnd.getTime(),
-        nowMs
-      );
+      const stats = calculateSleepStats(rawSessions, rangeStart.getTime(), rangeEnd.getTime(), nowMs);
 
       let events = [];
       try {
         events = await fetchEventsInRange(rangeStart, new Date(stats.effectiveEndMs));
-      } catch (error) {
-        console.error(error);
-      }
+      } catch (error) { console.error(error); }
 
       renderRangeSummary(stats);
       renderRangeLabel(stats);
@@ -2171,13 +2463,10 @@
     // ============================================================
 
     function renderRangeLabel(stats) {
-
       const start = new Date(stats.rangeStartMs);
       const end = new Date(stats.effectiveEndMs);
-
       rangeLabel.textContent =
         `Период: ${formatDateTime(start)} → ${formatDateTime(end)} (${formatDuration(stats.totalRangeMs)})`;
-
       rangeSublabel.textContent = "";
     }
 
@@ -2186,11 +2475,10 @@
       const isRange = periodMode === "range";
 
       if (isRange) {
-
         labelSleepTotal.textContent = "😴 Сон (в среднем в сутки)";
         labelAwakeTotal.textContent = "🙂 Бодрствование (в среднем в сутки)";
-        labelDaySleep.textContent = "☀️ Дневной сон в среднем";
-        labelNightSleep.textContent = "🌙 Ночной сон в среднем2";
+        labelDaySleep.textContent = "☀️ Дневной сон (в среднем в сутки)";
+        labelNightSleep.textContent = "🌙 Ночной сон (в среднем в сутки)";
 
         rangeSleepTotal.textContent = formatDuration(stats.avgSleepPerDayMs);
         rangeAwakeTotal.textContent = formatDuration(stats.avgAwakePerDayMs);
@@ -2201,7 +2489,6 @@
         avgNightRow.style.display = "none";
 
       } else {
-
         labelSleepTotal.textContent = "😴 Сон всего";
         labelAwakeTotal.textContent = "🙂 Бодрствование всего";
         labelDaySleep.textContent = "☀️ Дневной сон";
@@ -2209,34 +2496,23 @@
 
         rangeSleepTotal.textContent = formatDuration(stats.sleepMs);
         rangeAwakeTotal.textContent = formatDuration(stats.awakeMs);
-
-        rangeDaySleep.textContent =
-          `${formatDuration(stats.daySleepMs)} (${stats.daySleepCount})`;
-
-        rangeNightSleep.textContent =
-          `${formatDuration(stats.nightSleepMs)} (${stats.nightSleepCount})`;
+        rangeDaySleep.textContent = `${formatDuration(stats.daySleepMs)} (${stats.daySleepCount})`;
+        rangeNightSleep.textContent = `${formatDuration(stats.nightSleepMs)} (${stats.nightSleepCount})`;
 
         avgDayRow.style.display = "";
         avgNightRow.style.display = "";
 
-        rangeAvgDaySleep.textContent =
-          stats.daySleepCount > 0 ? formatDuration(stats.avgDaySleepMs) : "—";
-
-        rangeAvgNightSleep.textContent =
-          stats.nightSleepCount > 0 ? formatDuration(stats.avgNightSleepMs) : "—";
+        rangeAvgDaySleep.textContent = stats.daySleepCount > 0 ? formatDuration(stats.avgDaySleepMs) : "—";
+        rangeAvgNightSleep.textContent = stats.nightSleepCount > 0 ? formatDuration(stats.avgNightSleepMs) : "—";
       }
     }
 
     function renderEventCounts(events) {
-
-      let peeCount = 0;
-      let poopCount = 0;
-
-      events.forEach(event => {
-        if (event.event_type === "pee") peeCount++;
-        else if (event.event_type === "poop") poopCount++;
+      let peeCount = 0, poopCount = 0;
+      events.forEach(e => {
+        if (e.event_type === "pee") peeCount++;
+        else if (e.event_type === "poop") poopCount++;
       });
-
       rangePeeCount.textContent = String(peeCount);
       rangePoopCount.textContent = String(poopCount);
     }
@@ -2244,7 +2520,6 @@
     function renderRangeChart(sleepMs, awakeMs) {
 
       if (typeof Chart === "undefined") return;
-
       const canvas = document.getElementById("rangeChart");
       if (!canvas) return;
 
@@ -2252,7 +2527,6 @@
       const awakeHours = Number((awakeMs / 3600000).toFixed(2));
 
       if (rangeChartInstance) {
-
         rangeChartInstance.data.datasets[0].data = [sleepHours, awakeHours];
         rangeChartInstance.update("none");
         return;
@@ -2262,21 +2536,15 @@
         type: "doughnut",
         data: {
           labels: ["Сон", "Бодрствование"],
-          datasets: [{
-            data: [sleepHours, awakeHours],
-            backgroundColor: ["#2481cc", "#f2a154"]
-          }]
+          datasets: [{ data: [sleepHours, awakeHours], backgroundColor: ["#2481cc", "#f2a154"] }]
         },
-        options: {
-          animation: false,
-          plugins: { legend: { position: "bottom" } }
-        }
+        options: { animation: false, plugins: { legend: { position: "bottom" } } }
       });
     }
 
 
     // ============================================================
-    // ХРОНОЛОГИЯ (ГАНТ)
+    // ГАНТ
     // ============================================================
 
     function buildTimelineRows(rangeStartDate, rangeEndDate) {
@@ -2284,38 +2552,28 @@
       if (periodMode === "today") {
         return [{
           label: `${formatDateTime(rangeStartDate)} — ${formatDateTime(rangeEndDate)}`,
-          start: rangeStartDate,
-          end: rangeEndDate
+          start: rangeStartDate, end: rangeEndDate
         }];
       }
 
       const rows = [];
       const cursor = new Date(
-        rangeStartDate.getFullYear(),
-        rangeStartDate.getMonth(),
-        rangeStartDate.getDate()
+        rangeStartDate.getFullYear(), rangeStartDate.getMonth(), rangeStartDate.getDate()
       );
 
       while (cursor.getTime() < rangeEndDate.getTime()) {
-
         const dayStart = new Date(cursor);
         const dayEnd = new Date(cursor.getTime() + 24 * 60 * 60 * 1000);
-
         const rowStart = new Date(Math.max(dayStart.getTime(), rangeStartDate.getTime()));
         const rowEnd = new Date(Math.min(dayEnd.getTime(), rangeEndDate.getTime()));
-
         rows.push({ label: formatDateShort(dayStart), start: rowStart, end: rowEnd });
-
         cursor.setDate(cursor.getDate() + 1);
       }
-
       return rows;
     }
 
     function buildHourTicks(rowStartMs, rowEndMs, intervalHours) {
-
       const step = (intervalHours || 3) * 60 * 60 * 1000;
-
       const tickDate = new Date(rowStartMs);
       tickDate.setMinutes(0, 0, 0);
 
@@ -2323,52 +2581,35 @@
       const remainder = startHour % (intervalHours || 3);
       tickDate.setHours(startHour - remainder);
 
-      if (tickDate.getTime() < rowStartMs) {
-        tickDate.setTime(tickDate.getTime() + step);
-      }
+      if (tickDate.getTime() < rowStartMs) tickDate.setTime(tickDate.getTime() + step);
 
       const ticks = [];
-
       while (tickDate.getTime() <= rowEndMs) {
         ticks.push({ time: tickDate.getTime(), label: formatClock(tickDate) });
         tickDate.setTime(tickDate.getTime() + step);
       }
-
       return ticks;
     }
 
     function findAwakeIntervalAtClick(clickMs, rowStartMs, rowEndMs, sleepPieces) {
 
       const sleeps = sleepPieces
-        .map(p => ({
-          start: Math.max(p.start, rowStartMs),
-          end: Math.min(p.end, rowEndMs)
-        }))
+        .map(p => ({ start: Math.max(p.start, rowStartMs), end: Math.min(p.end, rowEndMs) }))
         .filter(p => p.end > p.start)
         .sort((a, b) => a.start - b.start);
 
       let cursor = rowStartMs;
-
       for (const s of sleeps) {
-
-        if (clickMs < s.start) {
-          return { start: cursor, end: s.start };
-        }
-
+        if (clickMs < s.start) return { start: cursor, end: s.start };
         cursor = Math.max(cursor, s.end);
       }
-
-      if (cursor < rowEndMs) {
-        return { start: cursor, end: rowEndMs };
-      }
-
+      if (cursor < rowEndMs) return { start: cursor, end: rowEndMs };
       return null;
     }
 
     function renderTimeline(sleepPieces, rangeStartDate, rangeEndDate) {
 
       timelineContainer.innerHTML = "";
-
       const rows = buildTimelineRows(rangeStartDate, rangeEndDate);
 
       if (rows.length === 0) {
@@ -2399,7 +2640,6 @@
 
           const segStart = Math.max(interval.start, rowStartMs);
           const segEnd = Math.min(interval.end, rowEndMs);
-
           if (segEnd <= segStart) return;
 
           const leftPercent = ((segStart - rowStartMs) / rowTotalMs) * 100;
@@ -2414,15 +2654,12 @@
             `${interval.type === "night" ? "🌙" : "☀️"} ` +
             `${formatClock(new Date(segStart))} → ${formatClock(new Date(segEnd))} · ` +
             `${formatDuration(segEnd - segStart)}`;
-
           segment.title = tooltipText;
 
           segment.addEventListener("click", event => {
             event.stopPropagation();
-
             const existing = wrapper.querySelector(".timeline-tooltip.visible");
             if (existing) existing.classList.remove("visible");
-
             tooltip.textContent = tooltipText;
             tooltip.classList.add("visible");
           });
@@ -2431,7 +2668,6 @@
         });
 
         track.addEventListener("click", event => {
-
           const rect = track.getBoundingClientRect();
           if (rect.width <= 0) return;
 
@@ -2445,11 +2681,9 @@
           if (existing) existing.classList.remove("visible");
 
           if (!gap) return;
-
           tooltip.textContent =
             `🙂 ${formatClock(new Date(gap.start))} → ${formatClock(new Date(gap.end))} · ` +
             `${formatDuration(gap.end - gap.start)}`;
-
           tooltip.classList.add("visible");
         });
 
@@ -2465,7 +2699,6 @@
 
         const tickLabels = document.createElement("div");
         tickLabels.className = "timeline-tick-labels";
-
         hourTicks.forEach(tick => {
           const leftPercent = ((tick.time - rowStartMs) / rowTotalMs) * 100;
           const tickLabel = document.createElement("div");
@@ -2479,7 +2712,6 @@
         wrapper.appendChild(track);
         wrapper.appendChild(tickLabels);
         wrapper.appendChild(tooltip);
-
         timelineContainer.appendChild(wrapper);
       });
     }
@@ -2510,26 +2742,16 @@
     function applyCustomRange() {
 
       if (periodMode === "day") {
-
         const value = statsSingleDate.value;
-        if (!value) {
-          alert("Выбери дату.");
-          return;
-        }
-
+        if (!value) { alert("Выбери дату."); return; }
         const { y, m, d } = parseDateInputValue(value);
         rangeStart = new Date(y, m - 1, d, 0, 0, 0, 0);
         rangeEnd = new Date(y, m - 1, d, 23, 59, 59, 999);
 
       } else if (periodMode === "range") {
-
         const fromValue = statsFromDate.value;
         const toValue = statsToDate.value;
-
-        if (!fromValue || !toValue) {
-          alert("Выбери обе даты.");
-          return;
-        }
+        if (!fromValue || !toValue) { alert("Выбери обе даты."); return; }
 
         const from = parseDateInputValue(fromValue);
         const to = parseDateInputValue(toValue);
@@ -2537,18 +2759,11 @@
         const start = new Date(from.y, from.m - 1, from.d, 0, 0, 0, 0);
         const end = new Date(to.y, to.m - 1, to.d, 23, 59, 59, 999);
 
-        if (end.getTime() < start.getTime()) {
-          alert("Конечная дата раньше начальной.");
-          return;
-        }
+        if (end.getTime() < start.getTime()) { alert("Конечная дата раньше начальной."); return; }
 
         rangeStart = start;
         rangeEnd = end;
-
-      } else {
-
-        return;
-      }
+      } else return;
 
       safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
     }
@@ -2559,16 +2774,13 @@
     // ============================================================
 
     function csvEscape(value) {
-      const stringValue = String(value ?? "");
-      return '"' + stringValue.replace(/"/g, '""') + '"';
+      const s = String(value ?? "");
+      return '"' + s.replace(/"/g, '""') + '"';
     }
 
     async function downloadCSV() {
 
-      if (!activeChildId) {
-        showError("Сначала выбери или добавь ребёнка.");
-        return;
-      }
+      if (!activeChildId) return;
 
       csvBtn.disabled = true;
       hideError();
@@ -2577,28 +2789,22 @@
       try {
 
         const sleepData = await fetchAllPages(
-          TABLE,
-          "id,start_time,end_time",
+          TABLE, "id,start_time,end_time",
           q => q.eq("child_id", activeChildId).not("end_time", "is", null),
-          "start_time",
-          true
+          "start_time", true
         );
 
         const eventData = await fetchAllPages(
-          EVENTS_TABLE,
-          "id,event_type,event_time",
+          EVENTS_TABLE, "id,event_type,event_time",
           q => q.eq("child_id", activeChildId),
-          "event_time",
-          true
+          "event_time", true
         );
 
         const rows = [];
 
         sleepData.forEach(session => {
-
           const start = new Date(session.start_time);
           const end = new Date(session.end_time);
-
           rows.push([
             start.toLocaleDateString("ru-RU"),
             start.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
@@ -2610,17 +2816,12 @@
         });
 
         eventData.forEach(event => {
-
           const date = new Date(event.event_time);
           const eventName = event.event_type === "pee" ? "Пописал" : "Покакал";
-
           rows.push([
             date.toLocaleDateString("ru-RU"),
             date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
-            eventName,
-            "",
-            date.toISOString(),
-            ""
+            eventName, "", date.toISOString(), ""
           ]);
         });
 
@@ -2644,9 +2845,7 @@
             await navigator.clipboard.writeText(csv);
             copied = true;
           }
-        } catch (clipboardError) {
-          copied = false;
-        }
+        } catch (e) { copied = false; }
 
         if (!copied) {
           try {
@@ -2654,9 +2853,7 @@
             csvOutput.select();
             document.execCommand("copy");
             copied = true;
-          } catch (fallbackError) {
-            copied = false;
-          }
+          } catch (e) { copied = false; }
         }
 
         csvHint.textContent = copied
@@ -2666,19 +2863,16 @@
         hapticSuccess();
 
       } catch (error) {
-
         console.error(error);
         showError(error.message || "Не удалось подготовить CSV.");
-
       } finally {
-
         csvBtn.disabled = false;
       }
     }
 
 
     // ============================================================
-    // НАЗВАНИЕ МЕСЯЦА
+    // ФОТО
     // ============================================================
 
     function getMonthTitle(monthNumber) {
@@ -2687,11 +2881,6 @@
       if (number >= 2 && number <= 4) return `${number} месяца`;
       return `${number} месяцев`;
     }
-
-
-    // ============================================================
-    // ФОТО
-    // ============================================================
 
     async function loadPhotos() {
 
@@ -2727,7 +2916,6 @@
       }
 
       const grouped = new Map();
-
       data.forEach(photo => {
         const month = Number(photo.month_number);
         if (!grouped.has(month)) grouped.set(month, []);
@@ -2766,7 +2954,6 @@
           const deleteButton = document.createElement("button");
           deleteButton.className = "photo-delete";
           deleteButton.textContent = "✕";
-          deleteButton.title = "Удалить фото";
           deleteButton.addEventListener("click", event => {
             event.stopPropagation();
             deletePhoto(photo);
@@ -2785,10 +2972,7 @@
 
     async function uploadPhoto() {
 
-      if (!activeChildId) {
-        alert("Сначала выбери или добавь ребёнка.");
-        return;
-      }
+      if (!activeChildId) return;
 
       const monthValue = photoMonthInput.value.trim();
       const file = photoFileInput.files && photoFileInput.files[0];
@@ -2796,27 +2980,14 @@
       photoHint.style.display = "none";
       hideError();
 
-      if (monthValue === "") {
-        alert("Укажи номер месяца.");
-        return;
-      }
+      if (monthValue === "") { alert("Укажи номер месяца."); return; }
 
       const monthNumber = Number(monthValue);
-
       if (!Number.isInteger(monthNumber) || monthNumber < 1 || monthNumber > 24) {
-        alert("Месяц должен быть целым числом от 1 до 24.");
-        return;
+        alert("Месяц должен быть целым числом от 1 до 24."); return;
       }
-
-      if (!file) {
-        alert("Выбери фото для загрузки.");
-        return;
-      }
-
-      if (!file.type.startsWith("image/")) {
-        alert("Можно загружать только изображения.");
-        return;
-      }
+      if (!file) { alert("Выбери фото для загрузки."); return; }
+      if (!file.type.startsWith("image/")) { alert("Можно загружать только изображения."); return; }
 
       uploadPhotoBtn.disabled = true;
       photoHint.style.display = "block";
@@ -2830,17 +3001,12 @@
 
         const { error: uploadError } = await supabaseClient
           .storage.from(PHOTOS_BUCKET).upload(path, file);
-
         if (uploadError) throw uploadError;
 
         const { data: publicUrlData } = supabaseClient
           .storage.from(PHOTOS_BUCKET).getPublicUrl(path);
-
         const photoUrl = publicUrlData?.publicUrl;
-
-        if (!photoUrl) {
-          throw new Error("Не удалось получить ссылку на фото.");
-        }
+        if (!photoUrl) throw new Error("Не удалось получить ссылку на фото.");
 
         const { error: insertError } = await supabaseClient
           .from(PHOTOS_TABLE)
@@ -2848,9 +3014,9 @@
             month_number: monthNumber,
             storage_path: path,
             photo_url: photoUrl,
-            child_id: activeChildId
+            child_id: activeChildId,
+            family_id: familyId
           });
-
         if (insertError) throw insertError;
 
         photoMonthInput.value = "";
@@ -2861,12 +3027,9 @@
         await loadPhotos();
 
       } catch (error) {
-
         console.error(error);
         photoHint.textContent = error.message || "Не удалось загрузить фото.";
-
       } finally {
-
         uploadPhotoBtn.disabled = false;
       }
     }
@@ -2879,22 +3042,17 @@
       hideError();
 
       try {
-
         const { error: storageError } = await supabaseClient
           .storage.from(PHOTOS_BUCKET).remove([photo.storage_path]);
-
         if (storageError) throw storageError;
 
         const { error } = await supabaseClient
           .from(PHOTOS_TABLE).delete().eq("id", photo.id);
-
         if (error) throw error;
 
         hapticSuccess();
         await loadPhotos();
-
       } catch (error) {
-
         console.error(error);
         showError(error.message || "Не удалось удалить фото.");
       }
@@ -2919,7 +3077,6 @@
     }
 
     function renderLightboxPhoto() {
-
       const photo = galleryPhotos[currentPhotoIndex];
       if (!photo) return;
 
@@ -2953,16 +3110,13 @@
     let touchStartX = null;
 
     lightboxContent.addEventListener("touchstart", event => {
-      if (event.touches && event.touches.length === 1) {
-        touchStartX = event.touches[0].clientX;
-      }
+      if (event.touches && event.touches.length === 1) touchStartX = event.touches[0].clientX;
     }, { passive: true });
 
     lightboxContent.addEventListener("touchend", event => {
       if (touchStartX === null) return;
       const endX = event.changedTouches && event.changedTouches[0]
-        ? event.changedTouches[0].clientX
-        : touchStartX;
+        ? event.changedTouches[0].clientX : touchStartX;
       const diff = endX - touchStartX;
       touchStartX = null;
       if (Math.abs(diff) < 50) return;
@@ -2988,19 +3142,16 @@
         refreshTodayRangeIfNeeded();
         await safeCall(() => loadRangeStats(false));
       }
-
       if (currentView === "gallery") {
         await safeCall(loadPhotos);
       }
     }
 
     async function manualRefresh() {
-
       refreshBtn.disabled = true;
       refreshBtn.classList.add("spinning");
-
       try {
-        // Список детей тоже может измениться с другого устройства.
+        await safeCall(loadFamilyInfo);
         await safeCall(loadChildren);
         await refreshAll();
         hapticLight();
@@ -3012,7 +3163,7 @@
 
 
     // ============================================================
-    // ОБРАБОТЧИКИ СОБЫТИЙ
+    // ОБРАБОТЧИКИ
     // ============================================================
 
     navMainBtn.addEventListener("click", () => setView("main"));
@@ -3056,41 +3207,73 @@
       else if (event.key === "ArrowRight") showNextPhoto();
     });
 
-    // --- дети ---
-
     childSelectorBtn.addEventListener("click", openChildPicker);
-
     closeChildPickerBtn.addEventListener("click", closeChildPicker);
-
     childPickerModal.addEventListener("click", event => {
       if (event.target === childPickerModal) closeChildPicker();
     });
-
-    addChildBtn.addEventListener("click", () => {
-      openChildForm("add", null);
-    });
-
+    addChildBtn.addEventListener("click", () => openChildForm("add", null));
     cancelChildFormBtn.addEventListener("click", closeChildForm);
-
     childFormModal.addEventListener("click", event => {
       if (event.target === childFormModal) closeChildForm();
     });
-
     saveChildBtn.addEventListener("click", saveChildForm);
-
     deleteChildBtn.addEventListener("click", deleteChild);
-
     childNameInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        saveChildForm();
+      if (event.key === "Enter") { event.preventDefault(); saveChildForm(); }
+    });
+
+    familySettingsBtn.addEventListener("click", openFamilyModal);
+    closeFamilyBtn.addEventListener("click", closeFamilyModal);
+    familyModal.addEventListener("click", event => {
+      if (event.target === familyModal) { saveFamilyName(); closeFamilyModal(); }
+    });
+    copyInviteBtn.addEventListener("click", copyInviteCode);
+    shareInviteBtn.addEventListener("click", shareInviteLink);
+    leaveFamilyBtn.addEventListener("click", leaveFamily);
+    familyNameInput.addEventListener("blur", saveFamilyName);
+    familyNameInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); familyNameInput.blur(); }
+    });
+
+    createFamilyBtn.addEventListener("click", async () => {
+      createFamilyBtn.disabled = true;
+      try {
+        await createFamilyInternal("Наша семья", { attachOrphans: false });
+        showAppScreen();
+        await loadChildren();
+        await refreshAll();
+      } catch (error) {
+        console.error(error);
+        alert("Не удалось создать семью: " + (error.message || "неизвестная ошибка"));
+      } finally {
+        createFamilyBtn.disabled = false;
       }
     });
 
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        refreshAll();
+    joinFamilyBtn.addEventListener("click", async () => {
+      joinFamilyBtn.disabled = true;
+      try {
+        await joinFamily(joinCodeInput.value);
+        await loadFamilyInfo();
+        showAppScreen();
+        await loadChildren();
+        await refreshAll();
+        hapticSuccess();
+      } catch (error) {
+        console.error(error);
+        alert("Не удалось присоединиться: " + (error.message || "неизвестная ошибка"));
+      } finally {
+        joinFamilyBtn.disabled = false;
       }
+    });
+
+    joinCodeInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); joinFamilyBtn.click(); }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && activeChildId) refreshAll();
     });
 
 
@@ -3099,6 +3282,7 @@
     // ============================================================
 
     versionLabel.textContent = `Режим дня · ${APP_VERSION}`;
+    versionLabelSetup.textContent = `Режим дня · ${APP_VERSION}`;
 
     const todayForInputs = dateToInputValue(new Date());
     const yesterdayForInputs = dateToInputValue(new Date(Date.now() - 24 * 60 * 60 * 1000));
@@ -3108,18 +3292,21 @@
     statsToDate.value = todayForInputs;
 
     (async function bootstrap() {
-
       try {
-        await loadChildren();
+        await bootstrapFamily();
+        if (familyId) {
+          await loadChildren();
+          await refreshAll();
+        }
       } catch (error) {
         console.error(error);
-        showError(error.message || "Не удалось загрузить список детей. Проверь, что таблица children существует.");
-        return;
+        setupView.classList.remove("hidden");
+        setupSubtitle.textContent =
+          "Ошибка запуска: " + (error.message || "неизвестная ошибка") +
+          ". Проверь, что таблицы families и family_members созданы.";
       }
 
-      await refreshAll();
-
-      setInterval(() => { renderStatus(); }, 60000);
+      setInterval(() => { if (activeChildId) renderStatus(); }, 60000);
     })();
 
   </script>
