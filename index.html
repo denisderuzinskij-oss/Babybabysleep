@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Режим Вани</title>
+  <title>Сон малыша</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -127,6 +127,13 @@
       margin-top: 3px;
       color: var(--hint);
       font-size: 13px;
+    }
+
+    .wake-gap-item {
+      text-align: center;
+      font-size: 12px;
+      color: var(--hint);
+      padding: 6px 0;
     }
 
     .edit-btn {
@@ -475,8 +482,8 @@
       <div class="hint" style="margin-bottom: 8px;">Период</div>
 
       <div class="period-buttons">
-        <button class="secondary-button active" id="modeTodayBtn">Сегодня</button>
-        <button class="secondary-button" id="modeDayBtn">Дата</button>
+        <button class="secondary-button active" id="modeRollingBtn">Последние 24 часа</button>
+        <button class="secondary-button" id="modeDayBtn">День</button>
         <button class="secondary-button" id="modeRangeBtn">Период</button>
       </div>
 
@@ -654,7 +661,7 @@
     const peeBtn = document.getElementById("peeBtn");
     const poopBtn = document.getElementById("poopBtn");
 
-    const modeTodayBtn = document.getElementById("modeTodayBtn");
+    const modeRollingBtn = document.getElementById("modeRollingBtn");
     const modeDayBtn = document.getElementById("modeDayBtn");
     const modeRangeBtn = document.getElementById("modeRangeBtn");
 
@@ -713,10 +720,9 @@
 
     let currentView = "main";
 
-    // Явные режимы периода статистики: "today" | "day" | "range"
-    let periodMode = "today";
-    let rangeStart = new Date();
-    rangeStart.setHours(0, 0, 0, 0);
+    // Явные режимы периода статистики: "rolling" | "day" | "range"
+    let periodMode = "rolling";
+    let rangeStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
     let rangeEnd = new Date();
 
     let rangeChartInstance = null;
@@ -1028,7 +1034,7 @@
         return;
       }
 
-      data.forEach(session => {
+      data.forEach((session, index) => {
 
         const start = new Date(session.start_time);
         const end = new Date(session.end_time);
@@ -1060,6 +1066,27 @@
         row.appendChild(editButton);
 
         historyList.appendChild(row);
+
+        // Список отсортирован от новых к старым: следующий элемент — это
+        // сон, который закончился РАНЬШЕ текущего. Разница между его концом
+        // и началом текущего сна — и есть время бодрствования между ними.
+        const earlierSession = data[index + 1];
+
+        if (earlierSession) {
+
+          const wakeGapMs =
+            new Date(session.start_time).getTime() -
+            new Date(earlierSession.end_time).getTime();
+
+          if (wakeGapMs > 0) {
+
+            const gapRow = document.createElement("div");
+            gapRow.className = "wake-gap-item";
+            gapRow.textContent = `🙂 бодрствовал ${formatDuration(wakeGapMs)}`;
+
+            historyList.appendChild(gapRow);
+          }
+        }
       });
     }
 
@@ -1227,12 +1254,11 @@
 
     // Обрезает сырые записи сна по границам диапазона.
     // Для ещё не завершённой сессии (end_time = null) концом считается "сейчас".
-    // Возвращает обрезанные интервалы и исходные сессии, пересекающие диапазон.
-    // Количество реальных дневных/ночных снов считается отдельно по времени старта.
+    // Возвращает как обрезанные интервалы, так и количество ИСХОДНЫХ записей,
+    // которые вообще попали в диапазон (для отличия от числа объединённых интервалов).
     function clipRawSessionsToRange(rawSessions, rangeStartMs, rangeEndMs, nowMs) {
 
       const clippedIntervals = [];
-      const overlappingSessions = [];
       let rawRecordCount = 0;
 
       rawSessions.forEach(session => {
@@ -1247,18 +1273,11 @@
 
         if (end > start) {
           clippedIntervals.push({ start, end });
-          overlappingSessions.push({
-            session,
-            sessionStartMs,
-            sessionEndMs,
-            start,
-            end
-          });
           rawRecordCount++;
         }
       });
 
-      return { clippedIntervals, overlappingSessions, rawRecordCount };
+      return { clippedIntervals, rawRecordCount };
     }
 
     // Ночь — фиксированное окно времени суток: с 20:00 до 09:00 следующего дня.
@@ -1303,7 +1322,6 @@
     }
 
     // Режет один интервал сна на куски "день"/"ночь" по фактическому времени суток.
-    // Это нужно для распределения ДЛИТЕЛЬНОСТИ, а не для количества снов.
     // Например, сон 19:00-22:00 даёт кусок 19:00-20:00 (день) и 20:00-22:00 (ночь).
     function splitIntervalByDayNight(interval) {
 
@@ -1333,14 +1351,13 @@
       const effectiveEndMs = Math.min(rangeEndMs, nowMs);
       const totalRangeMs = Math.max(effectiveEndMs - rangeStartMs, 0);
 
-      const { clippedIntervals, overlappingSessions, rawRecordCount } =
+      const { clippedIntervals, rawRecordCount } =
         clipRawSessionsToRange(rawSessions, rangeStartMs, effectiveEndMs, nowMs);
 
       const mergedSleepIntervals = mergeIntervals(clippedIntervals);
 
-      // Объединённые интервалы режем на дневные/ночные куски.
-      // Эти куски используются для СУММ длительности и раскраски таймлайна.
-      // Они НЕ используются для подсчёта количества снов.
+      // Каждый объединённый интервал сна режем на дневные/ночные куски —
+      // они и используются и для сумм, и для раскраски таймлайна.
       const sleepPieces = [];
       mergedSleepIntervals.forEach(interval => {
         sleepPieces.push(...splitIntervalByDayNight(interval));
@@ -1348,24 +1365,9 @@
 
       let sleepMs = 0;
       let daySleepMs = 0;
-      let daySleepCount = 0;
+      let dayPieceCount = 0;
       let nightSleepMs = 0;
-      let nightSleepCount = 0;
-
-      // Количество снов считаем по РЕАЛЬНЫМ записям сна, а не по кускам,
-      // на которые интервал был разрезан границами 09:00/20:00.
-      // Классификация определяется по фактическому времени НАЧАЛА сна:
-      // 09:00–19:59 — дневной сон, 20:00–08:59 — ночной сон.
-      // Запись считается в количестве, только если её начало попало в выбранный период.
-      overlappingSessions.forEach(({ sessionStartMs }) => {
-        if (sessionStartMs >= rangeStartMs && sessionStartMs < effectiveEndMs) {
-          if (isNightMoment(sessionStartMs)) {
-            nightSleepCount++;
-          } else {
-            daySleepCount++;
-          }
-        }
-      });
+      let nightPieceCount = 0;
 
       sleepPieces.forEach(piece => {
 
@@ -1374,8 +1376,10 @@
 
         if (piece.type === "night") {
           nightSleepMs += duration;
+          nightPieceCount++;
         } else {
           daySleepMs += duration;
+          dayPieceCount++;
         }
       });
 
@@ -1399,9 +1403,9 @@
         awakeMs,
         avgSleepMs,
         daySleepMs,
-        daySleepCount,
+        dayPieceCount,
         nightSleepMs,
-        nightSleepCount
+        nightPieceCount
       };
     }
 
@@ -1506,10 +1510,10 @@
       rangeAwakeTotal.textContent = formatDuration(stats.awakeMs);
 
       rangeDaySleep.textContent =
-        `${formatDuration(stats.daySleepMs)} (${stats.daySleepCount})`;
+        `${formatDuration(stats.daySleepMs)} (${stats.dayPieceCount})`;
 
       rangeNightSleep.textContent =
-        `${formatDuration(stats.nightSleepMs)} (${stats.nightSleepCount})`;
+        `${formatDuration(stats.nightSleepMs)} (${stats.nightPieceCount})`;
 
       rangeAvgSleep.textContent =
         stats.mergedIntervalCount > 0 ? formatDuration(stats.avgSleepMs) : "—";
@@ -1569,7 +1573,7 @@
 
     function buildTimelineRows(rangeStartDate, rangeEndDate) {
 
-      if (periodMode === "today") {
+      if (periodMode === "rolling") {
         return [{
           label: `${formatDateTime(rangeStartDate)} — ${formatDateTime(rangeEndDate)}`,
           start: rangeStartDate,
@@ -1711,18 +1715,17 @@
 
       periodMode = mode;
 
-      modeTodayBtn.classList.toggle("active", mode === "today");
+      modeRollingBtn.classList.toggle("active", mode === "rolling");
       modeDayBtn.classList.toggle("active", mode === "day");
       modeRangeBtn.classList.toggle("active", mode === "range");
 
       singleDateRow.style.display = mode === "day" ? "flex" : "none";
       rangeDateRow.style.display = mode === "range" ? "flex" : "none";
-      applyRangeBtn.style.display = mode === "today" ? "none" : "block";
+      applyRangeBtn.style.display = mode === "rolling" ? "none" : "block";
 
-      if (mode === "today") {
-        const now = new Date();
-        rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-        rangeEnd = now;
+      if (mode === "rolling") {
+        rangeStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        rangeEnd = new Date();
         safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       }
     }
@@ -2209,7 +2212,7 @@
     peeBtn.addEventListener("click", () => addBabyEvent("pee"));
     poopBtn.addEventListener("click", () => addBabyEvent("poop"));
 
-    modeTodayBtn.addEventListener("click", () => setPeriodMode("today"));
+    modeRollingBtn.addEventListener("click", () => setPeriodMode("rolling"));
     modeDayBtn.addEventListener("click", () => setPeriodMode("day"));
     modeRangeBtn.addEventListener("click", () => setPeriodMode("range"));
     applyRangeBtn.addEventListener("click", applyCustomRange);
