@@ -1286,32 +1286,53 @@
 
       const clippedIntervals = [];
       const overlappingSessions = [];
+
       let rawRecordCount = 0;
 
       rawSessions.forEach(session => {
 
         const sessionStartMs = new Date(session.start_time).getTime();
+
+        if (!Number.isFinite(sessionStartMs)) return;
+
         const sessionEndMs = session.end_time
           ? new Date(session.end_time).getTime()
           : nowMs;
 
+        if (!Number.isFinite(sessionEndMs)) return;
+
+        // Запись не пересекает выбранный период.
+        if (
+          sessionEndMs <= rangeStartMs ||
+          sessionStartMs >= rangeEndMs
+        ) {
+          return;
+        }
+
         const start = Math.max(sessionStartMs, rangeStartMs);
         const end = Math.min(sessionEndMs, rangeEndMs);
 
-        if (end > start) {
-          clippedIntervals.push({ start, end });
-          overlappingSessions.push({
-            session,
-            sessionStartMs,
-            sessionEndMs,
-            start,
-            end
-          });
-          rawRecordCount++;
-        }
+        if (end <= start) return;
+
+        clippedIntervals.push({ start, end });
+
+        overlappingSessions.push({
+          session,
+          sessionStartMs,
+          sessionEndMs,
+          start,
+          end
+        });
+
+        rawRecordCount++;
       });
 
-      return { clippedIntervals, overlappingSessions, rawRecordCount };
+      return {
+        clippedIntervals,
+        overlappingSessions,
+        rawRecordCount,
+        fetchedRecordCount: rawSessions.length
+      };
     }
 
     // Ночь — фиксированное окно времени суток: с 20:00 до 09:00 следующего дня.
@@ -1386,14 +1407,20 @@
       const effectiveEndMs = Math.min(rangeEndMs, nowMs);
       const totalRangeMs = Math.max(effectiveEndMs - rangeStartMs, 0);
 
-      const { clippedIntervals, overlappingSessions, rawRecordCount } =
-        clipRawSessionsToRange(rawSessions, rangeStartMs, effectiveEndMs, nowMs);
+      const {
+        clippedIntervals,
+        overlappingSessions,
+        rawRecordCount,
+        fetchedRecordCount
+      } = clipRawSessionsToRange(
+        rawSessions,
+        rangeStartMs,
+        effectiveEndMs,
+        nowMs
+      );
 
       const mergedSleepIntervals = mergeIntervals(clippedIntervals);
 
-      // Объединённые интервалы режем на дневные/ночные куски.
-      // Эти куски используются для СУММ длительности и раскраски таймлайна.
-      // Они НЕ используются для подсчёта количества снов.
       const sleepPieces = [];
       mergedSleepIntervals.forEach(interval => {
         sleepPieces.push(...splitIntervalByDayNight(interval));
@@ -1405,13 +1432,14 @@
       let nightSleepMs = 0;
       let nightSleepCount = 0;
 
-      // Количество снов считаем по РЕАЛЬНЫМ записям сна, а не по кускам,
-      // на которые интервал был разрезан границами 09:00/20:00.
-      // Классификация определяется по фактическому времени НАЧАЛА сна:
+      // Количество эпизодов считаем по реальным записям сна.
       // 09:00–19:59 — дневной сон, 20:00–08:59 — ночной сон.
-      // Запись считается в количестве, только если её начало попало в выбранный период.
       overlappingSessions.forEach(({ sessionStartMs }) => {
-        if (sessionStartMs >= rangeStartMs && sessionStartMs < effectiveEndMs) {
+
+        if (
+          sessionStartMs >= rangeStartMs &&
+          sessionStartMs < effectiveEndMs
+        ) {
           if (isNightMoment(sessionStartMs)) {
             nightSleepCount++;
           } else {
@@ -1422,7 +1450,7 @@
 
       sleepPieces.forEach(piece => {
 
-        const duration = piece.end - piece.start;
+        const duration = Math.max(piece.end - piece.start, 0);
         sleepMs += duration;
 
         if (piece.type === "night") {
@@ -1432,14 +1460,11 @@
         }
       });
 
-      // Подстраховка: даже если в базе окажутся дубли и объединение почему-то
-      // не сработало как ожидалось, сон за период не может быть больше самого периода.
       sleepMs = Math.min(sleepMs, totalRangeMs);
       const awakeMs = Math.max(totalRangeMs - sleepMs, 0);
 
       const mergedIntervalCount = mergedSleepIntervals.length;
 
-      // Средняя длительность одного дневного и одного ночного сна.
       const avgDaySleepMs = daySleepCount > 0
         ? daySleepMs / daySleepCount
         : 0;
@@ -1454,16 +1479,17 @@
         totalRangeMs,
         mergedSleepIntervals,
         sleepPieces,
-        mergedIntervalCount,
+        fetchedRecordCount,
         rawRecordCount,
+        mergedIntervalCount,
         sleepMs,
         awakeMs,
-        avgDaySleepMs,
-        avgNightSleepMs,
         daySleepMs,
         daySleepCount,
         nightSleepMs,
-        nightSleepCount
+        nightSleepCount,
+        avgDaySleepMs,
+        avgNightSleepMs
       };
     }
 
@@ -1475,15 +1501,22 @@
     // Тянем всё, что началось раньше конца диапазона; фактическое пересечение
     // с диапазоном (и с "сейчас" для открытой сессии) считаем в JS — это проще
     // и надёжнее, чем городить пересечение прямо в SQL-фильтре.
-    async function fetchSleepSessionsUpTo(endDate) {
+    async function fetchSleepSessionsUpTo() {
 
       const { data, error } = await supabaseClient
         .from(TABLE)
         .select("id,start_time,end_time")
-        .lte("start_time", endDate.toISOString())
         .order("start_time", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Ошибка загрузки sleep_sessions:", error);
+        throw error;
+      }
+
+      console.log(
+        "sleep_sessions получено из Supabase:",
+        data ? data.length : 0
+      );
 
       return data || [];
     }
@@ -1516,7 +1549,7 @@
 
       let rawSessions = [];
       try {
-        rawSessions = await fetchSleepSessionsUpTo(rangeEnd);
+        rawSessions = await fetchSleepSessionsUpTo();
       } catch (error) {
         console.error(error);
         showError("Не удалось загрузить сон за период.");
@@ -1557,9 +1590,8 @@
       rangeLabel.textContent =
         `Период: ${formatDateTime(start)} → ${formatDateTime(end)} (${formatDuration(stats.totalRangeMs)})`;
 
-      rangeSublabel.textContent =
-        `Записей в базе за период: ${stats.rawRecordCount}. ` +
-        `После объединения пересечений: ${stats.mergedIntervalCount}.`;
+      // Техническая диагностика количества записей не показывается пользователю.
+      rangeSublabel.textContent = "";
     }
 
     function renderRangeSummary(stats) {
