@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Сон малыша</title>
+  <title>Режим Ивана</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1226,11 +1226,12 @@
 
     // Обрезает сырые записи сна по границам диапазона.
     // Для ещё не завершённой сессии (end_time = null) концом считается "сейчас".
-    // Возвращает как обрезанные интервалы, так и количество ИСХОДНЫХ записей,
-    // которые вообще попали в диапазон (для отличия от числа объединённых интервалов).
+    // Возвращает обрезанные интервалы и исходные сессии, пересекающие диапазон.
+    // Количество реальных дневных/ночных снов считается отдельно по времени старта.
     function clipRawSessionsToRange(rawSessions, rangeStartMs, rangeEndMs, nowMs) {
 
       const clippedIntervals = [];
+      const overlappingSessions = [];
       let rawRecordCount = 0;
 
       rawSessions.forEach(session => {
@@ -1245,11 +1246,18 @@
 
         if (end > start) {
           clippedIntervals.push({ start, end });
+          overlappingSessions.push({
+            session,
+            sessionStartMs,
+            sessionEndMs,
+            start,
+            end
+          });
           rawRecordCount++;
         }
       });
 
-      return { clippedIntervals, rawRecordCount };
+      return { clippedIntervals, overlappingSessions, rawRecordCount };
     }
 
     // Ночь — фиксированное окно времени суток: с 20:00 до 09:00 следующего дня.
@@ -1294,6 +1302,7 @@
     }
 
     // Режет один интервал сна на куски "день"/"ночь" по фактическому времени суток.
+    // Это нужно для распределения ДЛИТЕЛЬНОСТИ, а не для количества снов.
     // Например, сон 19:00-22:00 даёт кусок 19:00-20:00 (день) и 20:00-22:00 (ночь).
     function splitIntervalByDayNight(interval) {
 
@@ -1323,13 +1332,14 @@
       const effectiveEndMs = Math.min(rangeEndMs, nowMs);
       const totalRangeMs = Math.max(effectiveEndMs - rangeStartMs, 0);
 
-      const { clippedIntervals, rawRecordCount } =
+      const { clippedIntervals, overlappingSessions, rawRecordCount } =
         clipRawSessionsToRange(rawSessions, rangeStartMs, effectiveEndMs, nowMs);
 
       const mergedSleepIntervals = mergeIntervals(clippedIntervals);
 
-      // Каждый объединённый интервал сна режем на дневные/ночные куски —
-      // они и используются и для сумм, и для раскраски таймлайна.
+      // Объединённые интервалы режем на дневные/ночные куски.
+      // Эти куски используются для СУММ длительности и раскраски таймлайна.
+      // Они НЕ используются для подсчёта количества снов.
       const sleepPieces = [];
       mergedSleepIntervals.forEach(interval => {
         sleepPieces.push(...splitIntervalByDayNight(interval));
@@ -1337,9 +1347,24 @@
 
       let sleepMs = 0;
       let daySleepMs = 0;
-      let dayPieceCount = 0;
+      let daySleepCount = 0;
       let nightSleepMs = 0;
-      let nightPieceCount = 0;
+      let nightSleepCount = 0;
+
+      // Количество снов считаем по РЕАЛЬНЫМ записям сна, а не по кускам,
+      // на которые интервал был разрезан границами 09:00/20:00.
+      // Классификация определяется по фактическому времени НАЧАЛА сна:
+      // 09:00–19:59 — дневной сон, 20:00–08:59 — ночной сон.
+      // Запись считается в количестве, только если её начало попало в выбранный период.
+      overlappingSessions.forEach(({ sessionStartMs }) => {
+        if (sessionStartMs >= rangeStartMs && sessionStartMs < effectiveEndMs) {
+          if (isNightMoment(sessionStartMs)) {
+            nightSleepCount++;
+          } else {
+            daySleepCount++;
+          }
+        }
+      });
 
       sleepPieces.forEach(piece => {
 
@@ -1348,10 +1373,8 @@
 
         if (piece.type === "night") {
           nightSleepMs += duration;
-          nightPieceCount++;
         } else {
           daySleepMs += duration;
-          dayPieceCount++;
         }
       });
 
@@ -1375,9 +1398,9 @@
         awakeMs,
         avgSleepMs,
         daySleepMs,
-        dayPieceCount,
+        daySleepCount,
         nightSleepMs,
-        nightPieceCount
+        nightSleepCount
       };
     }
 
@@ -1482,10 +1505,10 @@
       rangeAwakeTotal.textContent = formatDuration(stats.awakeMs);
 
       rangeDaySleep.textContent =
-        `${formatDuration(stats.daySleepMs)} (${stats.dayPieceCount})`;
+        `${formatDuration(stats.daySleepMs)} (${stats.daySleepCount})`;
 
       rangeNightSleep.textContent =
-        `${formatDuration(stats.nightSleepMs)} (${stats.nightPieceCount})`;
+        `${formatDuration(stats.nightSleepMs)} (${stats.nightSleepCount})`;
 
       rangeAvgSleep.textContent =
         stats.mergedIntervalCount > 0 ? formatDuration(stats.avgSleepMs) : "—";
