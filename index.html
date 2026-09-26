@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Сон малыша</title>
+  <title>Режим дня</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -35,7 +35,70 @@
       color: var(--text);
     }
 
-    h1 { font-size: 20px; margin: 0 0 16px; }
+    /* ЗАГОЛОВОК С КНОПКОЙ ОБНОВЛЕНИЯ */
+    .title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .title-row h1 {
+      margin: 0;
+      font-size: 20px;
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .name-button {
+      background: none;
+      border: none;
+      padding: 0 2px;
+      font: inherit;
+      font-size: 20px;
+      color: var(--button);
+      cursor: pointer;
+      border-bottom: 1px dashed rgba(128, 128, 128, 0.45);
+      line-height: 1.1;
+    }
+
+    .name-button:active { opacity: 0.7; }
+
+    .refresh-btn {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(128, 128, 128, 0.12);
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .refresh-btn:disabled { opacity: 0.6; cursor: default; }
+    .refresh-btn.spinning { animation: refresh-spin 0.8s linear infinite; }
+
+    @keyframes refresh-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* НАДПИСЬ ВЕРСИИ */
+    .version-label {
+      text-align: center;
+      color: var(--hint);
+      font-size: 11px;
+      margin-top: 22px;
+      margin-bottom: 6px;
+      user-select: none;
+      opacity: 0.7;
+    }
 
     .card {
       background: var(--secondary-bg);
@@ -74,6 +137,19 @@
     }
 
     .secondary-button:disabled { opacity: 0.5; }
+
+    .danger-button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 500;
+      background: rgba(255, 59, 48, 0.12);
+      color: var(--danger);
+      cursor: pointer;
+    }
 
     .diaper-buttons { display: flex; gap: 8px; }
 
@@ -230,6 +306,7 @@
       border-radius: 6px;
       background: var(--awake);
       overflow: hidden;
+      cursor: pointer;
     }
 
     .timeline-segment { position: absolute; top: 0; bottom: 0; }
@@ -242,6 +319,7 @@
       width: 1px;
       background: rgba(255, 255, 255, 0.6);
       z-index: 1;
+      pointer-events: none;
     }
 
     .timeline-tick-labels { position: relative; height: 14px; margin-top: 3px; }
@@ -265,6 +343,44 @@
 
     .timeline-legend span { display: inline-flex; align-items: center; gap: 5px; }
     .legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+    /* СПИСОК ДЕТЕЙ */
+    .child-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 16px;
+    }
+
+    .child-row:last-child { border-bottom: none; }
+
+    .child-row-name {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 4px;
+      cursor: pointer;
+    }
+
+    .child-row.active .child-row-name {
+      font-weight: 600;
+      color: var(--button);
+    }
+
+    .child-row-name .check { margin-left: 6px; }
+
+    .child-edit-btn {
+      flex-shrink: 0;
+      border: none;
+      border-radius: 9px;
+      padding: 8px 11px;
+      background: rgba(128, 128, 128, 0.14);
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+    }
 
     /* ГАЛЕРЕЯ */
     .photo-input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
@@ -408,6 +524,8 @@
       border-radius: 18px 18px 0 0;
       padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
       box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     .modal-title { font-size: 19px; font-weight: 600; margin-bottom: 18px; }
@@ -460,7 +578,10 @@
 
 <body>
 
-  <h1 id="pageTitle">😴 Сон малыша</h1>
+  <div class="title-row">
+    <h1>Режим дня <button class="name-button" id="childSelectorBtn" title="Выбрать ребёнка">…</button></h1>
+    <button class="refresh-btn" id="refreshBtn" aria-label="Обновить данные" title="Обновить">🔄</button>
+  </div>
 
   <div class="nav-row">
     <button class="secondary-button nav-button active" id="navMainBtn">😴 Сон</button>
@@ -532,31 +653,31 @@
       <div class="range-sublabel" id="rangeSublabel"></div>
 
       <div class="stats-row">
-        <span>😴 Сон всего</span>
+        <span id="labelSleepTotal">😴 Сон всего</span>
         <span id="rangeSleepTotal">—</span>
       </div>
 
       <div class="stats-row">
-        <span>🙂 Бодрствование всего</span>
+        <span id="labelAwakeTotal">🙂 Бодрствование всего</span>
         <span id="rangeAwakeTotal">—</span>
       </div>
 
       <div class="stats-row">
-        <span>☀️ Дневной сон</span>
+        <span id="labelDaySleep">☀️ Дневной сон</span>
         <span id="rangeDaySleep">—</span>
       </div>
 
       <div class="stats-row">
-        <span>🌙 Ночной сон</span>
+        <span id="labelNightSleep">🌙 Ночной сон</span>
         <span id="rangeNightSleep">—</span>
       </div>
 
-      <div class="stats-row">
+      <div class="stats-row" id="avgDayRow">
         <span>Средний дневной сон</span>
         <span id="rangeAvgDaySleep">—</span>
       </div>
 
-      <div class="stats-row">
+      <div class="stats-row" id="avgNightRow">
         <span>Средний ночной сон</span>
         <span id="rangeAvgNightSleep">—</span>
       </div>
@@ -646,8 +767,45 @@
     </div>
   </div>
 
+  <!-- ВЫБОР РЕБЁНКА -->
+  <div class="modal-backdrop" id="childPickerModal">
+    <div class="modal">
+      <div class="modal-title">👶 Ребёнок</div>
+      <div id="childListContainer"><div class="empty">Загрузка...</div></div>
+      <button class="secondary-button" id="addChildBtn" style="margin-top: 14px;">➕ Добавить ребёнка</button>
+      <div class="modal-buttons">
+        <button class="cancel-btn" id="closeChildPickerBtn">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ФОРМА РЕБЁНКА (ДОБАВИТЬ / ПЕРЕИМЕНОВАТЬ) -->
+  <div class="modal-backdrop" id="childFormModal">
+    <div class="modal">
+      <div class="modal-title" id="childFormTitle">👶 Добавить ребёнка</div>
+      <div class="field">
+        <label for="childNameInput">Имя</label>
+        <input type="text" id="childNameInput" maxlength="30" placeholder="Например, Аня" />
+        <div class="modal-hint">Будет показано в заголовке: «Режим дня Аня».</div>
+      </div>
+      <div class="modal-buttons">
+        <button class="cancel-btn" id="cancelChildFormBtn">Отмена</button>
+        <button class="save-btn" id="saveChildBtn">Сохранить</button>
+      </div>
+      <button class="danger-button" id="deleteChildBtn" style="display: none;">🗑 Удалить ребёнка и все записи</button>
+    </div>
+  </div>
+
+  <div class="version-label" id="versionLabel">Режим дня</div>
+
 
   <script>
+
+    // ============================================================
+    // ВЕРСИЯ
+    // ============================================================
+
+    const APP_VERSION = "3.0";
 
     // ============================================================
     // SUPABASE
@@ -660,6 +818,9 @@
     const EVENTS_TABLE = "baby_events";
     const PHOTOS_TABLE = "baby_photos";
     const PHOTOS_BUCKET = "baby-photos";
+    const CHILDREN_TABLE = "children";
+
+    const ACTIVE_CHILD_KEY = "activeChildId";
 
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
@@ -671,7 +832,9 @@
     // ELEMENTS
     // ============================================================
 
-    const pageTitle = document.getElementById("pageTitle");
+    const refreshBtn = document.getElementById("refreshBtn");
+    const versionLabel = document.getElementById("versionLabel");
+    const childSelectorBtn = document.getElementById("childSelectorBtn");
 
     const navMainBtn = document.getElementById("navMainBtn");
     const navStatsBtn = document.getElementById("navStatsBtn");
@@ -705,6 +868,12 @@
 
     const rangeLabel = document.getElementById("rangeLabel");
     const rangeSublabel = document.getElementById("rangeSublabel");
+    const labelSleepTotal = document.getElementById("labelSleepTotal");
+    const labelAwakeTotal = document.getElementById("labelAwakeTotal");
+    const labelDaySleep = document.getElementById("labelDaySleep");
+    const labelNightSleep = document.getElementById("labelNightSleep");
+    const avgDayRow = document.getElementById("avgDayRow");
+    const avgNightRow = document.getElementById("avgNightRow");
     const rangeSleepTotal = document.getElementById("rangeSleepTotal");
     const rangeAwakeTotal = document.getElementById("rangeAwakeTotal");
     const rangeDaySleep = document.getElementById("rangeDaySleep");
@@ -740,19 +909,33 @@
     const lightboxCounter = document.getElementById("lightboxCounter");
     const lightboxContent = document.getElementById("lightboxContent");
 
+    const childPickerModal = document.getElementById("childPickerModal");
+    const childListContainer = document.getElementById("childListContainer");
+    const addChildBtn = document.getElementById("addChildBtn");
+    const closeChildPickerBtn = document.getElementById("closeChildPickerBtn");
+
+    const childFormModal = document.getElementById("childFormModal");
+    const childFormTitle = document.getElementById("childFormTitle");
+    const childNameInput = document.getElementById("childNameInput");
+    const cancelChildFormBtn = document.getElementById("cancelChildFormBtn");
+    const saveChildBtn = document.getElementById("saveChildBtn");
+    const deleteChildBtn = document.getElementById("deleteChildBtn");
+
 
     // ============================================================
     // STATE
     // ============================================================
 
-    let openSession = null;         // null означает явно «нет открытой сессии»
-    let lastCompletedEnd = null;    // null означает явно «нет завершённых сессий»
+    let children = [];
+    let activeChildId = null;
+    let editingChildId = null;
+
+    let openSession = null;
+    let lastCompletedEnd = null;
     let editingSessionId = null;
-    let firstLoad = true;
 
     let currentView = "main";
 
-    // Явные режимы периода статистики: "today" | "day" | "range"
     let periodMode = "today";
     let rangeStart = new Date();
     rangeStart.setHours(0, 0, 0, 0);
@@ -778,7 +961,6 @@
       errorDiv.style.display = "none";
     }
 
-    // Оборачивает вызов: ошибка одного шага не должна ронять всё приложение.
     async function safeCall(fn, fallbackMessage) {
       try {
         await fn();
@@ -794,8 +976,12 @@
       }
     }
 
-    // Универсальный постраничный фетчер: Supabase отдаёт не более 1000
-    // строк за один запрос, поэтому идём в цикле, пока приходят полные страницы.
+    function hapticLight() {
+      if (tg) {
+        tg.HapticFeedback?.impactOccurred("light");
+      }
+    }
+
     async function fetchAllPages(table, columns, applyFilters, orderColumn, ascending) {
 
       const pageSize = 1000;
@@ -832,7 +1018,7 @@
 
 
     // ============================================================
-    // ЕДИНЫЙ ФОРМАТТЕР ДЛИТЕЛЬНОСТИ (используется везде: статистика, график, CSV)
+    // ФОРМАТТЕРЫ
     // ============================================================
 
     function formatDuration(ms) {
@@ -899,11 +1085,324 @@
 
 
     // ============================================================
+    // ДЕТИ
+    // ============================================================
+
+    function getActiveChild() {
+      return children.find(c => c.id === activeChildId) || null;
+    }
+
+    function getActiveChildName() {
+      const child = getActiveChild();
+      return child ? child.name : "…";
+    }
+
+    function renderActiveChildName() {
+      childSelectorBtn.textContent = `${getActiveChildName()} ▾`;
+    }
+
+    function saveActiveChildId() {
+      try {
+        if (activeChildId) {
+          localStorage.setItem(ACTIVE_CHILD_KEY, activeChildId);
+        } else {
+          localStorage.removeItem(ACTIVE_CHILD_KEY);
+        }
+      } catch (e) {
+        // localStorage недоступен — просто игнорируем.
+      }
+    }
+
+    function readStoredChildId() {
+      try {
+        return localStorage.getItem(ACTIVE_CHILD_KEY);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function loadChildren() {
+
+      const { data, error } = await supabaseClient
+        .from(CHILDREN_TABLE)
+        .select("id,name,created_at")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      children = data || [];
+
+      // Если детей нет — создаём первого автоматически.
+      if (children.length === 0) {
+
+        const { data: created, error: createError } = await supabaseClient
+          .from(CHILDREN_TABLE)
+          .insert({ name: "Малыш" })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        children = [created];
+      }
+
+      const stored = readStoredChildId();
+      const found = children.find(c => c.id === stored);
+
+      activeChildId = found ? found.id : children[0].id;
+      saveActiveChildId();
+
+      renderActiveChildName();
+    }
+
+    async function selectChild(childId) {
+
+      if (childId === activeChildId) {
+        closeChildPicker();
+        return;
+      }
+
+      activeChildId = childId;
+      saveActiveChildId();
+      renderActiveChildName();
+
+      closeChildPicker();
+      hideError();
+
+      // Сбрасываем открытую сессию, чтобы не тянуть чужое состояние.
+      openSession = null;
+      lastCompletedEnd = null;
+
+      await refreshAll();
+      hapticLight();
+    }
+
+    function openChildPicker() {
+      renderChildList();
+      childPickerModal.classList.add("visible");
+    }
+
+    function closeChildPicker() {
+      childPickerModal.classList.remove("visible");
+    }
+
+    function renderChildList() {
+
+      childListContainer.innerHTML = "";
+
+      if (children.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Нет детей. Добавьте первого.";
+        childListContainer.appendChild(empty);
+        return;
+      }
+
+      children.forEach(child => {
+
+        const row = document.createElement("div");
+        row.className = "child-row" + (child.id === activeChildId ? " active" : "");
+
+        const nameEl = document.createElement("div");
+        nameEl.className = "child-row-name";
+        nameEl.textContent = child.name;
+
+        if (child.id === activeChildId) {
+          const check = document.createElement("span");
+          check.className = "check";
+          check.textContent = "✓";
+          nameEl.appendChild(check);
+        }
+
+        nameEl.addEventListener("click", () => selectChild(child.id));
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "child-edit-btn";
+        editBtn.textContent = "✏️";
+        editBtn.title = "Изменить";
+        editBtn.addEventListener("click", event => {
+          event.stopPropagation();
+          openChildForm("edit", child);
+        });
+
+        row.appendChild(nameEl);
+        row.appendChild(editBtn);
+
+        childListContainer.appendChild(row);
+      });
+    }
+
+    function openChildForm(mode, child) {
+
+      editingChildId = mode === "edit" && child ? child.id : null;
+
+      if (mode === "edit" && child) {
+        childFormTitle.textContent = "✏️ Изменить имя";
+        childNameInput.value = child.name;
+        deleteChildBtn.style.display = "block";
+      } else {
+        childFormTitle.textContent = "👶 Добавить ребёнка";
+        childNameInput.value = "";
+        deleteChildBtn.style.display = "none";
+      }
+
+      // Прячем пикер, чтобы окна не накладывались.
+      closeChildPicker();
+
+      childFormModal.classList.add("visible");
+      setTimeout(() => childNameInput.focus(), 80);
+    }
+
+    function closeChildForm() {
+      childFormModal.classList.remove("visible");
+      editingChildId = null;
+    }
+
+    async function saveChildForm() {
+
+      const name = childNameInput.value.trim();
+
+      if (!name) {
+        alert("Введи имя.");
+        return;
+      }
+
+      saveChildBtn.disabled = true;
+      hideError();
+
+      try {
+
+        if (editingChildId) {
+
+          const { error } = await supabaseClient
+            .from(CHILDREN_TABLE)
+            .update({ name })
+            .eq("id", editingChildId);
+
+          if (error) throw error;
+
+          const child = children.find(c => c.id === editingChildId);
+          if (child) child.name = name;
+
+          if (editingChildId === activeChildId) {
+            renderActiveChildName();
+          }
+
+        } else {
+
+          const { data, error } = await supabaseClient
+            .from(CHILDREN_TABLE)
+            .insert({ name })
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          children.push(data);
+
+          // Переключаемся на нового ребёнка.
+          activeChildId = data.id;
+          saveActiveChildId();
+          renderActiveChildName();
+
+          // Сбрасываем состояние предыдущего ребёнка.
+          openSession = null;
+          lastCompletedEnd = null;
+        }
+
+        closeChildForm();
+        hapticSuccess();
+
+        await refreshAll();
+
+      } catch (error) {
+
+        console.error(error);
+        showError(error.message || "Не удалось сохранить.");
+        saveChildBtn.disabled = false;
+      }
+    }
+
+    async function deleteChild() {
+
+      if (!editingChildId) return;
+
+      if (children.length <= 1) {
+        alert("Нельзя удалить единственного ребёнка.");
+        return;
+      }
+
+      const child = children.find(c => c.id === editingChildId);
+      if (!child) return;
+
+      const confirmed = confirm(
+        `Удалить ребёнка «${child.name}» и все его записи (сон, события, фото)? Действие необратимо.`
+      );
+      if (!confirmed) return;
+
+      hideError();
+
+      try {
+
+        // Сначала — файлы фото из хранилища.
+        try {
+          const { data: photoRows } = await supabaseClient
+            .from(PHOTOS_TABLE)
+            .select("storage_path")
+            .eq("child_id", editingChildId);
+
+          if (photoRows && photoRows.length > 0) {
+            const paths = photoRows.map(p => p.storage_path).filter(Boolean);
+            if (paths.length > 0) {
+              await supabaseClient.storage.from(PHOTOS_BUCKET).remove(paths);
+            }
+          }
+        } catch (storageError) {
+          console.warn("Не удалось удалить файлы фото:", storageError);
+        }
+
+        // Удаляем данные.
+        await supabaseClient.from(TABLE).delete().eq("child_id", editingChildId);
+        await supabaseClient.from(EVENTS_TABLE).delete().eq("child_id", editingChildId);
+        await supabaseClient.from(PHOTOS_TABLE).delete().eq("child_id", editingChildId);
+
+        // Удаляем самого ребёнка.
+        const { error } = await supabaseClient
+          .from(CHILDREN_TABLE)
+          .delete()
+          .eq("id", editingChildId);
+
+        if (error) throw error;
+
+        const wasActive = (editingChildId === activeChildId);
+
+        children = children.filter(c => c.id !== editingChildId);
+
+        if (wasActive) {
+          activeChildId = children[0].id;
+          saveActiveChildId();
+          renderActiveChildName();
+          openSession = null;
+          lastCompletedEnd = null;
+        }
+
+        closeChildForm();
+        hapticSuccess();
+
+        await refreshAll();
+
+      } catch (error) {
+
+        console.error(error);
+        showError(error.message || "Не удалось удалить.");
+      }
+    }
+
+
+    // ============================================================
     // ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
     // ============================================================
 
-    // Если период «Сегодня» — пересчитываем границы на момент вызова,
-    // чтобы окно не «замерзало» с момента открытия мини-аппа.
     function refreshTodayRangeIfNeeded() {
       if (periodMode === "today") {
         const now = new Date();
@@ -924,14 +1423,10 @@
       navStatsBtn.classList.toggle("active", view === "stats");
       navGalleryBtn.classList.toggle("active", view === "gallery");
 
-      if (view === "main") {
-        pageTitle.textContent = "😴 Сон малыша";
-      } else if (view === "stats") {
-        pageTitle.textContent = "📊 Статистика";
+      if (view === "stats") {
         refreshTodayRangeIfNeeded();
         safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       } else if (view === "gallery") {
-        pageTitle.textContent = "📷 Галерея малыша";
         safeCall(loadPhotos, "Не удалось загрузить галерею.");
       }
 
@@ -945,9 +1440,16 @@
 
     async function loadOpenSession() {
 
+      if (!activeChildId) {
+        openSession = null;
+        renderStatus();
+        return;
+      }
+
       const { data, error } = await supabaseClient
         .from(TABLE)
         .select("*")
+        .eq("child_id", activeChildId)
         .is("end_time", null)
         .order("start_time", { ascending: false })
         .limit(1);
@@ -961,9 +1463,15 @@
 
     async function loadLastCompletedEnd() {
 
+      if (!activeChildId) {
+        lastCompletedEnd = null;
+        return;
+      }
+
       const { data, error } = await supabaseClient
         .from(TABLE)
         .select("end_time")
+        .eq("child_id", activeChildId)
         .not("end_time", "is", null)
         .order("end_time", { ascending: false })
         .limit(1);
@@ -1010,6 +1518,11 @@
 
     async function toggleSleep() {
 
+      if (!activeChildId) {
+        showError("Сначала выбери или добавь ребёнка.");
+        return;
+      }
+
       actionBtn.disabled = true;
       hideError();
 
@@ -1028,7 +1541,10 @@
 
           const { error } = await supabaseClient
             .from(TABLE)
-            .insert({ start_time: new Date().toISOString() });
+            .insert({
+              start_time: new Date().toISOString(),
+              child_id: activeChildId
+            });
 
           if (error) throw error;
         }
@@ -1051,6 +1567,11 @@
 
     async function addBabyEvent(eventType) {
 
+      if (!activeChildId) {
+        showError("Сначала выбери или добавь ребёнка.");
+        return;
+      }
+
       peeBtn.disabled = true;
       poopBtn.disabled = true;
       hideError();
@@ -1059,7 +1580,11 @@
 
         const { error } = await supabaseClient
           .from(EVENTS_TABLE)
-          .insert({ event_type: eventType, event_time: new Date().toISOString() });
+          .insert({
+            event_type: eventType,
+            event_time: new Date().toISOString(),
+            child_id: activeChildId
+          });
 
         if (error) throw error;
 
@@ -1084,14 +1609,20 @@
 
 
     // ============================================================
-    // ИСТОРИЯ / СОБЫТИЯ ДЛЯ ГЛАВНОГО ЭКРАНА (лёгкие списки)
+    // ИСТОРИЯ / СОБЫТИЯ
     // ============================================================
 
     async function loadRecentHistory() {
 
+      if (!activeChildId) {
+        renderHistory([]);
+        return;
+      }
+
       const { data, error } = await supabaseClient
         .from(TABLE)
         .select("id,start_time,end_time")
+        .eq("child_id", activeChildId)
         .not("end_time", "is", null)
         .order("start_time", { ascending: false })
         .limit(10);
@@ -1164,9 +1695,15 @@
 
     async function loadRecentEvents() {
 
+      if (!activeChildId) {
+        renderEvents([]);
+        return;
+      }
+
       const { data, error } = await supabaseClient
         .from(EVENTS_TABLE)
         .select("id,event_type,event_time")
+        .eq("child_id", activeChildId)
         .order("event_time", { ascending: false })
         .limit(10);
 
@@ -1294,7 +1831,7 @@
 
 
     // ============================================================
-    // ЧИСТЫЙ РАСЧЁТ СТАТИСТИКИ (не знает ни про UI, ни про базу)
+    // ЧИСТЫЙ РАСЧЁТ СТАТИСТИКИ
     // ============================================================
 
     function mergeIntervals(intervals) {
@@ -1491,8 +2028,6 @@
       sleepMs = Math.min(sleepMs, totalRangeMs);
       const awakeMs = Math.max(totalRangeMs - sleepMs, 0);
 
-      const mergedIntervalCount = mergedSleepIntervals.length;
-
       const avgDaySleepMs = daySleepCount > 0
         ? daySleepMs / daySleepCount
         : 0;
@@ -1500,6 +2035,15 @@
       const avgNightSleepMs = nightSleepCount > 0
         ? nightSleepMs / nightSleepCount
         : 0;
+
+      // Средние «в сутки» для режима «Период».
+      const dayMs = 24 * 60 * 60 * 1000;
+      const daysInRange = totalRangeMs > 0 ? totalRangeMs / dayMs : 0;
+
+      const avgSleepPerDayMs = daysInRange > 0 ? sleepMs / daysInRange : 0;
+      const avgAwakePerDayMs = daysInRange > 0 ? awakeMs / daysInRange : 0;
+      const avgDaySleepPerDayMs = daysInRange > 0 ? daySleepMs / daysInRange : 0;
+      const avgNightSleepPerDayMs = daysInRange > 0 ? nightSleepMs / daysInRange : 0;
 
       return {
         rangeStartMs,
@@ -1509,7 +2053,6 @@
         sleepPieces,
         fetchedRecordCount,
         rawRecordCount,
-        mergedIntervalCount,
         sleepMs,
         awakeMs,
         daySleepMs,
@@ -1517,20 +2060,22 @@
         nightSleepMs,
         nightSleepCount,
         avgDaySleepMs,
-        avgNightSleepMs
+        avgNightSleepMs,
+        avgSleepPerDayMs,
+        avgAwakePerDayMs,
+        avgDaySleepPerDayMs,
+        avgNightSleepPerDayMs
       };
     }
 
 
     // ============================================================
-    // ЗАГРУЗКА ДАННЫХ ИЗ SUPABASE (без бизнес-логики)
+    // ЗАГРУЗКА ДАННЫХ ИЗ SUPABASE
     // ============================================================
 
-    // Тянем только те сессии, которые реально пересекают диапазон:
-    //   (start_time < rangeEnd)  И  (end_time >= rangeStart  ИЛИ  end_time IS NULL)
-    // Вместо сложного .or() в PostgREST делаем два независимых запроса —
-    // так надёжнее и не упирается в парсинг значений с ISO-временем.
     async function fetchSleepSessionsInRange(rangeStartMs, rangeEndMs) {
+
+      if (!activeChildId) return [];
 
       const startIso = new Date(rangeStartMs).toISOString();
       const endIso = new Date(rangeEndMs).toISOString();
@@ -1538,7 +2083,7 @@
       const completed = await fetchAllPages(
         TABLE,
         "id,start_time,end_time",
-        q => q.lt("start_time", endIso).gte("end_time", startIso),
+        q => q.eq("child_id", activeChildId).lt("start_time", endIso).gte("end_time", startIso),
         "start_time",
         true
       );
@@ -1546,7 +2091,7 @@
       const open = await fetchAllPages(
         TABLE,
         "id,start_time,end_time",
-        q => q.lt("start_time", endIso).is("end_time", null),
+        q => q.eq("child_id", activeChildId).lt("start_time", endIso).is("end_time", null),
         "start_time",
         true
       );
@@ -1556,9 +2101,12 @@
 
     async function fetchEventsInRange(startDate, endDate) {
 
+      if (!activeChildId) return [];
+
       const { data, error } = await supabaseClient
         .from(EVENTS_TABLE)
         .select("event_type,event_time")
+        .eq("child_id", activeChildId)
         .gte("event_time", startDate.toISOString())
         .lte("event_time", endDate.toISOString());
 
@@ -1569,10 +2117,15 @@
 
 
     // ============================================================
-    // ОРКЕСТРАЦИЯ: БАЗА -> ДАННЫЕ -> РАСЧЁТ -> ОТРИСОВКА
+    // ОРКЕСТРАЦИЯ СТАТИСТИКИ
     // ============================================================
 
     async function loadRangeStats(showLoading) {
+
+      if (!activeChildId) {
+        timelineContainer.innerHTML = '<div class="empty">Сначала выбери или добавь ребёнка</div>';
+        return;
+      }
 
       if (showLoading) {
         timelineContainer.innerHTML = '<div class="empty">Загрузка...</div>';
@@ -1614,7 +2167,7 @@
 
 
     // ============================================================
-    // ОТРИСОВКА СТАТИСТИКИ (чистый UI-слой)
+    // ОТРИСОВКА СТАТИСТИКИ
     // ============================================================
 
     function renderRangeLabel(stats) {
@@ -1630,20 +2183,48 @@
 
     function renderRangeSummary(stats) {
 
-      rangeSleepTotal.textContent = formatDuration(stats.sleepMs);
-      rangeAwakeTotal.textContent = formatDuration(stats.awakeMs);
+      const isRange = periodMode === "range";
 
-      rangeDaySleep.textContent =
-        `${formatDuration(stats.daySleepMs)} (${stats.daySleepCount})`;
+      if (isRange) {
 
-      rangeNightSleep.textContent =
-        `${formatDuration(stats.nightSleepMs)} (${stats.nightSleepCount})`;
+        labelSleepTotal.textContent = "😴 Сон (в среднем в сутки)";
+        labelAwakeTotal.textContent = "🙂 Бодрствование (в среднем в сутки)";
+        labelDaySleep.textContent = "☀️ Дневной сон (в среднем в сутки)";
+        labelNightSleep.textContent = "🌙 Ночной сон (в среднем в сутки)";
 
-      rangeAvgDaySleep.textContent =
-        stats.daySleepCount > 0 ? formatDuration(stats.avgDaySleepMs) : "—";
+        rangeSleepTotal.textContent = formatDuration(stats.avgSleepPerDayMs);
+        rangeAwakeTotal.textContent = formatDuration(stats.avgAwakePerDayMs);
+        rangeDaySleep.textContent = formatDuration(stats.avgDaySleepPerDayMs);
+        rangeNightSleep.textContent = formatDuration(stats.avgNightSleepPerDayMs);
 
-      rangeAvgNightSleep.textContent =
-        stats.nightSleepCount > 0 ? formatDuration(stats.avgNightSleepMs) : "—";
+        avgDayRow.style.display = "none";
+        avgNightRow.style.display = "none";
+
+      } else {
+
+        labelSleepTotal.textContent = "😴 Сон всего";
+        labelAwakeTotal.textContent = "🙂 Бодрствование всего";
+        labelDaySleep.textContent = "☀️ Дневной сон";
+        labelNightSleep.textContent = "🌙 Ночной сон";
+
+        rangeSleepTotal.textContent = formatDuration(stats.sleepMs);
+        rangeAwakeTotal.textContent = formatDuration(stats.awakeMs);
+
+        rangeDaySleep.textContent =
+          `${formatDuration(stats.daySleepMs)} (${stats.daySleepCount})`;
+
+        rangeNightSleep.textContent =
+          `${formatDuration(stats.nightSleepMs)} (${stats.nightSleepCount})`;
+
+        avgDayRow.style.display = "";
+        avgNightRow.style.display = "";
+
+        rangeAvgDaySleep.textContent =
+          stats.daySleepCount > 0 ? formatDuration(stats.avgDaySleepMs) : "—";
+
+        rangeAvgNightSleep.textContent =
+          stats.nightSleepCount > 0 ? formatDuration(stats.avgNightSleepMs) : "—";
+      }
     }
 
     function renderEventCounts(events) {
@@ -1695,7 +2276,7 @@
 
 
     // ============================================================
-    // ХРОНОЛОГИЯ (ДИАГРАММА ГАНТА)
+    // ХРОНОЛОГИЯ (ГАНТ)
     // ============================================================
 
     function buildTimelineRows(rangeStartDate, rangeEndDate) {
@@ -1756,6 +2337,34 @@
       return ticks;
     }
 
+    function findAwakeIntervalAtClick(clickMs, rowStartMs, rowEndMs, sleepPieces) {
+
+      const sleeps = sleepPieces
+        .map(p => ({
+          start: Math.max(p.start, rowStartMs),
+          end: Math.min(p.end, rowEndMs)
+        }))
+        .filter(p => p.end > p.start)
+        .sort((a, b) => a.start - b.start);
+
+      let cursor = rowStartMs;
+
+      for (const s of sleeps) {
+
+        if (clickMs < s.start) {
+          return { start: cursor, end: s.start };
+        }
+
+        cursor = Math.max(cursor, s.end);
+      }
+
+      if (cursor < rowEndMs) {
+        return { start: cursor, end: rowEndMs };
+      }
+
+      return null;
+    }
+
     function renderTimeline(sleepPieces, rangeStartDate, rangeEndDate) {
 
       timelineContainer.innerHTML = "";
@@ -1800,9 +2409,13 @@
           segment.className = `timeline-segment ${interval.type}`;
           segment.style.left = `${leftPercent}%`;
           segment.style.width = `${widthPercent}%`;
-          segment.title =
+
+          const tooltipText =
+            `${interval.type === "night" ? "🌙" : "☀️"} ` +
             `${formatClock(new Date(segStart))} → ${formatClock(new Date(segEnd))} · ` +
             `${formatDuration(segEnd - segStart)}`;
+
+          segment.title = tooltipText;
 
           segment.addEventListener("click", event => {
             event.stopPropagation();
@@ -1810,15 +2423,34 @@
             const existing = wrapper.querySelector(".timeline-tooltip.visible");
             if (existing) existing.classList.remove("visible");
 
-            tooltip.textContent =
-              `${interval.type === "night" ? "🌙" : "☀️"} ` +
-              `${formatDateTime(new Date(segStart))} → ${formatClock(new Date(segEnd))} · ` +
-              `${formatDuration(segEnd - segStart)}`;
-
+            tooltip.textContent = tooltipText;
             tooltip.classList.add("visible");
           });
 
           track.appendChild(segment);
+        });
+
+        track.addEventListener("click", event => {
+
+          const rect = track.getBoundingClientRect();
+          if (rect.width <= 0) return;
+
+          const x = event.clientX - rect.left;
+          const ratio = Math.max(0, Math.min(1, x / rect.width));
+          const clickMs = rowStartMs + ratio * rowTotalMs;
+
+          const gap = findAwakeIntervalAtClick(clickMs, rowStartMs, rowEndMs, sleepPieces);
+
+          const existing = wrapper.querySelector(".timeline-tooltip.visible");
+          if (existing) existing.classList.remove("visible");
+
+          if (!gap) return;
+
+          tooltip.textContent =
+            `🙂 ${formatClock(new Date(gap.start))} → ${formatClock(new Date(gap.end))} · ` +
+            `${formatDuration(gap.end - gap.start)}`;
+
+          tooltip.classList.add("visible");
         });
 
         const hourTicks = buildHourTicks(rowStartMs, rowEndMs);
@@ -1854,7 +2486,7 @@
 
 
     // ============================================================
-    // ЯВНЫЕ РЕЖИМЫ ВЫБОРА ПЕРИОДА
+    // РЕЖИМЫ ПЕРИОДА
     // ============================================================
 
     function setPeriodMode(mode) {
@@ -1923,7 +2555,7 @@
 
 
     // ============================================================
-    // CSV (полная выгрузка, не зависит от выбранного периода)
+    // CSV
     // ============================================================
 
     function csvEscape(value) {
@@ -1933,17 +2565,21 @@
 
     async function downloadCSV() {
 
+      if (!activeChildId) {
+        showError("Сначала выбери или добавь ребёнка.");
+        return;
+      }
+
       csvBtn.disabled = true;
       hideError();
       csvHint.style.display = "none";
 
       try {
 
-        // Постранично, чтобы не потерять данные за пределами первых 1000 строк.
         const sleepData = await fetchAllPages(
           TABLE,
           "id,start_time,end_time",
-          q => q.not("end_time", "is", null),
+          q => q.eq("child_id", activeChildId).not("end_time", "is", null),
           "start_time",
           true
         );
@@ -1951,7 +2587,7 @@
         const eventData = await fetchAllPages(
           EVENTS_TABLE,
           "id,event_type,event_time",
-          null,
+          q => q.eq("child_id", activeChildId),
           "event_time",
           true
         );
@@ -2059,9 +2695,16 @@
 
     async function loadPhotos() {
 
+      if (!activeChildId) {
+        galleryPhotos = [];
+        renderPhotos([]);
+        return;
+      }
+
       const { data, error } = await supabaseClient
         .from(PHOTOS_TABLE)
         .select("id,month_number,storage_path,photo_url,created_at")
+        .eq("child_id", activeChildId)
         .order("month_number", { ascending: true })
         .order("created_at", { ascending: true });
 
@@ -2142,6 +2785,11 @@
 
     async function uploadPhoto() {
 
+      if (!activeChildId) {
+        alert("Сначала выбери или добавь ребёнка.");
+        return;
+      }
+
       const monthValue = photoMonthInput.value.trim();
       const file = photoFileInput.files && photoFileInput.files[0];
 
@@ -2178,7 +2826,7 @@
 
         const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
         const safeExtension = extension.replace(/[^a-z0-9]/gi, "") || "jpg";
-        const path = `month-${monthNumber}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExtension}`;
+        const path = `child-${activeChildId}/month-${monthNumber}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExtension}`;
 
         const { error: uploadError } = await supabaseClient
           .storage.from(PHOTOS_BUCKET).upload(path, file);
@@ -2196,7 +2844,12 @@
 
         const { error: insertError } = await supabaseClient
           .from(PHOTOS_TABLE)
-          .insert({ month_number: monthNumber, storage_path: path, photo_url: photoUrl });
+          .insert({
+            month_number: monthNumber,
+            storage_path: path,
+            photo_url: photoUrl,
+            child_id: activeChildId
+          });
 
         if (insertError) throw insertError;
 
@@ -2324,6 +2977,8 @@
 
     async function refreshAll() {
 
+      if (!activeChildId) return;
+
       await safeCall(loadLastCompletedEnd);
       await safeCall(loadOpenSession);
       await safeCall(loadRecentHistory);
@@ -2337,8 +2992,22 @@
       if (currentView === "gallery") {
         await safeCall(loadPhotos);
       }
+    }
 
-      firstLoad = false;
+    async function manualRefresh() {
+
+      refreshBtn.disabled = true;
+      refreshBtn.classList.add("spinning");
+
+      try {
+        // Список детей тоже может измениться с другого устройства.
+        await safeCall(loadChildren);
+        await refreshAll();
+        hapticLight();
+      } finally {
+        refreshBtn.classList.remove("spinning");
+        refreshBtn.disabled = false;
+      }
     }
 
 
@@ -2349,6 +3018,8 @@
     navMainBtn.addEventListener("click", () => setView("main"));
     navStatsBtn.addEventListener("click", () => setView("stats"));
     navGalleryBtn.addEventListener("click", () => setView("gallery"));
+
+    refreshBtn.addEventListener("click", manualRefresh);
 
     actionBtn.addEventListener("click", toggleSleep);
     editCurrentBtn.addEventListener("click", openEditCurrentModal);
@@ -2385,6 +3056,37 @@
       else if (event.key === "ArrowRight") showNextPhoto();
     });
 
+    // --- дети ---
+
+    childSelectorBtn.addEventListener("click", openChildPicker);
+
+    closeChildPickerBtn.addEventListener("click", closeChildPicker);
+
+    childPickerModal.addEventListener("click", event => {
+      if (event.target === childPickerModal) closeChildPicker();
+    });
+
+    addChildBtn.addEventListener("click", () => {
+      openChildForm("add", null);
+    });
+
+    cancelChildFormBtn.addEventListener("click", closeChildForm);
+
+    childFormModal.addEventListener("click", event => {
+      if (event.target === childFormModal) closeChildForm();
+    });
+
+    saveChildBtn.addEventListener("click", saveChildForm);
+
+    deleteChildBtn.addEventListener("click", deleteChild);
+
+    childNameInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        saveChildForm();
+      }
+    });
+
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
         refreshAll();
@@ -2396,6 +3098,8 @@
     // ПЕРВИЧНАЯ ЗАГРУЗКА
     // ============================================================
 
+    versionLabel.textContent = `Режим дня · ${APP_VERSION}`;
+
     const todayForInputs = dateToInputValue(new Date());
     const yesterdayForInputs = dateToInputValue(new Date(Date.now() - 24 * 60 * 60 * 1000));
 
@@ -2403,13 +3107,22 @@
     statsFromDate.value = yesterdayForInputs;
     statsToDate.value = todayForInputs;
 
-    refreshAll();
+    (async function bootstrap() {
 
-    // Локальный «тикающий» счётчик — раз в минуту пересчитывает
-    // длительность сна/бодрствования без обращения к базе.
-    setInterval(() => { renderStatus(); }, 60000);
+      try {
+        await loadChildren();
+      } catch (error) {
+        console.error(error);
+        showError(error.message || "Не удалось загрузить список детей. Проверь, что таблица children существует.");
+        return;
+      }
+
+      await refreshAll();
+
+      setInterval(() => { renderStatus(); }, 60000);
+    })();
 
   </script>
 
 </body>
-</html>
+  </html>ц
