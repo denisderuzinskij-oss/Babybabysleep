@@ -129,11 +129,35 @@
       font-size: 13px;
     }
 
-    .wake-gap-item {
+    .awake-gap {
       text-align: center;
-      font-size: 12px;
       color: var(--hint);
-      padding: 6px 0;
+      font-size: 12px;
+      line-height: 1.3;
+      padding: 5px 0;
+    }
+
+    .timeline-segment {
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .timeline-segment:active {
+      opacity: 0.78;
+    }
+
+    .timeline-tooltip {
+      margin-top: 5px;
+      padding: 7px 9px;
+      border-radius: 8px;
+      background: rgba(128, 128, 128, 0.12);
+      color: var(--text);
+      font-size: 12px;
+      display: none;
+    }
+
+    .timeline-tooltip.visible {
+      display: block;
     }
 
     .edit-btn {
@@ -208,22 +232,7 @@
       overflow: hidden;
     }
 
-    .timeline-segment { position: absolute; top: 0; bottom: 0; cursor: pointer; }
-    .timeline-segment.awake { background: transparent; }
-
-    .timeline-tooltip {
-      position: fixed;
-      background: rgba(0, 0, 0, 0.85);
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      z-index: 2500;
-      pointer-events: none;
-      display: none;
-      white-space: nowrap;
-      transform: translate(-50%, -100%);
-    }
+    .timeline-segment { position: absolute; top: 0; bottom: 0; }
     .timeline-segment.day { background: var(--day); }
     .timeline-segment.night { background: var(--night); }
 
@@ -497,8 +506,8 @@
       <div class="hint" style="margin-bottom: 8px;">Период</div>
 
       <div class="period-buttons">
-        <button class="secondary-button active" id="modeRollingBtn">Последние 24 часа</button>
-        <button class="secondary-button" id="modeDayBtn">День</button>
+        <button class="secondary-button active" id="modeTodayBtn">Сегодня</button>
+        <button class="secondary-button" id="modeDayBtn">Дата</button>
         <button class="secondary-button" id="modeRangeBtn">Период</button>
       </div>
 
@@ -541,18 +550,13 @@
       </div>
 
       <div class="stats-row">
-        <span>Средняя длительность дневного сна</span>
+        <span>Средний дневной сон</span>
         <span id="rangeAvgDaySleep">—</span>
       </div>
 
       <div class="stats-row">
-        <span>Средняя длительность ночного сна</span>
+        <span>Средний ночной сон</span>
         <span id="rangeAvgNightSleep">—</span>
-      </div>
-
-      <div class="stats-row" style="display: none;">
-        <span>Средняя длительность сна</span>
-        <span id="rangeAvgSleep">—</span>
       </div>
 
       <div class="event-stats">
@@ -621,8 +625,6 @@
   </div>
 
   <!-- ОКНО РЕДАКТИРОВАНИЯ СНА -->
-  <div class="timeline-tooltip" id="timelineTooltip"></div>
-
   <div class="modal-backdrop" id="editModal">
     <div class="modal">
       <div class="modal-title">✏️ Изменить сон</div>
@@ -688,7 +690,7 @@
     const peeBtn = document.getElementById("peeBtn");
     const poopBtn = document.getElementById("poopBtn");
 
-    const modeRollingBtn = document.getElementById("modeRollingBtn");
+    const modeTodayBtn = document.getElementById("modeTodayBtn");
     const modeDayBtn = document.getElementById("modeDayBtn");
     const modeRangeBtn = document.getElementById("modeRangeBtn");
 
@@ -705,12 +707,12 @@
     const rangeAwakeTotal = document.getElementById("rangeAwakeTotal");
     const rangeDaySleep = document.getElementById("rangeDaySleep");
     const rangeNightSleep = document.getElementById("rangeNightSleep");
-    const rangeAvgSleep = document.getElementById("rangeAvgSleep");
+    const rangeAvgDaySleep = document.getElementById("rangeAvgDaySleep");
+    const rangeAvgNightSleep = document.getElementById("rangeAvgNightSleep");
     const rangePeeCount = document.getElementById("rangePeeCount");
     const rangePoopCount = document.getElementById("rangePoopCount");
 
     const timelineContainer = document.getElementById("timelineContainer");
-    const timelineTooltip = document.getElementById("timelineTooltip");
 
     const csvBtn = document.getElementById("csvBtn");
     const csvOutput = document.getElementById("csvOutput");
@@ -748,9 +750,10 @@
 
     let currentView = "main";
 
-    // Явные режимы периода статистики: "rolling" | "day" | "range"
-    let periodMode = "rolling";
-    let rangeStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    // Явные режимы периода статистики: "today" | "day" | "range"
+    let periodMode = "today";
+    let rangeStart = new Date();
+    rangeStart.setHours(0, 0, 0, 0);
     let rangeEnd = new Date();
 
     let rangeChartInstance = null;
@@ -1095,24 +1098,19 @@
 
         historyList.appendChild(row);
 
-        // Список отсортирован от новых к старым: следующий элемент — это
-        // сон, который закончился РАНЬШЕ текущего. Разница между его концом
-        // и началом текущего сна — и есть время бодрствования между ними.
-        const earlierSession = data[index + 1];
+        // Список идёт от нового сна к старому.
+        // Между соседними снами показываем фактическое бодрствование.
+        const nextSession = data[index + 1];
 
-        if (earlierSession) {
+        if (nextSession) {
+          const nextEnd = new Date(nextSession.end_time);
+          const awakeMs = start.getTime() - nextEnd.getTime();
 
-          const wakeGapMs =
-            new Date(session.start_time).getTime() -
-            new Date(earlierSession.end_time).getTime();
-
-          if (wakeGapMs > 0) {
-
-            const gapRow = document.createElement("div");
-            gapRow.className = "wake-gap-item";
-            gapRow.textContent = `🙂 бодрствовал ${formatDuration(wakeGapMs)}`;
-
-            historyList.appendChild(gapRow);
+          if (awakeMs > 0) {
+            const awakeRow = document.createElement("div");
+            awakeRow.className = "awake-gap";
+            awakeRow.textContent = `🙂 бодрствовал ${formatDuration(awakeMs)}`;
+            historyList.appendChild(awakeRow);
           }
         }
       });
@@ -1282,11 +1280,12 @@
 
     // Обрезает сырые записи сна по границам диапазона.
     // Для ещё не завершённой сессии (end_time = null) концом считается "сейчас".
-    // Возвращает как обрезанные интервалы, так и количество ИСХОДНЫХ записей,
-    // которые вообще попали в диапазон (для отличия от числа объединённых интервалов).
+    // Возвращает обрезанные интервалы и исходные сессии, пересекающие диапазон.
+    // Количество реальных дневных/ночных снов считается отдельно по времени старта.
     function clipRawSessionsToRange(rawSessions, rangeStartMs, rangeEndMs, nowMs) {
 
       const clippedIntervals = [];
+      const overlappingSessions = [];
       let rawRecordCount = 0;
 
       rawSessions.forEach(session => {
@@ -1301,11 +1300,18 @@
 
         if (end > start) {
           clippedIntervals.push({ start, end });
+          overlappingSessions.push({
+            session,
+            sessionStartMs,
+            sessionEndMs,
+            start,
+            end
+          });
           rawRecordCount++;
         }
       });
 
-      return { clippedIntervals, rawRecordCount };
+      return { clippedIntervals, overlappingSessions, rawRecordCount };
     }
 
     // Ночь — фиксированное окно времени суток: с 20:00 до 09:00 следующего дня.
@@ -1350,6 +1356,7 @@
     }
 
     // Режет один интервал сна на куски "день"/"ночь" по фактическому времени суток.
+    // Это нужно для распределения ДЛИТЕЛЬНОСТИ, а не для количества снов.
     // Например, сон 19:00-22:00 даёт кусок 19:00-20:00 (день) и 20:00-22:00 (ночь).
     function splitIntervalByDayNight(interval) {
 
@@ -1379,13 +1386,14 @@
       const effectiveEndMs = Math.min(rangeEndMs, nowMs);
       const totalRangeMs = Math.max(effectiveEndMs - rangeStartMs, 0);
 
-      const { clippedIntervals, rawRecordCount } =
+      const { clippedIntervals, overlappingSessions, rawRecordCount } =
         clipRawSessionsToRange(rawSessions, rangeStartMs, effectiveEndMs, nowMs);
 
       const mergedSleepIntervals = mergeIntervals(clippedIntervals);
 
-      // Каждый объединённый интервал сна режем на дневные/ночные куски —
-      // они и используются и для сумм, и для раскраски таймлайна.
+      // Объединённые интервалы режем на дневные/ночные куски.
+      // Эти куски используются для СУММ длительности и раскраски таймлайна.
+      // Они НЕ используются для подсчёта количества снов.
       const sleepPieces = [];
       mergedSleepIntervals.forEach(interval => {
         sleepPieces.push(...splitIntervalByDayNight(interval));
@@ -1393,9 +1401,24 @@
 
       let sleepMs = 0;
       let daySleepMs = 0;
-      let dayPieceCount = 0;
+      let daySleepCount = 0;
       let nightSleepMs = 0;
-      let nightPieceCount = 0;
+      let nightSleepCount = 0;
+
+      // Количество снов считаем по РЕАЛЬНЫМ записям сна, а не по кускам,
+      // на которые интервал был разрезан границами 09:00/20:00.
+      // Классификация определяется по фактическому времени НАЧАЛА сна:
+      // 09:00–19:59 — дневной сон, 20:00–08:59 — ночной сон.
+      // Запись считается в количестве, только если её начало попало в выбранный период.
+      overlappingSessions.forEach(({ sessionStartMs }) => {
+        if (sessionStartMs >= rangeStartMs && sessionStartMs < effectiveEndMs) {
+          if (isNightMoment(sessionStartMs)) {
+            nightSleepCount++;
+          } else {
+            daySleepCount++;
+          }
+        }
+      });
 
       sleepPieces.forEach(piece => {
 
@@ -1404,10 +1427,8 @@
 
         if (piece.type === "night") {
           nightSleepMs += duration;
-          nightPieceCount++;
         } else {
           daySleepMs += duration;
-          dayPieceCount++;
         }
       });
 
@@ -1417,7 +1438,15 @@
       const awakeMs = Math.max(totalRangeMs - sleepMs, 0);
 
       const mergedIntervalCount = mergedSleepIntervals.length;
-      const avgSleepMs = mergedIntervalCount > 0 ? sleepMs / mergedIntervalCount : 0;
+
+      // Средняя длительность одного дневного и одного ночного сна.
+      const avgDaySleepMs = daySleepCount > 0
+        ? daySleepMs / daySleepCount
+        : 0;
+
+      const avgNightSleepMs = nightSleepCount > 0
+        ? nightSleepMs / nightSleepCount
+        : 0;
 
       return {
         rangeStartMs,
@@ -1429,11 +1458,12 @@
         rawRecordCount,
         sleepMs,
         awakeMs,
-        avgSleepMs,
+        avgDaySleepMs,
+        avgNightSleepMs,
         daySleepMs,
-        dayPieceCount,
+        daySleepCount,
         nightSleepMs,
-        nightPieceCount
+        nightSleepCount
       };
     }
 
@@ -1538,13 +1568,16 @@
       rangeAwakeTotal.textContent = formatDuration(stats.awakeMs);
 
       rangeDaySleep.textContent =
-        `${formatDuration(stats.daySleepMs)} (${stats.dayPieceCount})`;
+        `${formatDuration(stats.daySleepMs)} (${stats.daySleepCount})`;
 
       rangeNightSleep.textContent =
-        `${formatDuration(stats.nightSleepMs)} (${stats.nightPieceCount})`;
+        `${formatDuration(stats.nightSleepMs)} (${stats.nightSleepCount})`;
 
-      rangeAvgSleep.textContent =
-        stats.mergedIntervalCount > 0 ? formatDuration(stats.avgSleepMs) : "—";
+      rangeAvgDaySleep.textContent =
+        stats.daySleepCount > 0 ? formatDuration(stats.avgDaySleepMs) : "—";
+
+      rangeAvgNightSleep.textContent =
+        stats.nightSleepCount > 0 ? formatDuration(stats.avgNightSleepMs) : "—";
     }
 
     function renderEventCounts(events) {
@@ -1599,46 +1632,9 @@
     // ХРОНОЛОГИЯ (ДИАГРАММА ГАНТА)
     // ============================================================
 
-    // ============================================================
-    // ПОДСКАЗКА НАД СЕГМЕНТОМ ХРОНОЛОГИИ (по тапу, как у Chart.js)
-    // ============================================================
-
-    function showTimelineTooltip(event, text) {
-
-      timelineTooltip.textContent = text;
-      timelineTooltip.style.display = "block";
-
-      const x = event.clientX ??
-        (event.changedTouches && event.changedTouches[0]
-          ? event.changedTouches[0].clientX
-          : window.innerWidth / 2);
-
-      const y = event.clientY ??
-        (event.changedTouches && event.changedTouches[0]
-          ? event.changedTouches[0].clientY
-          : window.innerHeight / 2);
-
-      // Не даём подсказке вылезти за края экрана по горизонтали.
-      const margin = 8;
-      const maxX = window.innerWidth - margin;
-      const minX = margin;
-
-      timelineTooltip.style.left = `${Math.min(Math.max(x, minX), maxX)}px`;
-      timelineTooltip.style.top = `${Math.max(y - 10, margin)}px`;
-    }
-
-    function hideTimelineTooltip() {
-      timelineTooltip.style.display = "none";
-    }
-
-    document.addEventListener("click", () => {
-      hideTimelineTooltip();
-    });
-
-
     function buildTimelineRows(rangeStartDate, rangeEndDate) {
 
-      if (periodMode === "rolling") {
+      if (periodMode === "today") {
         return [{
           label: `${formatDateTime(rangeStartDate)} — ${formatDateTime(rangeEndDate)}`,
           start: rangeStartDate,
@@ -1723,61 +1719,39 @@
         const track = document.createElement("div");
         track.className = "timeline-track";
 
-        // Сегменты сна для этой строки, обрезанные по её границам,
-        // отсортированные по времени начала.
-        const rowSleepSegments = sleepPieces
-          .map(interval => ({
-            start: Math.max(interval.start, rowStartMs),
-            end: Math.min(interval.end, rowEndMs),
-            type: interval.type
-          }))
-          .filter(seg => seg.end > seg.start)
-          .sort((a, b) => a.start - b.start);
+        const tooltip = document.createElement("div");
+        tooltip.className = "timeline-tooltip";
 
-        // Между и вокруг сегментов сна достраиваем сегменты бодрствования,
-        // чтобы по ним тоже можно было тапнуть и увидеть время.
-        const allSegments = [];
-        let cursor = rowStartMs;
+        sleepPieces.forEach(interval => {
 
-        rowSleepSegments.forEach(seg => {
+          const segStart = Math.max(interval.start, rowStartMs);
+          const segEnd = Math.min(interval.end, rowEndMs);
 
-          if (seg.start > cursor) {
-            allSegments.push({ start: cursor, end: seg.start, type: "awake" });
-          }
+          if (segEnd <= segStart) return;
 
-          allSegments.push(seg);
-          cursor = seg.end;
-        });
-
-        if (cursor < rowEndMs) {
-          allSegments.push({ start: cursor, end: rowEndMs, type: "awake" });
-        }
-
-        const segmentLabels = {
-          day: "☀️ Дневной сон",
-          night: "🌙 Ночной сон",
-          awake: "🙂 Бодрствование"
-        };
-
-        allSegments.forEach(seg => {
-
-          const leftPercent = ((seg.start - rowStartMs) / rowTotalMs) * 100;
-          const widthPercent = ((seg.end - seg.start) / rowTotalMs) * 100;
+          const leftPercent = ((segStart - rowStartMs) / rowTotalMs) * 100;
+          const widthPercent = ((segEnd - segStart) / rowTotalMs) * 100;
 
           const segment = document.createElement("div");
-          segment.className = `timeline-segment ${seg.type}`;
+          segment.className = `timeline-segment ${interval.type}`;
           segment.style.left = `${leftPercent}%`;
           segment.style.width = `${widthPercent}%`;
+          segment.title =
+            `${formatClock(new Date(segStart))} → ${formatClock(new Date(segEnd))} · ` +
+            `${formatDuration(segEnd - segStart)}`;
 
           segment.addEventListener("click", event => {
-
             event.stopPropagation();
 
-            const text =
-              `${segmentLabels[seg.type]}: ${formatClock(new Date(seg.start))} → ` +
-              `${formatClock(new Date(seg.end))} (${formatDuration(seg.end - seg.start)})`;
+            const existing = wrapper.querySelector(".timeline-tooltip.visible");
+            if (existing) existing.classList.remove("visible");
 
-            showTimelineTooltip(event, text);
+            tooltip.textContent =
+              `${interval.type === "night" ? "🌙" : "☀️"} ` +
+              `${formatDateTime(new Date(segStart))} → ${formatClock(new Date(segEnd))} · ` +
+              `${formatDuration(segEnd - segStart)}`;
+
+            tooltip.classList.add("visible");
           });
 
           track.appendChild(segment);
@@ -1808,6 +1782,7 @@
         wrapper.appendChild(label);
         wrapper.appendChild(track);
         wrapper.appendChild(tickLabels);
+        wrapper.appendChild(tooltip);
 
         timelineContainer.appendChild(wrapper);
       });
@@ -1822,17 +1797,18 @@
 
       periodMode = mode;
 
-      modeRollingBtn.classList.toggle("active", mode === "rolling");
+      modeTodayBtn.classList.toggle("active", mode === "today");
       modeDayBtn.classList.toggle("active", mode === "day");
       modeRangeBtn.classList.toggle("active", mode === "range");
 
       singleDateRow.style.display = mode === "day" ? "flex" : "none";
       rangeDateRow.style.display = mode === "range" ? "flex" : "none";
-      applyRangeBtn.style.display = mode === "rolling" ? "none" : "block";
+      applyRangeBtn.style.display = mode === "today" ? "none" : "block";
 
-      if (mode === "rolling") {
-        rangeStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        rangeEnd = new Date();
+      if (mode === "today") {
+        const now = new Date();
+        rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        rangeEnd = now;
         safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       }
     }
@@ -2319,7 +2295,7 @@
     peeBtn.addEventListener("click", () => addBabyEvent("pee"));
     poopBtn.addEventListener("click", () => addBabyEvent("poop"));
 
-    modeRollingBtn.addEventListener("click", () => setPeriodMode("rolling"));
+    modeTodayBtn.addEventListener("click", () => setPeriodMode("today"));
     modeDayBtn.addEventListener("click", () => setPeriodMode("day"));
     modeRangeBtn.addEventListener("click", () => setPeriodMode("range"));
     applyRangeBtn.addEventListener("click", applyCustomRange);
