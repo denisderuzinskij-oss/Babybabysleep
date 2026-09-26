@@ -2,12 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  />
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Сон малыша</title>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -24,30 +19,23 @@
       --secondary-bg: var(--tg-theme-secondary-bg-color, #f2f2f7);
       --danger: #ff3b30;
       --border: rgba(128, 128, 128, 0.18);
+      --night: #1c5a8a;
+      --day: #2481cc;
+      --awake: #f2a154;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
       padding: 16px;
       padding-bottom: calc(16px + env(safe-area-inset-bottom));
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg);
       color: var(--text);
     }
 
-    h1 {
-      font-size: 20px;
-      margin: 0 0 16px;
-    }
+    h1 { font-size: 20px; margin: 0 0 16px; }
 
     .card {
       background: var(--secondary-bg);
@@ -56,10 +44,7 @@
       margin-bottom: 12px;
     }
 
-    .status-line {
-      font-size: 16px;
-      margin-bottom: 12px;
-    }
+    .status-line { font-size: 16px; margin-bottom: 12px; }
 
     .big-button {
       width: 100%;
@@ -73,10 +58,7 @@
       cursor: pointer;
     }
 
-    .big-button:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
+    .big-button:disabled { opacity: 0.5; cursor: default; }
 
     .secondary-button {
       width: 100%;
@@ -91,14 +73,9 @@
       cursor: pointer;
     }
 
-    .secondary-button:disabled {
-      opacity: 0.5;
-    }
+    .secondary-button:disabled { opacity: 0.5; }
 
-    .diaper-buttons {
-      display: flex;
-      gap: 8px;
-    }
+    .diaper-buttons { display: flex; gap: 8px; }
 
     .diaper-button {
       flex: 1;
@@ -112,9 +89,7 @@
       cursor: pointer;
     }
 
-    .diaper-button:active {
-      transform: scale(0.98);
-    }
+    .diaper-button:active { transform: scale(0.98); }
 
     .stats-row {
       display: flex;
@@ -124,14 +99,9 @@
       font-size: 15px;
     }
 
-    .stats-row:last-child {
-      margin-bottom: 0;
-    }
+    .stats-row:last-child { margin-bottom: 0; }
 
-    .hint {
-      color: var(--hint);
-      font-size: 13px;
-    }
+    .hint { color: var(--hint); font-size: 13px; }
 
     .event-stats {
       margin-top: 12px;
@@ -149,18 +119,9 @@
       font-size: 14px;
     }
 
-    .history-item:last-child {
-      border-bottom: none;
-    }
-
-    .history-info {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .history-time {
-      line-height: 1.35;
-    }
+    .history-item:last-child { border-bottom: none; }
+    .history-info { min-width: 0; flex: 1; }
+    .history-time { line-height: 1.35; }
 
     .history-duration {
       margin-top: 3px;
@@ -186,61 +147,21 @@
       display: none;
     }
 
-    .empty {
-      color: var(--hint);
-      font-size: 14px;
-      padding: 4px 0;
-    }
+    .empty { color: var(--hint); font-size: 14px; padding: 4px 0; }
 
-    .csv-button {
-      margin-top: 0;
-    }
+    .csv-button { margin-top: 0; }
 
-    /* =========================
-       НАВИГАЦИЯ
-       ========================= */
+    /* НАВИГАЦИЯ */
+    .nav-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .nav-button { flex: 1; padding: 10px 4px; margin-top: 0; font-size: 13px; }
+    .nav-button.active { background: var(--button); color: var(--button-text); }
 
-    .nav-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
+    /* ПЕРИОД */
+    .period-buttons { display: flex; gap: 8px; margin-bottom: 10px; }
+    .period-buttons .secondary-button { margin-top: 0; font-size: 13px; }
+    .period-buttons .secondary-button.active { background: var(--button); color: var(--button-text); }
 
-    .nav-button {
-      flex: 1;
-      padding: 10px 4px;
-      margin-top: 0;
-      font-size: 13px;
-    }
-
-    .nav-button.active {
-      background: var(--button);
-      color: var(--button-text);
-    }
-
-    /* =========================
-       СТАТИСТИКА / ПЕРИОД
-       ========================= */
-
-    .period-buttons {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-
-    .period-buttons .secondary-button {
-      margin-top: 0;
-    }
-
-    .period-buttons .secondary-button.active {
-      background: var(--button);
-      color: var(--button-text);
-    }
-
-    .date-row {
-      display: flex;
-      gap: 8px;
-    }
+    .date-row { display: flex; gap: 8px; margin-bottom: 10px; }
 
     .date-input {
       flex: 1;
@@ -255,51 +176,44 @@
     }
 
     .range-label {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .range-sublabel {
+      font-size: 12px;
+      color: var(--hint);
       margin-bottom: 10px;
     }
 
-    /* =========================
-       ХРОНОЛОГИЯ (ГАНТ)
-       ========================= */
-
-    .timeline-row {
-      margin-bottom: 14px;
-    }
-
-    .timeline-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .timeline-row-label {
-      font-size: 12px;
-      color: var(--hint);
-      margin-bottom: 4px;
-    }
+    /* ХРОНОЛОГИЯ (ГАНТ) */
+    .timeline-row { margin-bottom: 14px; }
+    .timeline-row:last-child { margin-bottom: 0; }
+    .timeline-row-label { font-size: 12px; color: var(--hint); margin-bottom: 4px; }
 
     .timeline-track {
       position: relative;
       height: 24px;
       border-radius: 6px;
-      background: #f2a154;
+      background: var(--awake);
       overflow: hidden;
     }
 
+    .timeline-segment { position: absolute; top: 0; bottom: 0; }
+    .timeline-segment.day { background: var(--day); }
+    .timeline-segment.night { background: var(--night); }
+
     .timeline-gridline {
       position: absolute;
-      top: 0;
-      bottom: 0;
+      top: 0; bottom: 0;
       width: 1px;
       background: rgba(255, 255, 255, 0.6);
       z-index: 1;
     }
 
-    .timeline-tick-labels {
-      position: relative;
-      height: 14px;
-      margin-top: 3px;
-    }
+    .timeline-tick-labels { position: relative; height: 14px; margin-top: 3px; }
 
     .timeline-tick-label {
       position: absolute;
@@ -309,44 +223,20 @@
       white-space: nowrap;
     }
 
-    .timeline-segment {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      background: #2481cc;
-    }
-
     .timeline-legend {
       display: flex;
-      gap: 16px;
+      flex-wrap: wrap;
+      gap: 14px;
       margin-top: 12px;
       font-size: 12px;
       color: var(--hint);
     }
 
-    .timeline-legend span {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
+    .timeline-legend span { display: inline-flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-      display: inline-block;
-    }
-
-    /* =========================
-       ГАЛЕРЕЯ
-       ========================= */
-
-    .photo-input-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-      align-items: center;
-    }
+    /* ГАЛЕРЕЯ */
+    .photo-input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
 
     .photo-month-input {
       width: 110px;
@@ -360,45 +250,15 @@
       font-family: inherit;
     }
 
-    .photo-file-input {
-      flex: 1;
-      min-width: 0;
-      font-size: 13px;
-      color: var(--hint);
-    }
+    .photo-file-input { flex: 1; min-width: 0; font-size: 13px; color: var(--hint); }
 
-    .month-group {
-      margin-bottom: 22px;
-    }
+    .month-group { margin-bottom: 22px; }
+    .month-group:last-child { margin-bottom: 0; }
+    .month-title { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+    .month-count { color: var(--hint); font-size: 13px; font-weight: 400; margin-left: 5px; }
 
-    .month-group:last-child {
-      margin-bottom: 0;
-    }
-
-    .month-title {
-      font-size: 17px;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-
-    .month-count {
-      color: var(--hint);
-      font-size: 13px;
-      font-weight: 400;
-      margin-left: 5px;
-    }
-
-    .photo-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .photo-item {
-      position: relative;
-      width: 100%;
-      cursor: pointer;
-    }
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .photo-item { position: relative; width: 100%; cursor: pointer; }
 
     .photo-item img {
       width: 100%;
@@ -411,10 +271,8 @@
 
     .photo-delete {
       position: absolute;
-      top: 5px;
-      right: 5px;
-      width: 26px;
-      height: 26px;
+      top: 5px; right: 5px;
+      width: 26px; height: 26px;
       border-radius: 50%;
       border: none;
       background: rgba(0, 0, 0, 0.6);
@@ -425,17 +283,11 @@
       z-index: 2;
     }
 
-    .photo-delete:active {
-      transform: scale(0.95);
-    }
+    .photo-delete:active { transform: scale(0.95); }
 
-    /* =========================
-       ПРОСМОТР ФОТО
-       ========================= */
-
+    /* ПРОСМОТР ФОТО */
     .lightbox-backdrop {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: rgba(0, 0, 0, 0.94);
       display: none;
       align-items: center;
@@ -444,13 +296,10 @@
       padding: 20px;
     }
 
-    .lightbox-backdrop.visible {
-      display: flex;
-    }
+    .lightbox-backdrop.visible { display: flex; }
 
     .lightbox-content {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -458,8 +307,7 @@
     }
 
     .lightbox-image {
-      max-width: 100%;
-      max-height: 100%;
+      max-width: 100%; max-height: 100%;
       object-fit: contain;
       border-radius: 8px;
       user-select: none;
@@ -469,8 +317,7 @@
       position: fixed;
       top: calc(14px + env(safe-area-inset-top));
       right: 14px;
-      width: 40px;
-      height: 40px;
+      width: 40px; height: 40px;
       border-radius: 50%;
       border: none;
       background: rgba(255, 255, 255, 0.15);
@@ -480,13 +327,11 @@
       z-index: 3002;
     }
 
-    .lightbox-prev,
-    .lightbox-next {
+    .lightbox-prev, .lightbox-next {
       position: fixed;
       top: 50%;
       transform: translateY(-50%);
-      width: 42px;
-      height: 42px;
+      width: 42px; height: 42px;
       border: none;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.15);
@@ -496,18 +341,9 @@
       z-index: 3002;
     }
 
-    .lightbox-prev {
-      left: 12px;
-    }
-
-    .lightbox-next {
-      right: 12px;
-    }
-
-    .lightbox-prev.hidden,
-    .lightbox-next.hidden {
-      display: none;
-    }
+    .lightbox-prev { left: 12px; }
+    .lightbox-next { right: 12px; }
+    .lightbox-prev.hidden, .lightbox-next.hidden { display: none; }
 
     .lightbox-counter {
       position: fixed;
@@ -522,13 +358,9 @@
       z-index: 3002;
     }
 
-    /* =========================
-       ОКНО РЕДАКТИРОВАНИЯ
-       ========================= */
-
+    /* ОКНО РЕДАКТИРОВАНИЯ */
     .modal-backdrop {
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: rgba(0, 0, 0, 0.45);
       display: none;
       align-items: flex-end;
@@ -536,9 +368,7 @@
       z-index: 1000;
     }
 
-    .modal-backdrop.visible {
-      display: flex;
-    }
+    .modal-backdrop.visible { display: flex; }
 
     .modal {
       width: 100%;
@@ -549,22 +379,9 @@
       box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.2);
     }
 
-    .modal-title {
-      font-size: 19px;
-      font-weight: 600;
-      margin-bottom: 18px;
-    }
-
-    .field {
-      margin-bottom: 14px;
-    }
-
-    .field label {
-      display: block;
-      margin-bottom: 6px;
-      color: var(--hint);
-      font-size: 13px;
-    }
+    .modal-title { font-size: 19px; font-weight: 600; margin-bottom: 18px; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; margin-bottom: 6px; color: var(--hint); font-size: 13px; }
 
     .field input {
       width: 100%;
@@ -578,21 +395,11 @@
       font-family: inherit;
     }
 
-    .modal-hint {
-      color: var(--hint);
-      font-size: 12px;
-      margin-top: 5px;
-    }
-
-    .modal-buttons {
-      display: flex;
-      gap: 8px;
-      margin-top: 18px;
-    }
+    .modal-hint { color: var(--hint); font-size: 12px; margin-top: 5px; }
+    .modal-buttons { display: flex; gap: 8px; margin-top: 18px; }
 
     .modal-buttons button {
-      flex: 1;
-      height: 46px;
+      flex: 1; height: 46px;
       border: none;
       border-radius: 11px;
       font-size: 15px;
@@ -600,24 +407,11 @@
       cursor: pointer;
     }
 
-    .cancel-btn {
-      background: var(--secondary-bg);
-      color: var(--text);
-    }
+    .cancel-btn { background: var(--secondary-bg); color: var(--text); }
+    .save-btn { background: var(--button); color: var(--button-text); }
+    .save-btn:disabled { opacity: 0.5; }
 
-    .save-btn {
-      background: var(--button);
-      color: var(--button-text);
-    }
-
-    .save-btn:disabled {
-      opacity: 0.5;
-    }
-
-    /* =========================
-       CSV
-       ========================= */
-
+    /* CSV */
     .csv-textarea {
       width: 100%;
       height: 180px;
@@ -637,101 +431,72 @@
 
   <h1 id="pageTitle">😴 Сон малыша</h1>
 
-  <!-- =========================
-       НАВИГАЦИЯ
-       ========================= -->
-
   <div class="nav-row">
     <button class="secondary-button nav-button active" id="navMainBtn">😴 Сон</button>
     <button class="secondary-button nav-button" id="navStatsBtn">📊 Статистика</button>
     <button class="secondary-button nav-button" id="navGalleryBtn">📷 Галерея</button>
   </div>
 
-  <!-- =========================
-       ОСНОВНОЙ ЭКРАН
-       ========================= -->
-
+  <!-- ОСНОВНОЙ ЭКРАН -->
   <div id="mainView">
 
-    <!-- ТЕКУЩИЙ СОН -->
     <div class="card">
-
       <div class="status-line" id="statusLine">Загрузка...</div>
-
       <button class="big-button" id="actionBtn" disabled>...</button>
-
-      <button class="secondary-button" id="editCurrentBtn" style="display: none;">
-        ✏️ Изменить время
-      </button>
-
+      <button class="secondary-button" id="editCurrentBtn" style="display: none;">✏️ Изменить время</button>
       <div id="error"></div>
-
     </div>
 
-    <!-- ПОДГУЗНИК -->
     <div class="card">
-
       <div class="hint" style="margin-bottom: 10px;">Подгузник</div>
-
       <div class="diaper-buttons">
         <button class="diaper-button" id="peeBtn">💧 Пописал</button>
         <button class="diaper-button" id="poopBtn">💩 Покакал</button>
       </div>
-
     </div>
 
-    <!-- ИСТОРИЯ СНА -->
     <div class="card">
-
       <div class="hint" style="margin-bottom: 8px;">Последние записи сна</div>
-
-      <div id="historyList">
-        <div class="empty">Загрузка...</div>
-      </div>
-
+      <div id="historyList"><div class="empty">Загрузка...</div></div>
     </div>
 
-    <!-- СОБЫТИЯ -->
     <div class="card">
-
       <div class="hint" style="margin-bottom: 8px;">Последние события</div>
-
-      <div id="eventsList">
-        <div class="empty">Загрузка...</div>
-      </div>
-
+      <div id="eventsList"><div class="empty">Загрузка...</div></div>
     </div>
 
   </div>
 
-  <!-- =========================
-       СТАТИСТИКА
-       ========================= -->
-
+  <!-- СТАТИСТИКА -->
   <div id="statsView" style="display: none;">
 
-    <!-- ПЕРИОД -->
     <div class="card">
 
       <div class="hint" style="margin-bottom: 8px;">Период</div>
 
       <div class="period-buttons">
-        <button class="secondary-button active" id="last24Btn">Последние сутки</button>
+        <button class="secondary-button active" id="modeRollingBtn">Последние 24 часа</button>
+        <button class="secondary-button" id="modeDayBtn">День</button>
+        <button class="secondary-button" id="modeRangeBtn">Период</button>
       </div>
 
-      <div class="date-row">
+      <div class="date-row" id="singleDateRow" style="display: none;">
+        <input type="date" class="date-input" id="statsSingleDate" />
+      </div>
+
+      <div class="date-row" id="rangeDateRow" style="display: none;">
         <input type="date" class="date-input" id="statsFromDate" />
         <input type="date" class="date-input" id="statsToDate" />
       </div>
 
-      <button class="secondary-button" id="applyRangeBtn">Показать за выбранные даты</button>
+      <button class="secondary-button" id="applyRangeBtn" style="display: none;">Показать</button>
 
     </div>
 
-    <!-- СВОДКА -->
     <div class="card">
 
       <div class="range-label" id="rangeLabel">—</div>
+      <div class="range-sublabel" id="rangeSublabel"></div>
 
       <div class="stats-row">
         <span>😴 Сон всего</span>
@@ -744,8 +509,13 @@
       </div>
 
       <div class="stats-row">
-        <span>Количество снов</span>
-        <span id="rangeSleepCount">—</span>
+        <span>☀️ Дневной сон</span>
+        <span id="rangeDaySleep">—</span>
+      </div>
+
+      <div class="stats-row">
+        <span>🌙 Ночной сон</span>
+        <span id="rangeNightSleep">—</span>
       </div>
 
       <div class="stats-row">
@@ -754,142 +524,88 @@
       </div>
 
       <div class="event-stats">
-
-        <div class="stats-row">
-          <span>💧 Пописал</span>
-          <span id="rangePeeCount">—</span>
-        </div>
-
-        <div class="stats-row">
-          <span>💩 Покакал</span>
-          <span id="rangePoopCount">—</span>
-        </div>
-
+        <div class="stats-row"><span>💧 Пописал</span><span id="rangePeeCount">—</span></div>
+        <div class="stats-row"><span>💩 Покакал</span><span id="rangePoopCount">—</span></div>
       </div>
 
     </div>
 
-    <!-- ДОЛЯ СНА/БОДРСТВОВАНИЯ -->
     <div class="card">
-
       <div class="hint" style="margin-bottom: 8px;">Соотношение за период</div>
-
       <canvas id="rangeChart" height="200"></canvas>
-
     </div>
 
-    <!-- ХРОНОЛОГИЯ (ГАНТ) -->
     <div class="card">
 
       <div class="hint" style="margin-bottom: 8px;">Хронология сна</div>
 
-      <div id="timelineContainer">
-        <div class="empty">Загрузка...</div>
-      </div>
+      <div id="timelineContainer"><div class="empty">Загрузка...</div></div>
 
       <div class="timeline-legend">
-        <span><span class="legend-dot" style="background:#2481cc;"></span>Сон</span>
-        <span><span class="legend-dot" style="background:#f2a154;"></span>Бодрствование</span>
+        <span><span class="legend-dot" style="background:var(--day);"></span>Дневной сон</span>
+        <span><span class="legend-dot" style="background:var(--night);"></span>Ночной сон</span>
+        <span><span class="legend-dot" style="background:var(--awake);"></span>Бодрствование</span>
       </div>
 
     </div>
 
-    <!-- CSV -->
     <div class="card">
-
-      <button class="secondary-button csv-button" id="csvBtn">
-        📊 Скопировать всю статистику (CSV)
-      </button>
-
+      <button class="secondary-button csv-button" id="csvBtn">📊 Скопировать всю статистику (CSV)</button>
       <textarea class="csv-textarea" id="csvOutput" style="display: none; margin-top: 10px;" readonly></textarea>
-
-      <div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">
-        Текст скопирован в буфер обмена.
-      </div>
-
+      <div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">Текст скопирован в буфер обмена.</div>
     </div>
 
   </div>
 
-  <!-- =========================
-       ГАЛЕРЕЯ
-       ========================= -->
-
+  <!-- ГАЛЕРЕЯ -->
   <div id="galleryView" style="display: none;">
 
     <div class="card">
-
       <div class="hint" style="margin-bottom: 8px;">📷 Добавить фото</div>
-
       <div class="photo-input-row">
         <input type="number" class="photo-month-input" id="photoMonthInput" placeholder="Месяц" min="1" max="24" step="1" />
         <input type="file" class="photo-file-input" id="photoFileInput" accept="image/*" />
       </div>
-
       <button class="secondary-button" id="uploadPhotoBtn">Добавить фото</button>
-
       <div class="hint" id="photoHint" style="margin-top: 8px; display: none;"></div>
-
     </div>
 
     <div class="card">
-
       <div class="hint" style="margin-bottom: 8px;">Галерея по месяцам</div>
-
-      <div id="photoGroups">
-        <div class="empty">Загрузка...</div>
-      </div>
-
+      <div id="photoGroups"><div class="empty">Загрузка...</div></div>
     </div>
 
   </div>
 
-  <!-- =========================
-       LIGHTBOX
-       ========================= -->
-
+  <!-- LIGHTBOX -->
   <div class="lightbox-backdrop" id="lightbox">
-
     <div class="lightbox-content" id="lightboxContent">
       <img class="lightbox-image" id="lightboxImage" alt="Фото" />
     </div>
-
     <div class="lightbox-counter" id="lightboxCounter">1 / 1</div>
-
     <button class="lightbox-close" id="lightboxClose" aria-label="Закрыть">✕</button>
     <button class="lightbox-prev" id="lightboxPrev" aria-label="Предыдущее фото">‹</button>
     <button class="lightbox-next" id="lightboxNext" aria-label="Следующее фото">›</button>
-
   </div>
 
-  <!-- =========================
-       ОКНО РЕДАКТИРОВАНИЯ СНА
-       ========================= -->
-
+  <!-- ОКНО РЕДАКТИРОВАНИЯ СНА -->
   <div class="modal-backdrop" id="editModal">
-
     <div class="modal">
-
       <div class="modal-title">✏️ Изменить сон</div>
-
       <div class="field">
         <label for="editStart">Начало сна</label>
         <input type="datetime-local" id="editStart" />
       </div>
-
       <div class="field">
         <label for="editEnd">Конец сна</label>
         <input type="datetime-local" id="editEnd" />
         <div class="modal-hint">Если оставить пустым — сон останется незавершённым.</div>
       </div>
-
       <div class="modal-buttons">
         <button class="cancel-btn" id="cancelEditBtn">Отмена</button>
         <button class="save-btn" id="saveEditBtn">Сохранить</button>
       </div>
-
     </div>
-
   </div>
 
 
@@ -907,22 +623,8 @@
     const PHOTOS_TABLE = "baby_photos";
     const PHOTOS_BUCKET = "baby-photos";
 
-
-    // ============================================================
-    // TELEGRAM
-    // ============================================================
-
     const tg = window.Telegram?.WebApp;
-
-    if (tg) {
-      tg.ready();
-      tg.expand();
-    }
-
-
-    // ============================================================
-    // SUPABASE CLIENT
-    // ============================================================
+    if (tg) { tg.ready(); tg.expand(); }
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -952,15 +654,23 @@
     const peeBtn = document.getElementById("peeBtn");
     const poopBtn = document.getElementById("poopBtn");
 
-    const last24Btn = document.getElementById("last24Btn");
+    const modeRollingBtn = document.getElementById("modeRollingBtn");
+    const modeDayBtn = document.getElementById("modeDayBtn");
+    const modeRangeBtn = document.getElementById("modeRangeBtn");
+
+    const singleDateRow = document.getElementById("singleDateRow");
+    const rangeDateRow = document.getElementById("rangeDateRow");
+    const statsSingleDate = document.getElementById("statsSingleDate");
     const statsFromDate = document.getElementById("statsFromDate");
     const statsToDate = document.getElementById("statsToDate");
     const applyRangeBtn = document.getElementById("applyRangeBtn");
 
     const rangeLabel = document.getElementById("rangeLabel");
+    const rangeSublabel = document.getElementById("rangeSublabel");
     const rangeSleepTotal = document.getElementById("rangeSleepTotal");
     const rangeAwakeTotal = document.getElementById("rangeAwakeTotal");
-    const rangeSleepCount = document.getElementById("rangeSleepCount");
+    const rangeDaySleep = document.getElementById("rangeDaySleep");
+    const rangeNightSleep = document.getElementById("rangeNightSleep");
     const rangeAvgSleep = document.getElementById("rangeAvgSleep");
     const rangePeeCount = document.getElementById("rangePeeCount");
     const rangePoopCount = document.getElementById("rangePoopCount");
@@ -996,15 +706,15 @@
     // STATE
     // ============================================================
 
-    let openSession = null;
-    let lastCompletedEnd = null;
+    let openSession = null;         // null означает явно «нет открытой сессии»
+    let lastCompletedEnd = null;    // null означает явно «нет завершённых сессий»
     let editingSessionId = null;
-    let refreshing = false;
     let firstLoad = true;
 
     let currentView = "main";
 
-    let rangeMode = "rolling"; // "rolling" | "daily"
+    // Явные режимы периода статистики: "rolling" | "day" | "range"
+    let periodMode = "rolling";
     let rangeStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
     let rangeEnd = new Date();
 
@@ -1015,7 +725,7 @@
 
 
     // ============================================================
-    // ERRORS
+    // ОШИБКИ / УТИЛИТЫ
     // ============================================================
 
     function showError(message) {
@@ -1028,10 +738,15 @@
       errorDiv.style.display = "none";
     }
 
-
-    // ============================================================
-    // HAPTIC
-    // ============================================================
+    // Оборачивает вызов: ошибка одного шага не должна ронять всё приложение.
+    async function safeCall(fn, fallbackMessage) {
+      try {
+        await fn();
+      } catch (error) {
+        console.error(error);
+        showError(error.message || fallbackMessage || "Не удалось загрузить данные.");
+      }
+    }
 
     function hapticSuccess() {
       if (tg) {
@@ -1041,7 +756,7 @@
 
 
     // ============================================================
-    // FORMAT
+    // ЕДИНЫЙ ФОРМАТТЕР ДЛИТЕЛЬНОСТИ (используется везде: статистика, график, CSV)
     // ============================================================
 
     function formatDuration(ms) {
@@ -1060,10 +775,7 @@
     function formatTime(iso) {
       const date = new Date(iso);
       return date.toLocaleString("ru-RU", {
-        day: "2-digit",
-        month: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit"
+        day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
       });
     }
 
@@ -1073,6 +785,10 @@
 
     function formatDateShort(date) {
       return date.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+    }
+
+    function formatDateTime(date) {
+      return `${formatDateShort(date)} ${formatClock(date)}`;
     }
 
     function isoToLocalInput(iso) {
@@ -1100,6 +816,11 @@
       return `${year}-${month}-${day}`;
     }
 
+    function parseDateInputValue(value) {
+      const [y, m, d] = value.split("-").map(Number);
+      return { y, m, d };
+    }
+
 
     // ============================================================
     // ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
@@ -1121,10 +842,10 @@
         pageTitle.textContent = "😴 Сон малыша";
       } else if (view === "stats") {
         pageTitle.textContent = "📊 Статистика";
-        loadRangeStats();
+        safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       } else if (view === "gallery") {
         pageTitle.textContent = "📷 Галерея малыша";
-        loadPhotos();
+        safeCall(loadPhotos, "Не удалось загрузить галерею.");
       }
 
       window.scrollTo(0, 0);
@@ -1132,10 +853,11 @@
 
 
     // ============================================================
-    // ЗАГРУЗКА ТЕКУЩЕГО СНА
+    // ТЕКУЩИЙ СОН
     // ============================================================
 
     async function loadOpenSession() {
+
       const { data, error } = await supabaseClient
         .from(TABLE)
         .select("*")
@@ -1145,11 +867,14 @@
 
       if (error) throw error;
 
-      openSession = data && data.length > 0 ? data[0] : null;
+      // Явно: если записей нет — openSession становится null, а не "неопределённостью".
+      openSession = (data && data.length > 0) ? data[0] : null;
+
       renderStatus();
     }
 
     async function loadLastCompletedEnd() {
+
       const { data, error } = await supabaseClient
         .from(TABLE)
         .select("end_time")
@@ -1159,7 +884,7 @@
 
       if (error) throw error;
 
-      lastCompletedEnd = data && data.length > 0 ? data[0].end_time : null;
+      lastCompletedEnd = (data && data.length > 0) ? data[0].end_time : null;
     }
 
     function renderStatus() {
@@ -1253,10 +978,10 @@
         if (error) throw error;
 
         hapticSuccess();
-        await loadRecentEvents();
+        await safeCall(loadRecentEvents);
 
         if (currentView === "stats") {
-          await loadRangeStats();
+          await safeCall(() => loadRangeStats(false));
         }
 
       } catch (error) {
@@ -1273,7 +998,7 @@
 
 
     // ============================================================
-    // ИСТОРИЯ СНА (лёгкий список для главного экрана)
+    // ИСТОРИЯ / СОБЫТИЯ ДЛЯ ГЛАВНОГО ЭКРАНА (лёгкие списки)
     // ============================================================
 
     async function loadRecentHistory() {
@@ -1336,11 +1061,6 @@
         historyList.appendChild(row);
       });
     }
-
-
-    // ============================================================
-    // СОБЫТИЯ (лёгкий список для главного экрана)
-    // ============================================================
 
     async function loadRecentEvents() {
 
@@ -1474,16 +1194,151 @@
 
 
     // ============================================================
-    // СТАТИСТИКА ЗА ПЕРИОД (с учётом текущего незавершённого сна)
+    // ЧИСТЫЙ РАСЧЁТ СТАТИСТИКИ (не знает ни про UI, ни про базу)
     // ============================================================
 
-    async function fetchSessionsOverlapping(start, end) {
+    // Объединяет пересекающиеся интервалы {start,end} (в мс) в список
+    // непересекающихся, отсортированных по времени начала.
+    function mergeIntervals(intervals) {
+
+      if (!intervals.length) return [];
+
+      const sorted = intervals
+        .slice()
+        .sort((a, b) => a.start - b.start);
+
+      const merged = [{ start: sorted[0].start, end: sorted[0].end }];
+
+      for (let i = 1; i < sorted.length; i++) {
+
+        const last = merged[merged.length - 1];
+        const current = sorted[i];
+
+        if (current.start <= last.end) {
+          last.end = Math.max(last.end, current.end);
+        } else {
+          merged.push({ start: current.start, end: current.end });
+        }
+      }
+
+      return merged;
+    }
+
+    // Обрезает сырые записи сна по границам диапазона.
+    // Для ещё не завершённой сессии (end_time = null) концом считается "сейчас".
+    // Возвращает как обрезанные интервалы, так и количество ИСХОДНЫХ записей,
+    // которые вообще попали в диапазон (для отличия от числа объединённых интервалов).
+    function clipRawSessionsToRange(rawSessions, rangeStartMs, rangeEndMs, nowMs) {
+
+      const clippedIntervals = [];
+      let rawRecordCount = 0;
+
+      rawSessions.forEach(session => {
+
+        const sessionStartMs = new Date(session.start_time).getTime();
+        const sessionEndMs = session.end_time
+          ? new Date(session.end_time).getTime()
+          : nowMs;
+
+        const start = Math.max(sessionStartMs, rangeStartMs);
+        const end = Math.min(sessionEndMs, rangeEndMs);
+
+        if (end > start) {
+          clippedIntervals.push({ start, end });
+          rawRecordCount++;
+        }
+      });
+
+      return { clippedIntervals, rawRecordCount };
+    }
+
+    // Ночной сон — любой объединённый интервал, который переходит на следующие
+    // календарные сутки (start и end приходятся на разные даты).
+    // Дневной сон — интервал целиком в пределах одних суток.
+    function classifyDayNight(interval) {
+
+      const startDate = new Date(interval.start);
+      const endDate = new Date(interval.end);
+
+      const sameCalendarDay =
+        startDate.getFullYear() === endDate.getFullYear() &&
+        startDate.getMonth() === endDate.getMonth() &&
+        startDate.getDate() === endDate.getDate();
+
+      return sameCalendarDay ? "day" : "night";
+    }
+
+    // Главная чистая функция: сырые сессии + границы диапазона -> готовая статистика.
+    function calculateSleepStats(rawSessions, rangeStartMs, rangeEndMs, nowMs) {
+
+      const effectiveEndMs = Math.min(rangeEndMs, nowMs);
+      const totalRangeMs = Math.max(effectiveEndMs - rangeStartMs, 0);
+
+      const { clippedIntervals, rawRecordCount } =
+        clipRawSessionsToRange(rawSessions, rangeStartMs, effectiveEndMs, nowMs);
+
+      const mergedSleepIntervals = mergeIntervals(clippedIntervals)
+        .map(interval => ({ ...interval, type: classifyDayNight(interval) }));
+
+      let sleepMs = 0;
+      let daySleepMs = 0;
+      let dayIntervalCount = 0;
+      let nightSleepMs = 0;
+      let nightIntervalCount = 0;
+
+      mergedSleepIntervals.forEach(interval => {
+
+        const duration = interval.end - interval.start;
+        sleepMs += duration;
+
+        if (interval.type === "night") {
+          nightSleepMs += duration;
+          nightIntervalCount++;
+        } else {
+          daySleepMs += duration;
+          dayIntervalCount++;
+        }
+      });
+
+      // Подстраховка: даже если в базе окажутся дубли и объединение почему-то
+      // не сработало как ожидалось, сон за период не может быть больше самого периода.
+      sleepMs = Math.min(sleepMs, totalRangeMs);
+      const awakeMs = Math.max(totalRangeMs - sleepMs, 0);
+
+      const mergedIntervalCount = mergedSleepIntervals.length;
+      const avgSleepMs = mergedIntervalCount > 0 ? sleepMs / mergedIntervalCount : 0;
+
+      return {
+        rangeStartMs,
+        effectiveEndMs,
+        totalRangeMs,
+        mergedSleepIntervals,
+        mergedIntervalCount,
+        rawRecordCount,
+        sleepMs,
+        awakeMs,
+        avgSleepMs,
+        daySleepMs,
+        dayIntervalCount,
+        nightSleepMs,
+        nightIntervalCount
+      };
+    }
+
+
+    // ============================================================
+    // ЗАГРУЗКА ДАННЫХ ИЗ SUPABASE (без бизнес-логики)
+    // ============================================================
+
+    // Тянем всё, что началось раньше конца диапазона; фактическое пересечение
+    // с диапазоном (и с "сейчас" для открытой сессии) считаем в JS — это проще
+    // и надёжнее, чем городить пересечение прямо в SQL-фильтре.
+    async function fetchSleepSessionsUpTo(endDate) {
 
       const { data, error } = await supabaseClient
         .from(TABLE)
         .select("id,start_time,end_time")
-        .lte("start_time", end.toISOString())
-        .or(`end_time.is.null,end_time.gte.${start.toISOString()}`)
+        .lte("start_time", endDate.toISOString())
         .order("start_time", { ascending: true });
 
       if (error) throw error;
@@ -1491,97 +1346,107 @@
       return data || [];
     }
 
-    function clipSessionsToRange(sessions, rangeStartDate, rangeEndDate) {
+    async function fetchEventsInRange(startDate, endDate) {
 
-      const now = new Date();
-      const rangeStartMs = rangeStartDate.getTime();
-      const rangeEndMs = Math.min(rangeEndDate.getTime(), now.getTime());
+      const { data, error } = await supabaseClient
+        .from(EVENTS_TABLE)
+        .select("event_type,event_time")
+        .gte("event_time", startDate.toISOString())
+        .lte("event_time", endDate.toISOString());
 
-      const clipped = [];
+      if (error) throw error;
 
-      sessions.forEach(session => {
-
-        const sessionStart = new Date(session.start_time).getTime();
-
-        // Если сон ещё не закончен — считаем, что длится до "сейчас".
-        const sessionEnd = session.end_time
-          ? new Date(session.end_time).getTime()
-          : now.getTime();
-
-        const start = Math.max(sessionStart, rangeStartMs);
-        const end = Math.min(sessionEnd, rangeEndMs);
-
-        if (end > start) {
-          clipped.push({ start, end });
-        }
-      });
-
-      return clipped;
+      return data || [];
     }
 
-    async function loadRangeStats() {
 
-      timelineContainer.innerHTML = '<div class="empty">Загрузка...</div>';
+    // ============================================================
+    // ОРКЕСТРАЦИЯ: БАЗА -> ДАННЫЕ -> РАСЧЁТ -> ОТРИСОВКА
+    // ============================================================
 
-      try {
+    async function loadRangeStats(showLoading) {
 
-        const rawSessions = await fetchSessionsOverlapping(rangeStart, rangeEnd);
-        const clipped = clipSessionsToRange(rawSessions, rangeStart, rangeEnd);
-
-        const effectiveEnd = new Date(Math.min(rangeEnd.getTime(), Date.now()));
-        const totalRangeMs = Math.max(effectiveEnd.getTime() - rangeStart.getTime(), 0);
-
-        let sleepMs = 0;
-        clipped.forEach(seg => { sleepMs += (seg.end - seg.start); });
-
-        sleepMs = Math.min(sleepMs, totalRangeMs);
-        const awakeMs = Math.max(totalRangeMs - sleepMs, 0);
-
-        const sleepCount = clipped.length;
-        const avgSleepMs = sleepCount > 0 ? sleepMs / sleepCount : 0;
-
-        rangeSleepTotal.textContent = formatDuration(sleepMs);
-        rangeAwakeTotal.textContent = formatDuration(awakeMs);
-        rangeSleepCount.textContent = String(sleepCount);
-        rangeAvgSleep.textContent = sleepCount > 0 ? formatDuration(avgSleepMs) : "—";
-
-        if (rangeMode === "rolling") {
-          rangeLabel.textContent =
-            `${formatClock(rangeStart)} (${formatDateShort(rangeStart)}) — ${formatClock(effectiveEnd)} (${formatDateShort(effectiveEnd)})`;
-        } else {
-          rangeLabel.textContent =
-            `${formatDateShort(rangeStart)} — ${formatDateShort(effectiveEnd)}`;
-        }
-
-        // Пописал / покакал за период
-        const { data: eventData, error: eventError } = await supabaseClient
-          .from(EVENTS_TABLE)
-          .select("event_type,event_time")
-          .gte("event_time", rangeStart.toISOString())
-          .lte("event_time", effectiveEnd.toISOString());
-
-        if (eventError) throw eventError;
-
-        let peeCount = 0;
-        let poopCount = 0;
-
-        (eventData || []).forEach(event => {
-          if (event.event_type === "pee") peeCount++;
-          else if (event.event_type === "poop") poopCount++;
-        });
-
-        rangePeeCount.textContent = String(peeCount);
-        rangePoopCount.textContent = String(poopCount);
-
-        renderRangeChart(sleepMs, awakeMs);
-        renderTimeline(clipped, rangeStart, effectiveEnd);
-
-      } catch (error) {
-
-        console.error(error);
-        showError(error.message || "Не удалось загрузить статистику.");
-        timelineContainer.innerHTML = '<div class="empty">Ошибка загрузки</div>';
+      if (showLoading) {
+        timelineContainer.innerHTML = '<div class="empty">Загрузка...</div>';
       }
+
+      const nowMs = Date.now();
+
+      let rawSessions = [];
+      try {
+        rawSessions = await fetchSleepSessionsUpTo(rangeEnd);
+      } catch (error) {
+        console.error(error);
+        showError("Не удалось загрузить сон за период.");
+      }
+
+      const stats = calculateSleepStats(
+        rawSessions,
+        rangeStart.getTime(),
+        rangeEnd.getTime(),
+        nowMs
+      );
+
+      let events = [];
+      try {
+        events = await fetchEventsInRange(rangeStart, new Date(stats.effectiveEndMs));
+      } catch (error) {
+        console.error(error);
+        // Не блокируем остальную статистику из-за упавшего запроса событий.
+      }
+
+      renderRangeSummary(stats);
+      renderRangeLabel(stats);
+      renderEventCounts(events);
+      renderRangeChart(stats.sleepMs, stats.awakeMs);
+      renderTimeline(stats.mergedSleepIntervals, rangeStart, new Date(stats.effectiveEndMs));
+    }
+
+
+    // ============================================================
+    // ОТРИСОВКА СТАТИСТИКИ (чистый UI-слой — только показывает готовые данные)
+    // ============================================================
+
+    function renderRangeLabel(stats) {
+
+      const start = new Date(stats.rangeStartMs);
+      const end = new Date(stats.effectiveEndMs);
+
+      rangeLabel.textContent =
+        `Период: ${formatDateTime(start)} → ${formatDateTime(end)} (${formatDuration(stats.totalRangeMs)})`;
+
+      rangeSublabel.textContent =
+        `Записей в базе за период: ${stats.rawRecordCount}. ` +
+        `После объединения пересечений: ${stats.mergedIntervalCount}.`;
+    }
+
+    function renderRangeSummary(stats) {
+
+      rangeSleepTotal.textContent = formatDuration(stats.sleepMs);
+      rangeAwakeTotal.textContent = formatDuration(stats.awakeMs);
+
+      rangeDaySleep.textContent =
+        `${formatDuration(stats.daySleepMs)} (${stats.dayIntervalCount})`;
+
+      rangeNightSleep.textContent =
+        `${formatDuration(stats.nightSleepMs)} (${stats.nightIntervalCount})`;
+
+      rangeAvgSleep.textContent =
+        stats.mergedIntervalCount > 0 ? formatDuration(stats.avgSleepMs) : "—";
+    }
+
+    function renderEventCounts(events) {
+
+      let peeCount = 0;
+      let poopCount = 0;
+
+      events.forEach(event => {
+        if (event.event_type === "pee") peeCount++;
+        else if (event.event_type === "poop") poopCount++;
+      });
+
+      rangePeeCount.textContent = String(peeCount);
+      rangePoopCount.textContent = String(poopCount);
     }
 
     function renderRangeChart(sleepMs, awakeMs) {
@@ -1591,8 +1456,14 @@
       const canvas = document.getElementById("rangeChart");
       if (!canvas) return;
 
+      const sleepHours = Number((sleepMs / 3600000).toFixed(2));
+      const awakeHours = Number((awakeMs / 3600000).toFixed(2));
+
       if (rangeChartInstance) {
-        rangeChartInstance.destroy();
+
+        rangeChartInstance.data.datasets[0].data = [sleepHours, awakeHours];
+        rangeChartInstance.update("none");
+        return;
       }
 
       rangeChartInstance = new Chart(canvas.getContext("2d"), {
@@ -1600,14 +1471,12 @@
         data: {
           labels: ["Сон", "Бодрствование"],
           datasets: [{
-            data: [
-              Number((sleepMs / 3600000).toFixed(2)),
-              Number((awakeMs / 3600000).toFixed(2))
-            ],
+            data: [sleepHours, awakeHours],
             backgroundColor: ["#2481cc", "#f2a154"]
           }]
         },
         options: {
+          animation: false,
           plugins: { legend: { position: "bottom" } }
         }
       });
@@ -1620,16 +1489,15 @@
 
     function buildTimelineRows(rangeStartDate, rangeEndDate) {
 
-      if (rangeMode === "rolling") {
+      if (periodMode === "rolling") {
         return [{
-          label: `${formatDateShort(rangeStartDate)} ${formatClock(rangeStartDate)} — ${formatDateShort(rangeEndDate)} ${formatClock(rangeEndDate)}`,
+          label: `${formatDateTime(rangeStartDate)} — ${formatDateTime(rangeEndDate)}`,
           start: rangeStartDate,
-          end: rangeEndDate,
-          startLabel: formatClock(rangeStartDate),
-          endLabel: formatClock(rangeEndDate)
+          end: rangeEndDate
         }];
       }
 
+      // Для режимов "день" и "период" — по одной полосе на каждые календарные сутки.
       const rows = [];
       const cursor = new Date(
         rangeStartDate.getFullYear(),
@@ -1645,13 +1513,7 @@
         const rowStart = new Date(Math.max(dayStart.getTime(), rangeStartDate.getTime()));
         const rowEnd = new Date(Math.min(dayEnd.getTime(), rangeEndDate.getTime()));
 
-        rows.push({
-          label: formatDateShort(dayStart),
-          start: rowStart,
-          end: rowEnd,
-          startLabel: "00:00",
-          endLabel: "24:00"
-        });
+        rows.push({ label: formatDateShort(dayStart), start: rowStart, end: rowEnd });
 
         cursor.setDate(cursor.getDate() + 1);
       }
@@ -1659,7 +1521,33 @@
       return rows;
     }
 
-    function renderTimeline(clippedSessions, rangeStartDate, rangeEndDate) {
+    function buildHourTicks(rowStartMs, rowEndMs, intervalHours) {
+
+      const step = (intervalHours || 3) * 60 * 60 * 1000;
+
+      const tickDate = new Date(rowStartMs);
+      tickDate.setMinutes(0, 0, 0);
+
+      const startHour = tickDate.getHours();
+      const remainder = startHour % (intervalHours || 3);
+      tickDate.setHours(startHour - remainder);
+
+      if (tickDate.getTime() < rowStartMs) {
+        tickDate.setTime(tickDate.getTime() + step);
+      }
+
+      const ticks = [];
+
+      while (tickDate.getTime() <= rowEndMs) {
+        ticks.push({ time: tickDate.getTime(), label: formatClock(tickDate) });
+        tickDate.setTime(tickDate.getTime() + step);
+      }
+
+      return ticks;
+    }
+
+    // Чистая отрисовка: получает уже объединённые интервалы и просто рисует их.
+    function renderTimeline(mergedSleepIntervals, rangeStartDate, rangeEndDate) {
 
       timelineContainer.innerHTML = "";
 
@@ -1686,10 +1574,10 @@
         const track = document.createElement("div");
         track.className = "timeline-track";
 
-        clippedSessions.forEach(seg => {
+        mergedSleepIntervals.forEach(interval => {
 
-          const segStart = Math.max(seg.start, rowStartMs);
-          const segEnd = Math.min(seg.end, rowEndMs);
+          const segStart = Math.max(interval.start, rowStartMs);
+          const segEnd = Math.min(interval.end, rowEndMs);
 
           if (segEnd <= segStart) return;
 
@@ -1697,28 +1585,20 @@
           const widthPercent = ((segEnd - segStart) / rowTotalMs) * 100;
 
           const segment = document.createElement("div");
-          segment.className = "timeline-segment";
+          segment.className = `timeline-segment ${interval.type}`;
           segment.style.left = `${leftPercent}%`;
           segment.style.width = `${widthPercent}%`;
 
           track.appendChild(segment);
         });
 
-        /*
-         * Часовые метки: раз в 3 часа, привязаны к реальным
-         * часам (00, 03, 06, ...), а не просто к краям полосы.
-         */
-
         const hourTicks = buildHourTicks(rowStartMs, rowEndMs);
 
         hourTicks.forEach(tick => {
-
           const leftPercent = ((tick.time - rowStartMs) / rowTotalMs) * 100;
-
           const gridline = document.createElement("div");
           gridline.className = "timeline-gridline";
           gridline.style.left = `${leftPercent}%`;
-
           track.appendChild(gridline);
         });
 
@@ -1726,14 +1606,11 @@
         tickLabels.className = "timeline-tick-labels";
 
         hourTicks.forEach(tick => {
-
           const leftPercent = ((tick.time - rowStartMs) / rowTotalMs) * 100;
-
           const tickLabel = document.createElement("div");
           tickLabel.className = "timeline-tick-label";
           tickLabel.style.left = `${leftPercent}%`;
           tickLabel.textContent = tick.label;
-
           tickLabels.appendChild(tickLabel);
         });
 
@@ -1747,87 +1624,72 @@
 
 
     // ============================================================
-    // ЧАСОВЫЕ МЕТКИ ДЛЯ ШКАЛЫ (раз в 3 часа, по реальным часам)
+    // ЯВНЫЕ РЕЖИМЫ ВЫБОРА ПЕРИОДА
     // ============================================================
 
-    function buildHourTicks(rowStartMs, rowEndMs, intervalHours) {
+    function setPeriodMode(mode) {
 
-      const step = (intervalHours || 3) * 60 * 60 * 1000;
+      periodMode = mode;
 
-      const tickDate = new Date(rowStartMs);
-      tickDate.setMinutes(0, 0, 0);
+      modeRollingBtn.classList.toggle("active", mode === "rolling");
+      modeDayBtn.classList.toggle("active", mode === "day");
+      modeRangeBtn.classList.toggle("active", mode === "range");
 
-      const startHour = tickDate.getHours();
-      const remainder = startHour % (intervalHours || 3);
+      singleDateRow.style.display = mode === "day" ? "flex" : "none";
+      rangeDateRow.style.display = mode === "range" ? "flex" : "none";
+      applyRangeBtn.style.display = mode === "rolling" ? "none" : "block";
 
-      tickDate.setHours(startHour - remainder);
-
-      if (tickDate.getTime() < rowStartMs) {
-        tickDate.setTime(tickDate.getTime() + step);
+      if (mode === "rolling") {
+        rangeStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        rangeEnd = new Date();
+        safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       }
-
-      const ticks = [];
-
-      while (tickDate.getTime() <= rowEndMs) {
-
-        ticks.push({
-          time: tickDate.getTime(),
-          label: formatClock(tickDate)
-        });
-
-        tickDate.setTime(tickDate.getTime() + step);
-      }
-
-      return ticks;
-    }
-
-
-    // ============================================================
-    // ВЫБОР ПЕРИОДА
-    // ============================================================
-
-    function setRollingLast24() {
-
-      rangeMode = "rolling";
-      rangeStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      rangeEnd = new Date();
-
-      last24Btn.classList.add("active");
-
-      statsFromDate.value = "";
-      statsToDate.value = "";
-
-      loadRangeStats();
     }
 
     function applyCustomRange() {
 
-      const fromValue = statsFromDate.value;
-      const toValue = statsToDate.value;
+      if (periodMode === "day") {
 
-      if (!fromValue || !toValue) {
-        alert("Выбери обе даты.");
+        const value = statsSingleDate.value;
+        if (!value) {
+          alert("Выбери дату.");
+          return;
+        }
+
+        const { y, m, d } = parseDateInputValue(value);
+        rangeStart = new Date(y, m - 1, d, 0, 0, 0, 0);
+        rangeEnd = new Date(y, m - 1, d, 23, 59, 59, 999);
+
+      } else if (periodMode === "range") {
+
+        const fromValue = statsFromDate.value;
+        const toValue = statsToDate.value;
+
+        if (!fromValue || !toValue) {
+          alert("Выбери обе даты.");
+          return;
+        }
+
+        const from = parseDateInputValue(fromValue);
+        const to = parseDateInputValue(toValue);
+
+        const start = new Date(from.y, from.m - 1, from.d, 0, 0, 0, 0);
+        const end = new Date(to.y, to.m - 1, to.d, 23, 59, 59, 999);
+
+        if (end.getTime() < start.getTime()) {
+          alert("Конечная дата раньше начальной.");
+          return;
+        }
+
+        rangeStart = start;
+        rangeEnd = end;
+
+      } else {
+
         return;
       }
 
-      const [fy, fm, fd] = fromValue.split("-").map(Number);
-      const [ty, tm, td] = toValue.split("-").map(Number);
-
-      const start = new Date(fy, fm - 1, fd, 0, 0, 0, 0);
-      const end = new Date(ty, tm - 1, td, 23, 59, 59, 999);
-
-      if (end.getTime() < start.getTime()) {
-        alert("Конечная дата раньше начальной.");
-        return;
-      }
-
-      rangeMode = "daily";
-      rangeStart = start;
-      rangeEnd = end;
-
-      last24Btn.classList.remove("active");
-
-      loadRangeStats();
+      safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
     }
 
 
@@ -2088,16 +1950,12 @@
         const path = `month-${monthNumber}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExtension}`;
 
         const { error: uploadError } = await supabaseClient
-          .storage
-          .from(PHOTOS_BUCKET)
-          .upload(path, file);
+          .storage.from(PHOTOS_BUCKET).upload(path, file);
 
         if (uploadError) throw uploadError;
 
         const { data: publicUrlData } = supabaseClient
-          .storage
-          .from(PHOTOS_BUCKET)
-          .getPublicUrl(path);
+          .storage.from(PHOTOS_BUCKET).getPublicUrl(path);
 
         const photoUrl = publicUrlData?.publicUrl;
 
@@ -2139,16 +1997,12 @@
       try {
 
         const { error: storageError } = await supabaseClient
-          .storage
-          .from(PHOTOS_BUCKET)
-          .remove([photo.storage_path]);
+          .storage.from(PHOTOS_BUCKET).remove([photo.storage_path]);
 
         if (storageError) throw storageError;
 
         const { error } = await supabaseClient
-          .from(PHOTOS_TABLE)
-          .delete()
-          .eq("id", photo.id);
+          .from(PHOTOS_TABLE).delete().eq("id", photo.id);
 
         if (error) throw error;
 
@@ -2234,53 +2088,32 @@
 
 
     // ============================================================
-    // ОБНОВЛЕНИЕ
+    // ОБНОВЛЕНИЕ ДАННЫХ
+    // Никакого фонового опроса раз в N секунд — только по действию
+    // пользователя и при возврате в приложение (чтобы не моргал экран).
     // ============================================================
 
     async function refreshAll() {
 
-      if (refreshing) return;
-      refreshing = true;
+      await safeCall(loadLastCompletedEnd);
+      await safeCall(loadOpenSession);
+      await safeCall(loadRecentHistory);
+      await safeCall(loadRecentEvents);
 
-      try {
-
-        await loadLastCompletedEnd();
-        await loadOpenSession();
-        await loadRecentHistory();
-        await loadRecentEvents();
-
-        if (currentView === "stats") {
-          await loadRangeStats();
-        }
-
-        if (currentView === "gallery") {
-          await loadPhotos();
-        }
-
-        firstLoad = false;
-
-      } catch (error) {
-
-        console.error(error);
-        showError(error.message || "Не удалось загрузить данные.");
-
-        if (firstLoad) {
-          statusLine.textContent = "Не удалось загрузить данные";
-          actionBtn.textContent = "Попробовать снова";
-          actionBtn.disabled = false;
-          historyList.innerHTML = '<div class="empty">Ошибка загрузки</div>';
-          eventsList.innerHTML = '<div class="empty">Ошибка загрузки</div>';
-        }
-
-      } finally {
-
-        refreshing = false;
+      if (currentView === "stats") {
+        await safeCall(() => loadRangeStats(false));
       }
+
+      if (currentView === "gallery") {
+        await safeCall(loadPhotos);
+      }
+
+      firstLoad = false;
     }
 
 
     // ============================================================
-    // СОБЫТИЯ (обработчики)
+    // ОБРАБОТЧИКИ СОБЫТИЙ
     // ============================================================
 
     navMainBtn.addEventListener("click", () => setView("main"));
@@ -2295,7 +2128,9 @@
     peeBtn.addEventListener("click", () => addBabyEvent("pee"));
     poopBtn.addEventListener("click", () => addBabyEvent("poop"));
 
-    last24Btn.addEventListener("click", setRollingLast24);
+    modeRollingBtn.addEventListener("click", () => setPeriodMode("rolling"));
+    modeDayBtn.addEventListener("click", () => setPeriodMode("day"));
+    modeRangeBtn.addEventListener("click", () => setPeriodMode("range"));
     applyRangeBtn.addEventListener("click", applyCustomRange);
 
     csvBtn.addEventListener("click", downloadCSV);
@@ -2320,21 +2155,31 @@
       else if (event.key === "ArrowRight") showNextPhoto();
     });
 
+    // Обновляем данные, когда пользователь возвращается в приложение
+    // (например, разворачивает Telegram из фона) — без фонового опроса.
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        refreshAll();
+      }
+    });
+
 
     // ============================================================
     // ПЕРВИЧНАЯ ЗАГРУЗКА
     // ============================================================
 
-    statsFromDate.value = dateToInputValue(new Date(Date.now() - 24 * 60 * 60 * 1000));
-    statsToDate.value = dateToInputValue(new Date());
+    const todayForInputs = dateToInputValue(new Date());
+    const yesterdayForInputs = dateToInputValue(new Date(Date.now() - 24 * 60 * 60 * 1000));
+
+    statsSingleDate.value = todayForInputs;
+    statsFromDate.value = yesterdayForInputs;
+    statsToDate.value = todayForInputs;
 
     refreshAll();
 
-    setInterval(refreshAll, 30000);
-
-    setInterval(() => {
-      renderStatus();
-    }, 60000);
+    // Локальный "тикающий" счётчик (без обращения к базе) — раз в минуту
+    // обновляет отображаемую длительность сна/бодрствования на главном экране.
+    setInterval(() => { renderStatus(); }, 60000);
 
   </script>
 
