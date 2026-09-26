@@ -174,7 +174,7 @@
     #error {
       color: var(--danger);
       font-size: 14px;
-      margin-top: 8px;
+      margin-bottom: 12px;
       display: none;
     }
 
@@ -468,6 +468,9 @@
     <button class="secondary-button nav-button" id="navGalleryBtn">📷 Галерея</button>
   </div>
 
+  <!-- Общая ошибка — видна на всех вкладках -->
+  <div id="error"></div>
+
   <!-- ОСНОВНОЙ ЭКРАН -->
   <div id="mainView">
 
@@ -475,7 +478,6 @@
       <div class="status-line" id="statusLine">Загрузка...</div>
       <button class="big-button" id="actionBtn" disabled>...</button>
       <button class="secondary-button" id="editCurrentBtn" style="display: none;">✏️ Изменить время</button>
-      <div id="error"></div>
     </div>
 
     <div class="card">
@@ -792,6 +794,42 @@
       }
     }
 
+    // Универсальный постраничный фетчер: Supabase отдаёт не более 1000
+    // строк за один запрос, поэтому идём в цикле, пока приходят полные страницы.
+    async function fetchAllPages(table, columns, applyFilters, orderColumn, ascending) {
+
+      const pageSize = 1000;
+      const all = [];
+      let from = 0;
+
+      while (true) {
+
+        let query = supabaseClient
+          .from(table)
+          .select(columns)
+          .order(orderColumn, { ascending })
+          .range(from, from + pageSize - 1);
+
+        if (applyFilters) {
+          query = applyFilters(query);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) break;
+
+        all.push(...data);
+
+        if (data.length < pageSize) break;
+
+        from += pageSize;
+      }
+
+      return all;
+    }
+
 
     // ============================================================
     // ЕДИНЫЙ ФОРМАТТЕР ДЛИТЕЛЬНОСТИ (используется везде: статистика, график, CSV)
@@ -864,6 +902,16 @@
     // ПЕРЕКЛЮЧЕНИЕ ЭКРАНОВ
     // ============================================================
 
+    // Если период «Сегодня» — пересчитываем границы на момент вызова,
+    // чтобы окно не «замерзало» с момента открытия мини-аппа.
+    function refreshTodayRangeIfNeeded() {
+      if (periodMode === "today") {
+        const now = new Date();
+        rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        rangeEnd = now;
+      }
+    }
+
     function setView(view) {
 
       currentView = view;
@@ -880,6 +928,7 @@
         pageTitle.textContent = "😴 Сон малыша";
       } else if (view === "stats") {
         pageTitle.textContent = "📊 Статистика";
+        refreshTodayRangeIfNeeded();
         safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       } else if (view === "gallery") {
         pageTitle.textContent = "📷 Галерея малыша";
@@ -905,7 +954,6 @@
 
       if (error) throw error;
 
-      // Явно: если записей нет — openSession становится null, а не "неопределённостью".
       openSession = (data && data.length > 0) ? data[0] : null;
 
       renderStatus();
@@ -1098,8 +1146,6 @@
 
         historyList.appendChild(row);
 
-        // Список идёт от нового сна к старому.
-        // Между соседними снами показываем фактическое бодрствование.
         const nextSession = data[index + 1];
 
         if (nextSession) {
@@ -1251,8 +1297,6 @@
     // ЧИСТЫЙ РАСЧЁТ СТАТИСТИКИ (не знает ни про UI, ни про базу)
     // ============================================================
 
-    // Объединяет пересекающиеся интервалы {start,end} (в мс) в список
-    // непересекающихся, отсортированных по времени начала.
     function mergeIntervals(intervals) {
 
       if (!intervals.length) return [];
@@ -1278,10 +1322,6 @@
       return merged;
     }
 
-    // Обрезает сырые записи сна по границам диапазона.
-    // Для ещё не завершённой сессии (end_time = null) концом считается "сейчас".
-    // Возвращает обрезанные интервалы и исходные сессии, пересекающие диапазон.
-    // Количество реальных дневных/ночных снов считается отдельно по времени старта.
     function clipRawSessionsToRange(rawSessions, rangeStartMs, rangeEndMs, nowMs) {
 
       const clippedIntervals = [];
@@ -1301,7 +1341,6 @@
 
         if (!Number.isFinite(sessionEndMs)) return;
 
-        // Запись не пересекает выбранный период.
         if (
           sessionEndMs <= rangeStartMs ||
           sessionStartMs >= rangeEndMs
@@ -1335,22 +1374,17 @@
       };
     }
 
-    // Ночь — фиксированное окно времени суток: с 20:00 до 09:00 следующего дня.
-    // Проверяем, попадает ли момент времени (мс) в это окно.
     function isNightMoment(ms) {
       const date = new Date(ms);
       const hour = date.getHours() + date.getMinutes() / 60;
       return hour >= 20 || hour < 9;
     }
 
-    // Границы дневных/ночных окон (все моменты вида "20:00" и "09:00"),
-    // которые попадают строго внутрь интервала — по ним режем интервал на куски.
     function getDayNightBoundaries(intervalStart, intervalEnd) {
 
       const boundaries = [];
       const dayMs = 24 * 60 * 60 * 1000;
 
-      // На день раньше начала интервала — с запасом, чтобы не пропустить границу.
       const cursor = new Date(intervalStart - dayMs);
       cursor.setHours(0, 0, 0, 0);
 
@@ -1376,9 +1410,6 @@
       return boundaries.sort((a, b) => a - b);
     }
 
-    // Режет один интервал сна на куски "день"/"ночь" по фактическому времени суток.
-    // Это нужно для распределения ДЛИТЕЛЬНОСТИ, а не для количества снов.
-    // Например, сон 19:00-22:00 даёт кусок 19:00-20:00 (день) и 20:00-22:00 (ночь).
     function splitIntervalByDayNight(interval) {
 
       const boundaries = getDayNightBoundaries(interval.start, interval.end);
@@ -1401,7 +1432,6 @@
       return pieces;
     }
 
-    // Главная чистая функция: сырые сессии + границы диапазона -> готовая статистика.
     function calculateSleepStats(rawSessions, rangeStartMs, rangeEndMs, nowMs) {
 
       const effectiveEndMs = Math.min(rangeEndMs, nowMs);
@@ -1432,8 +1462,6 @@
       let nightSleepMs = 0;
       let nightSleepCount = 0;
 
-      // Количество эпизодов считаем по реальным записям сна.
-      // 09:00–19:59 — дневной сон, 20:00–08:59 — ночной сон.
       overlappingSessions.forEach(({ sessionStartMs }) => {
 
         if (
@@ -1498,27 +1526,32 @@
     // ЗАГРУЗКА ДАННЫХ ИЗ SUPABASE (без бизнес-логики)
     // ============================================================
 
-    // Тянем всё, что началось раньше конца диапазона; фактическое пересечение
-    // с диапазоном (и с "сейчас" для открытой сессии) считаем в JS — это проще
-    // и надёжнее, чем городить пересечение прямо в SQL-фильтре.
-    async function fetchSleepSessionsUpTo() {
+    // Тянем только те сессии, которые реально пересекают диапазон:
+    //   (start_time < rangeEnd)  И  (end_time >= rangeStart  ИЛИ  end_time IS NULL)
+    // Вместо сложного .or() в PostgREST делаем два независимых запроса —
+    // так надёжнее и не упирается в парсинг значений с ISO-временем.
+    async function fetchSleepSessionsInRange(rangeStartMs, rangeEndMs) {
 
-      const { data, error } = await supabaseClient
-        .from(TABLE)
-        .select("id,start_time,end_time")
-        .order("start_time", { ascending: true });
+      const startIso = new Date(rangeStartMs).toISOString();
+      const endIso = new Date(rangeEndMs).toISOString();
 
-      if (error) {
-        console.error("Ошибка загрузки sleep_sessions:", error);
-        throw error;
-      }
-
-      console.log(
-        "sleep_sessions получено из Supabase:",
-        data ? data.length : 0
+      const completed = await fetchAllPages(
+        TABLE,
+        "id,start_time,end_time",
+        q => q.lt("start_time", endIso).gte("end_time", startIso),
+        "start_time",
+        true
       );
 
-      return data || [];
+      const open = await fetchAllPages(
+        TABLE,
+        "id,start_time,end_time",
+        q => q.lt("start_time", endIso).is("end_time", null),
+        "start_time",
+        true
+      );
+
+      return [...completed, ...open];
     }
 
     async function fetchEventsInRange(startDate, endDate) {
@@ -1549,7 +1582,10 @@
 
       let rawSessions = [];
       try {
-        rawSessions = await fetchSleepSessionsUpTo();
+        rawSessions = await fetchSleepSessionsInRange(
+          rangeStart.getTime(),
+          rangeEnd.getTime()
+        );
       } catch (error) {
         console.error(error);
         showError("Не удалось загрузить сон за период.");
@@ -1567,7 +1603,6 @@
         events = await fetchEventsInRange(rangeStart, new Date(stats.effectiveEndMs));
       } catch (error) {
         console.error(error);
-        // Не блокируем остальную статистику из-за упавшего запроса событий.
       }
 
       renderRangeSummary(stats);
@@ -1579,7 +1614,7 @@
 
 
     // ============================================================
-    // ОТРИСОВКА СТАТИСТИКИ (чистый UI-слой — только показывает готовые данные)
+    // ОТРИСОВКА СТАТИСТИКИ (чистый UI-слой)
     // ============================================================
 
     function renderRangeLabel(stats) {
@@ -1590,7 +1625,6 @@
       rangeLabel.textContent =
         `Период: ${formatDateTime(start)} → ${formatDateTime(end)} (${formatDuration(stats.totalRangeMs)})`;
 
-      // Техническая диагностика количества записей не показывается пользователю.
       rangeSublabel.textContent = "";
     }
 
@@ -1674,7 +1708,6 @@
         }];
       }
 
-      // Для режимов "день" и "период" — по одной полосе на каждые календарные сутки.
       const rows = [];
       const cursor = new Date(
         rangeStartDate.getFullYear(),
@@ -1723,7 +1756,6 @@
       return ticks;
     }
 
-    // Чистая отрисовка: получает уже объединённые интервалы и просто рисует их.
     function renderTimeline(sleepPieces, rangeStartDate, rangeEndDate) {
 
       timelineContainer.innerHTML = "";
@@ -1838,9 +1870,7 @@
       applyRangeBtn.style.display = mode === "today" ? "none" : "block";
 
       if (mode === "today") {
-        const now = new Date();
-        rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-        rangeEnd = now;
+        refreshTodayRangeIfNeeded();
         safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       }
     }
@@ -1909,20 +1939,22 @@
 
       try {
 
-        const { data: sleepData, error: sleepError } = await supabaseClient
-          .from(TABLE)
-          .select("id,start_time,end_time")
-          .not("end_time", "is", null)
-          .order("start_time", { ascending: true });
+        // Постранично, чтобы не потерять данные за пределами первых 1000 строк.
+        const sleepData = await fetchAllPages(
+          TABLE,
+          "id,start_time,end_time",
+          q => q.not("end_time", "is", null),
+          "start_time",
+          true
+        );
 
-        if (sleepError) throw sleepError;
-
-        const { data: eventData, error: eventError } = await supabaseClient
-          .from(EVENTS_TABLE)
-          .select("id,event_type,event_time")
-          .order("event_time", { ascending: true });
-
-        if (eventError) throw eventError;
+        const eventData = await fetchAllPages(
+          EVENTS_TABLE,
+          "id,event_type,event_time",
+          null,
+          "event_time",
+          true
+        );
 
         const rows = [];
 
@@ -2288,8 +2320,6 @@
 
     // ============================================================
     // ОБНОВЛЕНИЕ ДАННЫХ
-    // Никакого фонового опроса раз в N секунд — только по действию
-    // пользователя и при возврате в приложение (чтобы не моргал экран).
     // ============================================================
 
     async function refreshAll() {
@@ -2300,6 +2330,7 @@
       await safeCall(loadRecentEvents);
 
       if (currentView === "stats") {
+        refreshTodayRangeIfNeeded();
         await safeCall(() => loadRangeStats(false));
       }
 
@@ -2354,8 +2385,6 @@
       else if (event.key === "ArrowRight") showNextPhoto();
     });
 
-    // Обновляем данные, когда пользователь возвращается в приложение
-    // (например, разворачивает Telegram из фона) — без фонового опроса.
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
         refreshAll();
@@ -2376,8 +2405,8 @@
 
     refreshAll();
 
-    // Локальный "тикающий" счётчик (без обращения к базе) — раз в минуту
-    // обновляет отображаемую длительность сна/бодрствования на главном экране.
+    // Локальный «тикающий» счётчик — раз в минуту пересчитывает
+    // длительность сна/бодрствования без обращения к базе.
     setInterval(() => { renderStatus(); }, 60000);
 
   </script>
