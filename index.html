@@ -748,6 +748,15 @@
     <div class="title-row">
       <h1>Режим дня <button class="name-button" id="childSelectorBtn" title="Выбрать ребёнка">…</button></h1>
       <div class="icon-buttons">
+        <button class="icon-btn" id="familySettingsBtn" aria-label="Настройки семьи" title="Семья">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </button>
         <button class="icon-btn" id="settingsBtn" aria-label="Показатели" title="Показатели">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
                stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -1069,7 +1078,7 @@
 
   <script>
 
-    const APP_VERSION = "5.0.0";
+    const APP_VERSION = "5.0.1";
 
     const BOT_USERNAME = "Ivanregimebot";
     const MINIAPP_SHORT_NAME = "Babybabysleep";
@@ -1125,7 +1134,6 @@
 
     const historyList = document.getElementById("historyList");
     const eventsList = document.getElementById("eventsList");
-    const eventsCard = document.getElementById("eventsCard");
 
     const peeBtn = document.getElementById("peeBtn");
     const poopBtn = document.getElementById("poopBtn");
@@ -3655,4 +3663,4 @@
   </script>
 
 </body>
-  </html>
+        </html>
