@@ -719,6 +719,17 @@
 
 <body>
 
+<script>
+window.addEventListener("error", function (e) {
+  var msg = (e.message || "error") + "\n" +
+            (e.filename || "") + " : " + (e.lineno || "?") + ":" + (e.colno || "?") + "\n\n" +
+            (e.error && e.error.stack ? e.error.stack : "");
+  document.body.innerHTML = '<pre style="position:fixed;inset:0;margin:0;padding:16px;font:12px monospace;color:#b00;background:#fff;overflow:auto;z-index:99999;white-space:pre-wrap;">' +
+    msg.replace(/[<>&]/g, function (c) { return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c]; }) +
+    "</pre>";
+});
+</script>
+
   <!-- ЭКРАН НАСТРОЙКИ СЕМЬИ -->
   <div class="setup-screen hidden" id="setupView">
     <div class="setup-title">👨‍👩‍👧 Семейный доступ</div>
