@@ -3197,4 +3197,462 @@
       photoGroups.innerHTML = "";
 
       if (!data || data.length === 0) {
-        const empty = document.createElement("div
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Пока ни одного фото нет";
+        photoGroups.appendChild(empty);
+        return;
+      }
+
+      const grouped = new Map();
+      data.forEach(photo => {
+        const month = Number(photo.month_number);
+        if (!grouped.has(month)) grouped.set(month, []);
+        grouped.get(month).push(photo);
+      });
+
+      const sortedMonths = Array.from(grouped.keys()).sort((a, b) => a - b);
+
+      sortedMonths.forEach(monthNumber => {
+
+        const photos = grouped.get(monthNumber);
+
+        const monthGroup = document.createElement("div");
+        monthGroup.className = "month-group";
+
+        const title = document.createElement("div");
+        title.className = "month-title";
+        title.innerHTML = `${getMonthTitle(monthNumber)} <span class="month-count">(${photos.length} фото)</span>`;
+
+        const grid = document.createElement("div");
+        grid.className = "photo-grid";
+
+        photos.forEach(photo => {
+
+          const globalIndex = galleryPhotos.findIndex(item => item.id === photo.id);
+
+          const item = document.createElement("div");
+          item.className = "photo-item";
+          item.addEventListener("click", () => openLightbox(globalIndex));
+
+          const img = document.createElement("img");
+          img.src = photo.photo_url;
+          img.alt = getMonthTitle(monthNumber);
+          img.loading = "lazy";
+
+          const deleteButton = document.createElement("button");
+          deleteButton.className = "photo-delete";
+          deleteButton.textContent = "✕";
+          deleteButton.addEventListener("click", event => {
+            event.stopPropagation();
+            deletePhoto(photo);
+          });
+
+          item.appendChild(img);
+          item.appendChild(deleteButton);
+          grid.appendChild(item);
+        });
+
+        monthGroup.appendChild(title);
+        monthGroup.appendChild(grid);
+        photoGroups.appendChild(monthGroup);
+      });
+    }
+
+    async function uploadPhoto() {
+
+      if (!activeChildId) return;
+
+      const monthValue = photoMonthInput.value.trim();
+      const file = photoFileInput.files && photoFileInput.files[0];
+
+      photoHint.style.display = "none";
+      hideError();
+
+      if (monthValue === "") { alert("Укажи номер месяца."); return; }
+
+      const monthNumber = Number(monthValue);
+      if (!Number.isInteger(monthNumber) || monthNumber < 1 || monthNumber > 24) {
+        alert("Месяц должен быть целым числом от 1 до 24."); return;
+      }
+      if (!file) { alert("Выбери фото для загрузки."); return; }
+      if (!file.type.startsWith("image/")) { alert("Можно загружать только изображения."); return; }
+
+      uploadPhotoBtn.disabled = true;
+      photoHint.style.display = "block";
+      photoHint.textContent = "Загрузка...";
+
+      try {
+
+        const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
+        const safeExtension = extension.replace(/[^a-z0-9]/gi, "") || "jpg";
+        const path = `child-${activeChildId}/month-${monthNumber}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExtension}`;
+
+        const { error: uploadError } = await supabaseClient
+          .storage.from(PHOTOS_BUCKET).upload(path, file);
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabaseClient
+          .storage.from(PHOTOS_BUCKET).getPublicUrl(path);
+        const photoUrl = publicUrlData?.publicUrl;
+        if (!photoUrl) throw new Error("Не удалось получить ссылку на фото.");
+
+        const { error: insertError } = await supabaseClient
+          .from(PHOTOS_TABLE)
+          .insert({
+            month_number: monthNumber,
+            storage_path: path,
+            photo_url: photoUrl,
+            child_id: activeChildId,
+            family_id: familyId
+          });
+        if (insertError) throw insertError;
+
+        photoMonthInput.value = "";
+        photoFileInput.value = "";
+        photoHint.textContent = `${getMonthTitle(monthNumber)}: фото добавлено.`;
+
+        hapticSuccess();
+        await loadPhotos();
+
+      } catch (error) {
+        console.error(error);
+        photoHint.textContent = error.message || "Не удалось загрузить фото.";
+      } finally {
+        uploadPhotoBtn.disabled = false;
+      }
+    }
+
+    async function deletePhoto(photo) {
+
+      const confirmed = confirm(`Удалить это фото из раздела «${getMonthTitle(photo.month_number)}»?`);
+      if (!confirmed) return;
+
+      hideError();
+
+      try {
+        const { error: storageError } = await supabaseClient
+          .storage.from(PHOTOS_BUCKET).remove([photo.storage_path]);
+        if (storageError) throw storageError;
+
+        const { error } = await supabaseClient
+          .from(PHOTOS_TABLE).delete().eq("id", photo.id);
+        if (error) throw error;
+
+        hapticSuccess();
+        await loadPhotos();
+      } catch (error) {
+        console.error(error);
+        showError(error.message || "Не удалось удалить фото.");
+      }
+    }
+
+
+    // ============================================================
+    // LIGHTBOX
+    // ============================================================
+
+    function openLightbox(index) {
+      if (!galleryPhotos.length) return;
+      currentPhotoIndex = index;
+      renderLightboxPhoto();
+      lightbox.classList.add("visible");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove("visible");
+      document.body.style.overflow = "";
+    }
+
+    function renderLightboxPhoto() {
+      const photo = galleryPhotos[currentPhotoIndex];
+      if (!photo) return;
+
+      lightboxImage.src = photo.photo_url;
+      lightboxImage.alt = getMonthTitle(photo.month_number);
+      lightboxCounter.textContent = `${currentPhotoIndex + 1} / ${galleryPhotos.length}`;
+
+      if (galleryPhotos.length <= 1) {
+        lightboxPrev.classList.add("hidden");
+        lightboxNext.classList.add("hidden");
+      } else {
+        lightboxPrev.classList.remove("hidden");
+        lightboxNext.classList.remove("hidden");
+      }
+    }
+
+    function showPreviousPhoto() {
+      if (!galleryPhotos.length) return;
+      currentPhotoIndex--;
+      if (currentPhotoIndex < 0) currentPhotoIndex = galleryPhotos.length - 1;
+      renderLightboxPhoto();
+    }
+
+    function showNextPhoto() {
+      if (!galleryPhotos.length) return;
+      currentPhotoIndex++;
+      if (currentPhotoIndex >= galleryPhotos.length) currentPhotoIndex = 0;
+      renderLightboxPhoto();
+    }
+
+    let touchStartX = null;
+
+    lightboxContent.addEventListener("touchstart", event => {
+      if (event.touches && event.touches.length === 1) touchStartX = event.touches[0].clientX;
+    }, { passive: true });
+
+    lightboxContent.addEventListener("touchend", event => {
+      if (touchStartX === null) return;
+      const endX = event.changedTouches && event.changedTouches[0]
+        ? event.changedTouches[0].clientX : touchStartX;
+      const diff = endX - touchStartX;
+      touchStartX = null;
+      if (Math.abs(diff) < 50) return;
+      if (diff > 0) showPreviousPhoto();
+      else showNextPhoto();
+    }, { passive: true });
+
+
+    // ============================================================
+    // ОБНОВЛЕНИЕ ДАННЫХ
+    // ============================================================
+
+    async function refreshAll() {
+
+      if (!activeChildId) return;
+
+      await safeCall(loadLastCompletedEnd);
+      await safeCall(loadOpenSession);
+      await safeCall(loadRecentHistory);
+      await safeCall(loadRecentEvents);
+
+      if (currentView === "stats") {
+        refreshYesterdayRangeIfNeeded();
+        await safeCall(() => loadRangeStats(false));
+      }
+      if (currentView === "gallery") {
+        await safeCall(loadPhotos);
+      }
+    }
+
+    async function manualRefresh() {
+      settingsRefreshBtn.disabled = true;
+      const originalText = settingsRefreshBtn.textContent;
+      settingsRefreshBtn.textContent = "Обновление...";
+
+      try {
+        await safeCall(loadFamilyInfo);
+        await safeCall(loadChildren);
+        await refreshAll();
+        hapticLight();
+      } finally {
+        settingsRefreshBtn.disabled = false;
+        settingsRefreshBtn.textContent = originalText;
+      }
+    }
+
+
+    // ============================================================
+    // ОБРАБОТЧИКИ
+    // ============================================================
+
+    navMainBtn.addEventListener("click", () => setView("main"));
+    navStatsBtn.addEventListener("click", () => setView("stats"));
+    navGalleryBtn.addEventListener("click", () => setView("gallery"));
+
+    settingsBtn.addEventListener("click", openSettingsModal);
+    closeSettingsBtn.addEventListener("click", closeSettingsModal);
+    settingsModal.addEventListener("click", event => {
+      if (event.target === settingsModal) closeSettingsModal();
+    });
+
+    openSettingsFromDiaperBtn.addEventListener("click", openSettingsModal);
+
+    settingsRefreshBtn.addEventListener("click", manualRefresh);
+
+    showPeeCheckbox.addEventListener("change", async () => {
+      try {
+        await saveChildSettings({ show_pee: showPeeCheckbox.checked });
+        applyVisibilityChanges();
+        hapticLight();
+      } catch (error) {
+        console.error(error);
+        showPeeCheckbox.checked = !showPeeCheckbox.checked;
+        showError(error.message || "Не удалось сохранить.");
+      }
+    });
+
+    showPoopCheckbox.addEventListener("change", async () => {
+      try {
+        await saveChildSettings({ show_poop: showPoopCheckbox.checked });
+        applyVisibilityChanges();
+        hapticLight();
+      } catch (error) {
+        console.error(error);
+        showPoopCheckbox.checked = !showPoopCheckbox.checked;
+        showError(error.message || "Не удалось сохранить.");
+      }
+    });
+
+    actionBtn.addEventListener("click", toggleSleep);
+    editCurrentBtn.addEventListener("click", openEditCurrentModal);
+    cancelEditBtn.addEventListener("click", closeEditModal);
+    saveEditBtn.addEventListener("click", saveEdit);
+
+    peeBtn.addEventListener("click", () => addBabyEvent("pee"));
+    poopBtn.addEventListener("click", () => addBabyEvent("poop"));
+
+    modeYesterdayBtn.addEventListener("click", () => setPeriodMode("yesterday"));
+    modeDayBtn.addEventListener("click", () => setPeriodMode("day"));
+    modeRangeBtn.addEventListener("click", () => setPeriodMode("range"));
+    applyRangeBtn.addEventListener("click", applyCustomRange);
+
+    csvBtn.addEventListener("click", openCsvModal);
+    cancelCsvBtn.addEventListener("click", closeCsvModal);
+    csvModal.addEventListener("click", event => {
+      if (event.target === csvModal) closeCsvModal();
+    });
+
+    csvSleepCheckbox.addEventListener("change", updateCsvConfirmState);
+    csvPeeCheckbox.addEventListener("change", updateCsvConfirmState);
+    csvPoopCheckbox.addEventListener("change", updateCsvConfirmState);
+
+    confirmCsvBtn.addEventListener("click", async () => {
+      const options = {
+        includeSleep: csvSleepCheckbox.checked,
+        includePee: csvPeeCheckbox.checked,
+        includePoop: csvPoopCheckbox.checked
+      };
+
+      closeCsvModal();
+      await downloadCSV(options);
+    });
+
+    uploadPhotoBtn.addEventListener("click", uploadPhoto);
+
+    editModal.addEventListener("click", event => {
+      if (event.target === editModal) closeEditModal();
+    });
+
+    lightboxClose.addEventListener("click", closeLightbox);
+    lightboxPrev.addEventListener("click", showPreviousPhoto);
+    lightboxNext.addEventListener("click", showNextPhoto);
+
+    lightbox.addEventListener("click", event => {
+      if (event.target === lightbox) closeLightbox();
+    });
+
+    document.addEventListener("keydown", event => {
+      if (!lightbox.classList.contains("visible")) return;
+      if (event.key === "Escape") closeLightbox();
+      else if (event.key === "ArrowLeft") showPreviousPhoto();
+      else if (event.key === "ArrowRight") showNextPhoto();
+    });
+
+    childSelectorBtn.addEventListener("click", openChildPicker);
+    closeChildPickerBtn.addEventListener("click", closeChildPicker);
+    childPickerModal.addEventListener("click", event => {
+      if (event.target === childPickerModal) closeChildPicker();
+    });
+    addChildBtn.addEventListener("click", () => openChildForm("add", null));
+    cancelChildFormBtn.addEventListener("click", closeChildForm);
+    childFormModal.addEventListener("click", event => {
+      if (event.target === childFormModal) closeChildForm();
+    });
+    saveChildBtn.addEventListener("click", saveChildForm);
+    deleteChildBtn.addEventListener("click", deleteChild);
+    childNameInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); saveChildForm(); }
+    });
+
+    familySettingsBtn.addEventListener("click", openFamilyModal);
+    closeFamilyBtn.addEventListener("click", closeFamilyModal);
+    familyModal.addEventListener("click", event => {
+      if (event.target === familyModal) { saveFamilyName(); closeFamilyModal(); }
+    });
+    copyInviteBtn.addEventListener("click", copyInviteCode);
+    shareInviteBtn.addEventListener("click", shareInviteLink);
+    leaveFamilyBtn.addEventListener("click", leaveFamily);
+    familyNameInput.addEventListener("blur", saveFamilyName);
+    familyNameInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); familyNameInput.blur(); }
+    });
+
+    createFamilyBtn.addEventListener("click", async () => {
+      createFamilyBtn.disabled = true;
+      try {
+        await createFamilyInternal("Наша семья", { attachOrphans: false });
+        showAppScreen();
+        await loadChildren();
+        await refreshAll();
+      } catch (error) {
+        console.error(error);
+        alert("Не удалось создать семью: " + (error.message || "неизвестная ошибка"));
+      } finally {
+        createFamilyBtn.disabled = false;
+      }
+    });
+
+    joinFamilyBtn.addEventListener("click", async () => {
+      joinFamilyBtn.disabled = true;
+      try {
+        await joinFamily(joinCodeInput.value);
+        await loadFamilyInfo();
+        showAppScreen();
+        await loadChildren();
+        await refreshAll();
+        hapticSuccess();
+      } catch (error) {
+        console.error(error);
+        alert("Не удалось присоединиться: " + (error.message || "неизвестная ошибка"));
+      } finally {
+        joinFamilyBtn.disabled = false;
+      }
+    });
+
+    joinCodeInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); joinFamilyBtn.click(); }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && activeChildId) refreshAll();
+    });
+
+
+    // ============================================================
+    // ПЕРВИЧНАЯ ЗАГРУЗКА
+    // ============================================================
+
+    versionLabel.textContent = `Режим дня · ${APP_VERSION}`;
+    versionLabelSetup.textContent = `Режим дня · ${APP_VERSION}`;
+
+    const todayForInputs = dateToInputValue(new Date());
+    const yesterdayForInputs = dateToInputValue(new Date(Date.now() - 24 * 60 * 60 * 1000));
+
+    statsSingleDate.value = todayForInputs;
+    statsFromDate.value = yesterdayForInputs;
+    statsToDate.value = todayForInputs;
+
+    (async function bootstrap() {
+      try {
+        await bootstrapFamily();
+        if (familyId) {
+          await loadChildren();
+          await refreshAll();
+        }
+      } catch (error) {
+        console.error(error);
+        setupView.classList.remove("hidden");
+        setupSubtitle.textContent =
+          "Ошибка запуска: " + (error.message || "неизвестная ошибка") +
+          ". Проверь, что таблицы families и family_members созданы.";
+      }
+
+      setInterval(() => { if (activeChildId) renderStatus(); }, 60000);
+    })();
+
+  </script>
+
+</body>
+  </html>
