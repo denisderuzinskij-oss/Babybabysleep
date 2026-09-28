@@ -93,11 +93,9 @@
   .history-duration { margin-top: 3px; color: var(--hint); font-size: 13px; }
   .awake-gap { text-align: center; color: var(--hint); font-size: 12px; line-height: 1.3; padding: 5px 0; }
 
-  /* СВОРАЧИВАНИЕ */
   .collapsible-header {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    cursor: pointer; user-select: none;
-    -webkit-tap-highlight-color: transparent;
+    cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
   }
   .collapsible-header .hint { margin-bottom: 0; }
   .collapsible-header .chevron {
@@ -368,7 +366,6 @@
 
   <div id="error"></div>
 
-  <!-- ГЛАВНЫЙ -->
   <div id="mainView">
     <div class="card">
       <div class="status-line" id="statusLine">Загрузка...</div>
@@ -417,7 +414,6 @@
     </div>
   </div>
 
-  <!-- СТАТИСТИКА -->
   <div id="statsView" style="display: none;">
     <div class="card">
       <div class="hint" style="margin-bottom: 8px;">Период</div>
@@ -514,7 +510,6 @@
     </div>
   </div>
 
-  <!-- ГАЛЕРЕЯ -->
   <div id="galleryView" style="display: none;">
     <div class="card">
       <div class="hint" style="margin-bottom: 8px;">📷 Добавить фото</div>
@@ -525,7 +520,6 @@
       <button class="secondary-button" id="uploadPhotoBtn">Добавить фото</button>
       <div class="hint" id="photoHint" style="margin-top: 8px; display: none;"></div>
     </div>
-
     <div class="card">
       <div class="hint" style="margin-bottom: 8px;">Галерея по месяцам</div>
       <div id="photoGroups"><div class="empty">Загрузка...</div></div>
@@ -559,14 +553,15 @@
       <button class="cancel-btn" id="cancelEditBtn">Отмена</button>
       <button class="save-btn" id="saveEditBtn">Сохранить</button>
     </div>
+    <button class="danger-button" id="deleteSleepBtn">🗑 Удалить сон</button>
   </div>
 </div>
 
 <div class="modal-backdrop" id="editFeedModal">
   <div class="modal">
-    <div class="modal-title">✏️ Изменить кормление</div>
+    <div class="modal-title" id="editFeedTitle">✏️ Изменить кормление</div>
     <div class="field"><label for="editFeedStart">Начало</label><input type="datetime-local" id="editFeedStart" /></div>
-    <div class="field">
+    <div class="field" id="editFeedEndField">
       <label for="editFeedEnd">Конец</label>
       <input type="datetime-local" id="editFeedEnd" />
       <div class="modal-hint">Если пусто — кормление останется незавершённым.</div>
@@ -687,7 +682,7 @@
 </div>
 
 <script>
-const APP_VERSION = "6.1.0";
+const APP_VERSION = "6.2.0";
 const BOT_USERNAME = "Ivanregimebot";
 const MINIAPP_SHORT_NAME = "Babybabysleep";
 
@@ -747,8 +742,10 @@ const openFeedStatus = document.getElementById("openFeedStatus");
 const endFeedBtn = document.getElementById("endFeedBtn");
 const editOpenFeedBtn = document.getElementById("editOpenFeedBtn");
 const editFeedModal = document.getElementById("editFeedModal");
+const editFeedTitle = document.getElementById("editFeedTitle");
 const editFeedStart = document.getElementById("editFeedStart");
 const editFeedEnd = document.getElementById("editFeedEnd");
+const editFeedEndField = document.getElementById("editFeedEndField");
 const editFeedVolumeField = document.getElementById("editFeedVolumeField");
 const editFeedVolume = document.getElementById("editFeedVolume");
 const cancelEditFeedBtn = document.getElementById("cancelEditFeedBtn");
@@ -805,6 +802,7 @@ const editStart = document.getElementById("editStart");
 const editEnd = document.getElementById("editEnd");
 const saveEditBtn = document.getElementById("saveEditBtn");
 const cancelEditBtn = document.getElementById("cancelEditBtn");
+const deleteSleepBtn = document.getElementById("deleteSleepBtn");
 const lightbox = document.getElementById("lightbox");
 const lightboxImage = document.getElementById("lightboxImage");
 const lightboxClose = document.getElementById("lightboxClose");
@@ -858,6 +856,8 @@ let lastCompletedEnd = null;
 let editingSessionId = null;
 let openFeed = null;
 let editingFeedId = null;
+let editingFeedIsBottle = false;
+let editingFeedIsEvent = false;
 let pendingFeedId = null;
 let pendingFeedIsBottle = false;
 let currentView = "main";
@@ -963,7 +963,6 @@ function getCollapsedMap() {
   const c = getActiveChild();
   return (c && c.ui_collapsed && typeof c.ui_collapsed === "object") ? c.ui_collapsed : {};
 }
-
 async function setCollapsed(key, value) {
   const current = getCollapsedMap();
   const next = Object.assign({}, current);
@@ -971,7 +970,6 @@ async function setCollapsed(key, value) {
   await saveChildSettings({ ui_collapsed: next });
   applyCollapsedState();
 }
-
 function applyCollapsedState() {
   const map = getCollapsedMap();
   document.querySelectorAll("[data-collapsible]").forEach(el => {
@@ -980,7 +978,6 @@ function applyCollapsedState() {
     else el.classList.remove("collapsed");
   });
 }
-
 function initCollapsibleHeaders() {
   document.querySelectorAll(".collapsible-header").forEach(header => {
     header.addEventListener("click", async () => {
@@ -990,12 +987,8 @@ function initCollapsibleHeaders() {
       const map = getCollapsedMap();
       const nextValue = !map[key];
       hapticLight();
-      try {
-        await setCollapsed(key, nextValue);
-      } catch (e) {
-        console.error(e);
-        showError(e.message || "Не удалось сохранить.");
-      }
+      try { await setCollapsed(key, nextValue); }
+      catch (e) { console.error(e); showError(e.message || "Не удалось сохранить."); }
     });
   });
 }
@@ -1468,7 +1461,7 @@ async function toggleSleep() {
   } catch (e) { console.error(e); showError(e.message || "Ошибка."); actionBtn.disabled = false; }
 }
 
-// EVENTS
+// EVENTS (popisal/pokakal)
 async function addBabyEvent(type) {
   if (!activeChildId || !familyId) return;
   peeBtn.disabled = true; poopBtn.disabled = true; hideError();
@@ -1544,20 +1537,32 @@ function renderEvents(data) {
     const row = document.createElement("div"); row.className = "history-item";
     const info = document.createElement("div"); info.className = "history-info";
     const t = document.createElement("div"); t.className = "history-time";
-    if (ev.event_type === "pee") t.textContent = `💧 Пописал — ${formatTime(ev.event_time)}`;
-    else if (ev.event_type === "poop") t.textContent = `💩 Покакал — ${formatTime(ev.event_time)}`;
-    else {
+    let editHandler = null;
+
+    if (ev.event_type === "pee") {
+      t.textContent = `💧 Пописал — ${formatTime(ev.event_time)}`;
+      editHandler = () => openEditEventModal(ev);
+    } else if (ev.event_type === "poop") {
+      t.textContent = `💩 Покакал — ${formatTime(ev.event_time)}`;
+      editHandler = () => openEditEventModal(ev);
+    } else {
       const label = getFeedTypeLabel(ev.event_type);
       const end = ev.end_time ? formatClock(new Date(ev.end_time)) : "…";
       const dur = ev.end_time ? formatDuration(new Date(ev.end_time) - new Date(ev.event_time)) : "идёт";
       const vol = ev.volume_ml ? ` · ${ev.volume_ml} мл` : "";
       t.textContent = `${label} — ${formatTime(ev.event_time)} → ${end} · ${dur}${vol}`;
+      editHandler = () => openEditFeedModal(ev);
     }
-    info.appendChild(t); row.appendChild(info); eventsList.appendChild(row);
+    info.appendChild(t); row.appendChild(info);
+    const btn = document.createElement("button");
+    btn.className = "edit-btn"; btn.textContent = "Изменить";
+    btn.addEventListener("click", editHandler);
+    row.appendChild(btn);
+    eventsList.appendChild(row);
   });
 }
 
-// SLEEP EDIT
+// EDIT SLEEP
 function openEditModal(s) {
   editingSessionId = s.id;
   editStart.value = isoToLocalInput(s.start_time);
@@ -1586,6 +1591,19 @@ async function saveEdit() {
     closeEditModal(); hapticSuccess();
     await refreshAll();
   } catch (e) { console.error(e); showError(e.message || "Не удалось."); saveEditBtn.disabled = false; }
+}
+async function deleteSleep() {
+  if (!editingSessionId) return;
+  if (!confirm("Удалить эту запись сна?")) return;
+  hideError();
+  try {
+    const { error } = await supabaseClient.from(TABLE).delete().eq("id", editingSessionId);
+    if (error) throw error;
+    closeEditModal();
+    openSession = null;
+    hapticSuccess();
+    await refreshAll();
+  } catch (e) { console.error(e); showError(e.message || "Не удалось."); }
 }
 
 // FEED
@@ -1643,52 +1661,103 @@ async function finishFeed(volumeMl) {
 
 function openEditFeedModal(feed) {
   editingFeedId = feed.id;
+  editingFeedIsBottle = feed.event_type === "feed_bottle";
+  editingFeedIsEvent = false;
+
+  editFeedTitle.textContent = "✏️ Изменить кормление";
   editFeedStart.value = isoToLocalInput(feed.event_time);
   editFeedEnd.value = isoToLocalInput(feed.end_time);
+  editFeedEndField.style.display = "";
+  editFeedVolumeField.style.display = editingFeedIsBottle ? "" : "none";
+  editFeedVolume.value = feed.volume_ml != null ? String(feed.volume_ml) : "";
+
   saveEditFeedBtn.disabled = false;
-  if (feed.event_type === "feed_bottle") {
-    editFeedVolumeField.style.display = "";
-    editFeedVolume.value = feed.volume_ml != null ? String(feed.volume_ml) : "";
-  } else {
-    editFeedVolumeField.style.display = "none";
-    editFeedVolume.value = "";
-  }
   editFeedModal.classList.add("visible");
 }
-function closeEditFeedModal() { editFeedModal.classList.remove("visible"); editingFeedId = null; }
+
+function openEditEventModal(ev) {
+  editingFeedId = ev.id;
+  editingFeedIsBottle = false;
+  editingFeedIsEvent = true;
+
+  editFeedTitle.textContent = ev.event_type === "pee" ? "✏️ Пописал" : "✏️ Покакал";
+  editFeedStart.value = isoToLocalInput(ev.event_time);
+  editFeedEnd.value = "";
+  editFeedEndField.style.display = "none";
+  editFeedVolumeField.style.display = "none";
+  editFeedVolume.value = "";
+
+  saveEditFeedBtn.disabled = false;
+  editFeedModal.classList.add("visible");
+}
+
+function closeEditFeedModal() {
+  editFeedModal.classList.remove("visible");
+  editingFeedId = null;
+  editingFeedIsEvent = false;
+  editingFeedIsBottle = false;
+}
 
 async function saveEditFeed() {
   if (!editingFeedId) return;
   const sv = editFeedStart.value, ev = editFeedEnd.value;
-  if (!sv) { alert("Укажи начало."); return; }
-  const sISO = localInputToISO(sv), eISO = localInputToISO(ev);
+  if (!sv) { alert("Укажи время."); return; }
+  const sISO = localInputToISO(sv);
   if (!sISO) { alert("Некорректно."); return; }
-  if (ev && !eISO) { alert("Некорректно."); return; }
-  if (eISO && new Date(eISO) <= new Date(sISO)) { alert("Конец должен быть позже."); return; }
+
+  let eISO = null;
+  if (!editingFeedIsEvent && ev) {
+    eISO = localInputToISO(ev);
+    if (!eISO) { alert("Некорректно."); return; }
+    if (new Date(eISO) <= new Date(sISO)) { alert("Конец должен быть позже."); return; }
+  }
+
   const vr = editFeedVolume.value.trim();
   let vol = null;
-  if (vr !== "") { const n = Number(vr); if (!Number.isFinite(n) || n < 0) { alert("Некорректный объём."); return; } vol = Math.round(n); }
+  if (editingFeedIsBottle && vr !== "") {
+    const n = Number(vr);
+    if (!Number.isFinite(n) || n < 0) { alert("Некорректный объём."); return; }
+    vol = Math.round(n);
+  }
+
   saveEditFeedBtn.disabled = true; hideError();
+
   try {
-    const patch = { event_time: sISO, end_time: eISO };
-    if (editFeedVolumeField.style.display !== "none") patch.volume_ml = vol;
+    const patch = { event_time: sISO };
+    if (!editingFeedIsEvent) {
+      patch.end_time = eISO;
+    }
+    if (editingFeedIsBottle) {
+      patch.volume_ml = vol;
+    }
+
     const { error } = await supabaseClient.from(EVENTS_TABLE).update(patch).eq("id", editingFeedId);
     if (error) throw error;
-    closeEditFeedModal(); hapticSuccess();
+
+    closeEditFeedModal();
+    hapticSuccess();
     await loadOpenFeed();
     await safeCall(loadRecentEvents);
     if (currentView === "stats") await safeCall(() => loadRangeStats(false));
-  } catch (e) { console.error(e); showError(e.message || "Не удалось."); saveEditFeedBtn.disabled = false; }
+  } catch (e) {
+    console.error(e);
+    showError(e.message || "Не удалось.");
+    saveEditFeedBtn.disabled = false;
+  }
 }
 
 async function deleteFeed() {
   if (!editingFeedId) return;
-  if (!confirm("Удалить это кормление?")) return;
+  const msg = editingFeedIsEvent ? "Удалить эту запись?" : "Удалить это кормление?";
+  if (!confirm(msg)) return;
   hideError();
+  const id = editingFeedId;
   try {
-    const { error } = await supabaseClient.from(EVENTS_TABLE).delete().eq("id", editingFeedId);
+    const { error } = await supabaseClient.from(EVENTS_TABLE).delete().eq("id", id);
     if (error) throw error;
-    closeEditFeedModal(); openFeed = null; hapticSuccess();
+    if (openFeed && openFeed.id === id) openFeed = null;
+    closeEditFeedModal();
+    hapticSuccess();
     await loadOpenFeed();
     await safeCall(loadRecentEvents);
     if (currentView === "stats") await safeCall(() => loadRangeStats(false));
@@ -2188,9 +2257,8 @@ function renderPhotos(data) {
       body.style.display = wasCollapsed ? "block" : "none";
       ch.style.transform = wasCollapsed ? "" : "rotate(-90deg)";
       header.style.marginBottom = wasCollapsed ? "10px" : "0";
-      try {
-        await setCollapsed(key, !wasCollapsed);
-      } catch (e) { console.error(e); }
+      try { await setCollapsed(key, !wasCollapsed); }
+      catch (e) { console.error(e); }
     });
 
     g.appendChild(header); g.appendChild(body); photoGroups.appendChild(g);
@@ -2346,6 +2414,7 @@ actionBtn.addEventListener("click", toggleSleep);
 editCurrentBtn.addEventListener("click", openEditCurrentModal);
 cancelEditBtn.addEventListener("click", closeEditModal);
 saveEditBtn.addEventListener("click", saveEdit);
+deleteSleepBtn.addEventListener("click", deleteSleep);
 
 peeBtn.addEventListener("click", () => addBabyEvent("pee"));
 poopBtn.addEventListener("click", () => addBabyEvent("poop"));
@@ -2444,7 +2513,7 @@ joinCodeInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.prev
 
 document.addEventListener("visibilitychange", () => { if (!document.hidden && activeChildId) refreshAll(); });
 
-// LONG PRESS for hiding buttons
+// LONG PRESS
 attachLongPressHide(peeBtn, "show_pee", "Пописал");
 attachLongPressHide(poopBtn, "show_poop", "Покакал");
 attachLongPressHide(startBreastLeftBtn, "show_breast", "Грудь");
@@ -2454,7 +2523,6 @@ attachLongPressHide(startBottleBtn, "show_bottle", "Бутылочка");
 // INIT
 versionLabel.textContent = `Режим дня · ${APP_VERSION}`;
 versionLabelSetup.textContent = `Режим дня · ${APP_VERSION}`;
-
 initCollapsibleHeaders();
 
 const todayV = dateToInputValue(new Date());
