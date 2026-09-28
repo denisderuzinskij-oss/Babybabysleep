@@ -94,15 +94,6 @@
     .icon-btn:disabled { opacity: 0.6; cursor: default; }
     .icon-btn svg { display: block; }
 
-    .icon-btn.spinning svg {
-      animation: refresh-spin 0.8s linear infinite;
-    }
-
-    @keyframes refresh-spin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-
     .version-label {
       text-align: center;
       color: var(--hint);
@@ -180,6 +171,11 @@
 
     .diaper-button:active { transform: scale(0.98); }
 
+    .diaper-hidden-hint {
+      text-align: center;
+      padding: 6px 0 2px;
+    }
+
     .stats-row {
       display: flex;
       justify-content: space-between;
@@ -233,17 +229,29 @@
 
     .timeline-segment:active { opacity: 0.78; }
 
+    .timeline-segment.selected {
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.9);
+      z-index: 2;
+    }
+
     .timeline-tooltip {
-      margin-top: 5px;
+      margin-top: 10px;
       padding: 7px 9px;
       border-radius: 8px;
       background: rgba(128, 128, 128, 0.12);
       color: var(--text);
       font-size: 12px;
-      display: none;
+      min-height: 30px;
+      box-sizing: border-box;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s ease;
     }
 
-    .timeline-tooltip.visible { display: block; }
+    .timeline-tooltip.visible {
+      visibility: visible;
+      opacity: 1;
+    }
 
     .edit-btn {
       flex-shrink: 0;
@@ -390,6 +398,28 @@
       color: var(--text);
       font-size: 14px;
       cursor: pointer;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 4px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 16px;
+      user-select: none;
+    }
+
+    .checkbox-row:last-of-type { border-bottom: none; }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      margin: 0;
+      accent-color: var(--button);
+      cursor: pointer;
+      flex-shrink: 0;
     }
 
     .photo-input-row { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
@@ -573,7 +603,7 @@
 
     .cancel-btn { background: var(--secondary-bg); color: var(--text); }
     .save-btn { background: var(--button); color: var(--button-text); }
-    .save-btn:disabled { opacity: 0.5; }
+    .save-btn:disabled { opacity: 0.5; cursor: default; }
 
     .setup-screen {
       display: flex;
@@ -718,20 +748,13 @@
     <div class="title-row">
       <h1>Режим дня <button class="name-button" id="childSelectorBtn" title="Выбрать ребёнка">…</button></h1>
       <div class="icon-buttons">
-        <button class="icon-btn" id="familySettingsBtn" aria-label="Настройки семьи" title="Семья">
+        <button class="icon-btn" id="settingsBtn" aria-label="Показатели" title="Показатели">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
-               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-        </button>
-        <button class="icon-btn" id="refreshBtn" aria-label="Обновить данные" title="Обновить">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none"
-               stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
-            <polyline points="21 4 21 10 15 10"/>
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <line x1="3" y1="7" x2="21" y2="7"/>
+            <line x1="3" y1="17" x2="21" y2="17"/>
+            <circle cx="9" cy="7" r="2.6" fill="currentColor" stroke="none"/>
+            <circle cx="15" cy="17" r="2.6" fill="currentColor" stroke="none"/>
           </svg>
         </button>
       </div>
@@ -756,9 +779,15 @@
 
       <div class="card">
         <div class="hint" style="margin-bottom: 10px;">Подгузник</div>
-        <div class="diaper-buttons">
+
+        <div class="diaper-buttons" id="diaperButtons">
           <button class="diaper-button" id="peeBtn">💧 Пописал</button>
           <button class="diaper-button" id="poopBtn">💩 Покакал</button>
+        </div>
+
+        <div class="diaper-hidden-hint" id="diaperHiddenHint" style="display: none;">
+          <div class="hint">Показатели подгузника скрыты.</div>
+          <button class="secondary-button" id="openSettingsFromDiaperBtn" style="margin-top: 8px;">⚙️ Настроить показатели</button>
         </div>
       </div>
 
@@ -767,7 +796,7 @@
         <div id="historyList"><div class="empty">Загрузка...</div></div>
       </div>
 
-      <div class="card">
+      <div class="card" id="eventsCard">
         <div class="hint" style="margin-bottom: 8px;">Последние события</div>
         <div id="eventsList"><div class="empty">Загрузка...</div></div>
       </div>
@@ -832,9 +861,15 @@
           <span id="rangeAvgNightSleep">—</span>
         </div>
 
-        <div class="event-stats">
-          <div class="stats-row"><span>💧 Пописал</span><span id="rangePeeCount">—</span></div>
-          <div class="stats-row"><span>💩 Покакал</span><span id="rangePoopCount">—</span></div>
+        <div class="event-stats" id="eventStatsBlock" style="display: none;">
+          <div class="stats-row" id="peeStatsRow">
+            <span>💧 Пописал</span>
+            <span id="rangePeeCount">—</span>
+          </div>
+          <div class="stats-row" id="poopStatsRow">
+            <span>💩 Покакал</span>
+            <span id="rangePoopCount">—</span>
+          </div>
         </div>
       </div>
 
@@ -846,6 +881,7 @@
       <div class="card">
         <div class="hint" style="margin-bottom: 8px;">Хронология сна</div>
         <div id="timelineContainer"><div class="empty">Загрузка...</div></div>
+        <div class="timeline-tooltip" id="timelineTooltip"></div>
 
         <div class="timeline-legend">
           <span><span class="legend-dot" style="background:var(--day);"></span>Дневной сон</span>
@@ -855,7 +891,7 @@
       </div>
 
       <div class="card">
-        <button class="secondary-button" id="csvBtn" style="margin-top: 0;">📊 Скопировать всю статистику (CSV)</button>
+        <button class="secondary-button" id="csvBtn" style="margin-top: 0;">📊 Скопировать статистику (CSV)</button>
         <textarea class="csv-textarea" id="csvOutput" style="display: none; margin-top: 10px;" readonly></textarea>
         <div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">Текст скопирован в буфер обмена.</div>
       </div>
@@ -978,10 +1014,62 @@
     </div>
   </div>
 
+  <!-- МОДАЛКА ПОКАЗАТЕЛЕЙ -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal">
+      <div class="modal-title">⚙️ Показатели</div>
+      <div class="hint" style="margin-bottom: 6px;">Что показывать в приложении</div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="showPeeCheckbox" />
+        <span>💧 Пописал</span>
+      </label>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="showPoopCheckbox" />
+        <span>💩 Покакал</span>
+      </label>
+
+      <button class="secondary-button" id="settingsRefreshBtn" style="margin-top: 16px;">🔄 Обновить данные</button>
+
+      <div class="modal-buttons">
+        <button class="cancel-btn" id="closeSettingsBtn">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА ВЫГРУЗКИ CSV -->
+  <div class="modal-backdrop" id="csvModal">
+    <div class="modal">
+      <div class="modal-title">📊 Что выгрузить</div>
+      <div class="hint" style="margin-bottom: 6px;">Отметь, что включить в CSV</div>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="csvSleepCheckbox" checked />
+        <span>😴 Сон</span>
+      </label>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="csvPeeCheckbox" />
+        <span>💧 Пописал</span>
+      </label>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="csvPoopCheckbox" />
+        <span>💩 Покакал</span>
+      </label>
+
+      <div class="modal-buttons">
+        <button class="cancel-btn" id="cancelCsvBtn">Отмена</button>
+        <button class="save-btn" id="confirmCsvBtn">Скопировать</button>
+      </div>
+    </div>
+  </div>
+
 
   <script>
 
-    const APP_VERSION = "4.2.1";
+    const APP_VERSION = "5.0.0";
 
     const BOT_USERNAME = "Ivanregimebot";
     const MINIAPP_SHORT_NAME = "Babybabysleep";
@@ -1020,7 +1108,7 @@
     const versionLabel = document.getElementById("versionLabel");
     const childSelectorBtn = document.getElementById("childSelectorBtn");
     const familySettingsBtn = document.getElementById("familySettingsBtn");
-    const refreshBtn = document.getElementById("refreshBtn");
+    const settingsBtn = document.getElementById("settingsBtn");
 
     const navMainBtn = document.getElementById("navMainBtn");
     const navStatsBtn = document.getElementById("navStatsBtn");
@@ -1037,9 +1125,13 @@
 
     const historyList = document.getElementById("historyList");
     const eventsList = document.getElementById("eventsList");
+    const eventsCard = document.getElementById("eventsCard");
 
     const peeBtn = document.getElementById("peeBtn");
     const poopBtn = document.getElementById("poopBtn");
+    const diaperButtons = document.getElementById("diaperButtons");
+    const diaperHiddenHint = document.getElementById("diaperHiddenHint");
+    const openSettingsFromDiaperBtn = document.getElementById("openSettingsFromDiaperBtn");
 
     const modeYesterdayBtn = document.getElementById("modeYesterdayBtn");
     const modeDayBtn = document.getElementById("modeDayBtn");
@@ -1066,10 +1158,14 @@
     const rangeNightSleep = document.getElementById("rangeNightSleep");
     const rangeAvgDaySleep = document.getElementById("rangeAvgDaySleep");
     const rangeAvgNightSleep = document.getElementById("rangeAvgNightSleep");
+    const eventStatsBlock = document.getElementById("eventStatsBlock");
+    const peeStatsRow = document.getElementById("peeStatsRow");
+    const poopStatsRow = document.getElementById("poopStatsRow");
     const rangePeeCount = document.getElementById("rangePeeCount");
     const rangePoopCount = document.getElementById("rangePoopCount");
 
     const timelineContainer = document.getElementById("timelineContainer");
+    const timelineTooltip = document.getElementById("timelineTooltip");
 
     const csvBtn = document.getElementById("csvBtn");
     const csvOutput = document.getElementById("csvOutput");
@@ -1116,6 +1212,19 @@
     const closeFamilyBtn = document.getElementById("closeFamilyBtn");
     const leaveFamilyBtn = document.getElementById("leaveFamilyBtn");
 
+    const settingsModal = document.getElementById("settingsModal");
+    const showPeeCheckbox = document.getElementById("showPeeCheckbox");
+    const showPoopCheckbox = document.getElementById("showPoopCheckbox");
+    const settingsRefreshBtn = document.getElementById("settingsRefreshBtn");
+    const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+
+    const csvModal = document.getElementById("csvModal");
+    const csvSleepCheckbox = document.getElementById("csvSleepCheckbox");
+    const csvPeeCheckbox = document.getElementById("csvPeeCheckbox");
+    const csvPoopCheckbox = document.getElementById("csvPoopCheckbox");
+    const cancelCsvBtn = document.getElementById("cancelCsvBtn");
+    const confirmCsvBtn = document.getElementById("confirmCsvBtn");
+
 
     // ============================================================
     // STATE
@@ -1140,6 +1249,7 @@
     let rangeEnd = new Date();
 
     let rangeChartInstance = null;
+    let selectedTimelineSegment = null;
 
     let galleryPhotos = [];
     let currentPhotoIndex = 0;
@@ -1272,6 +1382,21 @@
     function parseDateInputValue(value) {
       const [y, m, d] = value.split("-").map(Number);
       return { y, m, d };
+    }
+
+
+    // ============================================================
+    // ФЛАГИ ПОКАЗАТЕЛЕЙ
+    // ============================================================
+
+    function isPeeVisible() {
+      const c = getActiveChild();
+      return !c || c.show_pee !== false;
+    }
+
+    function isPoopVisible() {
+      const c = getActiveChild();
+      return !c || c.show_poop !== false;
     }
 
 
@@ -1527,7 +1652,7 @@
 
       const { data, error } = await supabaseClient
         .from(CHILDREN_TABLE)
-        .select("id,name,created_at")
+        .select("*")
         .eq("family_id", familyId)
         .order("created_at", { ascending: true });
 
@@ -1549,12 +1674,55 @@
       const found = children.find(c => c.id === activeChildId);
       activeChildId = found ? found.id : children[0].id;
       renderActiveChildName();
+      renderDiaperCard();
+    }
+
+    async function saveChildSettings(patch) {
+      if (!activeChildId) return;
+
+      const { error } = await supabaseClient
+        .from(CHILDREN_TABLE)
+        .update(patch)
+        .eq("id", activeChildId)
+        .eq("family_id", familyId);
+
+      if (error) throw error;
+
+      const child = children.find(c => c.id === activeChildId);
+      if (child) Object.assign(child, patch);
+    }
+
+    function applyVisibilityChanges() {
+      renderDiaperCard();
+      safeCall(loadRecentEvents);
+
+      if (currentView === "stats") {
+        safeCall(() => loadRangeStats(false));
+      }
+    }
+
+    function renderDiaperCard() {
+
+      const pee = isPeeVisible();
+      const poop = isPoopVisible();
+
+      if (!pee && !poop) {
+        diaperButtons.style.display = "none";
+        diaperHiddenHint.style.display = "block";
+        return;
+      }
+
+      diaperButtons.style.display = "flex";
+      diaperHiddenHint.style.display = "none";
+      peeBtn.style.display = pee ? "" : "none";
+      poopBtn.style.display = poop ? "" : "none";
     }
 
     async function selectChild(childId) {
       if (childId === activeChildId) { closeChildPicker(); return; }
       activeChildId = childId;
       renderActiveChildName();
+      renderDiaperCard();
       closeChildPicker();
       hideError();
       openSession = null;
@@ -1673,6 +1841,7 @@
           children.push(data);
           activeChildId = data.id;
           renderActiveChildName();
+          renderDiaperCard();
           openSession = null;
           lastCompletedEnd = null;
         }
@@ -1732,6 +1901,7 @@
         if (wasActive) {
           activeChildId = children[0].id;
           renderActiveChildName();
+          renderDiaperCard();
           openSession = null;
           lastCompletedEnd = null;
         }
@@ -1859,6 +2029,49 @@
       }
 
       hapticLight();
+    }
+
+
+    // ============================================================
+    // МОДАЛКА ПОКАЗАТЕЛЕЙ
+    // ============================================================
+
+    function openSettingsModal() {
+      const c = getActiveChild();
+      showPeeCheckbox.checked = !c || c.show_pee !== false;
+      showPoopCheckbox.checked = !c || c.show_poop !== false;
+      settingsModal.classList.add("visible");
+    }
+
+    function closeSettingsModal() {
+      settingsModal.classList.remove("visible");
+    }
+
+
+    // ============================================================
+    // МОДАЛКА CSV
+    // ============================================================
+
+    function openCsvModal() {
+
+      const pee = isPeeVisible();
+      const poop = isPoopVisible();
+
+      csvSleepCheckbox.checked = true;
+      csvPeeCheckbox.checked = pee;
+      csvPoopCheckbox.checked = poop;
+
+      updateCsvConfirmState();
+      csvModal.classList.add("visible");
+    }
+
+    function closeCsvModal() {
+      csvModal.classList.remove("visible");
+    }
+
+    function updateCsvConfirmState() {
+      const any = csvSleepCheckbox.checked || csvPeeCheckbox.checked || csvPoopCheckbox.checked;
+      confirmCsvBtn.disabled = !any;
     }
 
 
@@ -2130,10 +2343,20 @@
 
       if (!activeChildId) { renderEvents([]); return; }
 
+      const types = [];
+      if (isPeeVisible()) types.push("pee");
+      if (isPoopVisible()) types.push("poop");
+
+      if (types.length === 0) {
+        renderEvents([]);
+        return;
+      }
+
       const { data, error } = await supabaseClient
         .from(EVENTS_TABLE)
         .select("id,event_type,event_time")
         .eq("child_id", activeChildId)
+        .in("event_type", types)
         .order("event_time", { ascending: false })
         .limit(10);
 
@@ -2405,14 +2628,21 @@
       return [...completed, ...open];
     }
 
-    async function fetchEventsInRange(startDate, endDate) {
+    async function fetchEventsInRange(startDate, endDate, categories) {
 
       if (!activeChildId) return [];
+
+      const types = [];
+      if (categories.includes("pee")) types.push("pee");
+      if (categories.includes("poop")) types.push("poop");
+
+      if (types.length === 0) return [];
 
       const { data, error } = await supabaseClient
         .from(EVENTS_TABLE)
         .select("event_type,event_time")
         .eq("child_id", activeChildId)
+        .in("event_type", types)
         .gte("event_time", startDate.toISOString())
         .lte("event_time", endDate.toISOString());
 
@@ -2446,9 +2676,17 @@
 
       const stats = calculateSleepStats(rawSessions, rangeStart.getTime(), rangeEnd.getTime(), nowMs);
 
+      const activeCategories = [];
+      if (isPeeVisible()) activeCategories.push("pee");
+      if (isPoopVisible()) activeCategories.push("poop");
+
       let events = [];
       try {
-        events = await fetchEventsInRange(rangeStart, new Date(stats.effectiveEndMs));
+        events = await fetchEventsInRange(
+          rangeStart,
+          new Date(stats.effectiveEndMs),
+          activeCategories
+        );
       } catch (error) { console.error(error); }
 
       renderRangeSummary(stats);
@@ -2506,13 +2744,31 @@
     }
 
     function renderEventCounts(events) {
+
+      const pee = isPeeVisible();
+      const poop = isPoopVisible();
+
       let peeCount = 0, poopCount = 0;
       events.forEach(e => {
         if (e.event_type === "pee") peeCount++;
         else if (e.event_type === "poop") poopCount++;
       });
-      rangePeeCount.textContent = String(peeCount);
-      rangePoopCount.textContent = String(poopCount);
+
+      if (pee) {
+        peeStatsRow.style.display = "";
+        rangePeeCount.textContent = String(peeCount);
+      } else {
+        peeStatsRow.style.display = "none";
+      }
+
+      if (poop) {
+        poopStatsRow.style.display = "";
+        rangePoopCount.textContent = String(poopCount);
+      } else {
+        poopStatsRow.style.display = "none";
+      }
+
+      eventStatsBlock.style.display = (pee || poop) ? "" : "none";
     }
 
     function renderRangeChart(sleepMs, awakeMs) {
@@ -2605,9 +2861,31 @@
       return null;
     }
 
+    function clearTimelineSelection() {
+      if (selectedTimelineSegment) {
+        selectedTimelineSegment.classList.remove("selected");
+        selectedTimelineSegment = null;
+      }
+    }
+
+    function showTimelineTooltip(text) {
+      if (!timelineTooltip) return;
+      timelineTooltip.textContent = text;
+      timelineTooltip.classList.add("visible");
+    }
+
+    function hideTimelineTooltip() {
+      if (!timelineTooltip) return;
+      timelineTooltip.classList.remove("visible");
+      timelineTooltip.textContent = "";
+    }
+
     function renderTimeline(sleepPieces, rangeStartDate, rangeEndDate) {
 
       timelineContainer.innerHTML = "";
+      clearTimelineSelection();
+      hideTimelineTooltip();
+
       const rows = buildTimelineRows(rangeStartDate, rangeEndDate);
 
       if (rows.length === 0) {
@@ -2631,9 +2909,6 @@
         const track = document.createElement("div");
         track.className = "timeline-track";
 
-        const tooltip = document.createElement("div");
-        tooltip.className = "timeline-tooltip";
-
         sleepPieces.forEach(interval => {
 
           const segStart = Math.max(interval.start, rowStartMs);
@@ -2656,10 +2931,12 @@
 
           segment.addEventListener("click", event => {
             event.stopPropagation();
-            const existing = wrapper.querySelector(".timeline-tooltip.visible");
-            if (existing) existing.classList.remove("visible");
-            tooltip.textContent = tooltipText;
-            tooltip.classList.add("visible");
+
+            clearTimelineSelection();
+            segment.classList.add("selected");
+            selectedTimelineSegment = segment;
+
+            showTimelineTooltip(tooltipText);
           });
 
           track.appendChild(segment);
@@ -2674,15 +2951,14 @@
           const clickMs = rowStartMs + ratio * rowTotalMs;
 
           const gap = findAwakeIntervalAtClick(clickMs, rowStartMs, rowEndMs, sleepPieces);
-
-          const existing = wrapper.querySelector(".timeline-tooltip.visible");
-          if (existing) existing.classList.remove("visible");
-
           if (!gap) return;
-          tooltip.textContent =
+
+          clearTimelineSelection();
+
+          showTimelineTooltip(
             `🙂 ${formatClock(new Date(gap.start))} → ${formatClock(new Date(gap.end))} · ` +
-            `${formatDuration(gap.end - gap.start)}`;
-          tooltip.classList.add("visible");
+            `${formatDuration(gap.end - gap.start)}`
+          );
         });
 
         const hourTicks = buildHourTicks(rowStartMs, rowEndMs);
@@ -2709,7 +2985,6 @@
         wrapper.appendChild(label);
         wrapper.appendChild(track);
         wrapper.appendChild(tickLabels);
-        wrapper.appendChild(tooltip);
         timelineContainer.appendChild(wrapper);
       });
     }
@@ -2776,9 +3051,15 @@
       return '"' + s.replace(/"/g, '""') + '"';
     }
 
-    async function downloadCSV() {
+    async function downloadCSV(options) {
 
       if (!activeChildId) return;
+
+      const includeSleep = options.includeSleep;
+      const includePee = options.includePee;
+      const includePoop = options.includePoop;
+
+      if (!includeSleep && !includePee && !includePoop) return;
 
       csvBtn.disabled = true;
       hideError();
@@ -2786,17 +3067,27 @@
 
       try {
 
-        const sleepData = await fetchAllPages(
-          TABLE, "id,start_time,end_time",
-          q => q.eq("child_id", activeChildId).not("end_time", "is", null),
-          "start_time", true
-        );
+        let sleepData = [];
+        if (includeSleep) {
+          sleepData = await fetchAllPages(
+            TABLE, "id,start_time,end_time",
+            q => q.eq("child_id", activeChildId).not("end_time", "is", null),
+            "start_time", true
+          );
+        }
 
-        const eventData = await fetchAllPages(
-          EVENTS_TABLE, "id,event_type,event_time",
-          q => q.eq("child_id", activeChildId),
-          "event_time", true
-        );
+        let eventData = [];
+        const types = [];
+        if (includePee) types.push("pee");
+        if (includePoop) types.push("poop");
+
+        if (types.length > 0) {
+          eventData = await fetchAllPages(
+            EVENTS_TABLE, "id,event_type,event_time",
+            q => q.eq("child_id", activeChildId).in("event_type", types),
+            "event_time", true
+          );
+        }
 
         const rows = [];
 
@@ -2906,408 +3197,4 @@
       photoGroups.innerHTML = "";
 
       if (!data || data.length === 0) {
-        const empty = document.createElement("div");
-        empty.className = "empty";
-        empty.textContent = "Пока ни одного фото нет";
-        photoGroups.appendChild(empty);
-        return;
-      }
-
-      const grouped = new Map();
-      data.forEach(photo => {
-        const month = Number(photo.month_number);
-        if (!grouped.has(month)) grouped.set(month, []);
-        grouped.get(month).push(photo);
-      });
-
-      const sortedMonths = Array.from(grouped.keys()).sort((a, b) => a - b);
-
-      sortedMonths.forEach(monthNumber => {
-
-        const photos = grouped.get(monthNumber);
-
-        const monthGroup = document.createElement("div");
-        monthGroup.className = "month-group";
-
-        const title = document.createElement("div");
-        title.className = "month-title";
-        title.innerHTML = `${getMonthTitle(monthNumber)} <span class="month-count">(${photos.length} фото)</span>`;
-
-        const grid = document.createElement("div");
-        grid.className = "photo-grid";
-
-        photos.forEach(photo => {
-
-          const globalIndex = galleryPhotos.findIndex(item => item.id === photo.id);
-
-          const item = document.createElement("div");
-          item.className = "photo-item";
-          item.addEventListener("click", () => openLightbox(globalIndex));
-
-          const img = document.createElement("img");
-          img.src = photo.photo_url;
-          img.alt = getMonthTitle(monthNumber);
-          img.loading = "lazy";
-
-          const deleteButton = document.createElement("button");
-          deleteButton.className = "photo-delete";
-          deleteButton.textContent = "✕";
-          deleteButton.addEventListener("click", event => {
-            event.stopPropagation();
-            deletePhoto(photo);
-          });
-
-          item.appendChild(img);
-          item.appendChild(deleteButton);
-          grid.appendChild(item);
-        });
-
-        monthGroup.appendChild(title);
-        monthGroup.appendChild(grid);
-        photoGroups.appendChild(monthGroup);
-      });
-    }
-
-    async function uploadPhoto() {
-
-      if (!activeChildId) return;
-
-      const monthValue = photoMonthInput.value.trim();
-      const file = photoFileInput.files && photoFileInput.files[0];
-
-      photoHint.style.display = "none";
-      hideError();
-
-      if (monthValue === "") { alert("Укажи номер месяца."); return; }
-
-      const monthNumber = Number(monthValue);
-      if (!Number.isInteger(monthNumber) || monthNumber < 1 || monthNumber > 24) {
-        alert("Месяц должен быть целым числом от 1 до 24."); return;
-      }
-      if (!file) { alert("Выбери фото для загрузки."); return; }
-      if (!file.type.startsWith("image/")) { alert("Можно загружать только изображения."); return; }
-
-      uploadPhotoBtn.disabled = true;
-      photoHint.style.display = "block";
-      photoHint.textContent = "Загрузка...";
-
-      try {
-
-        const extension = (file.name.split(".").pop() || "jpg").toLowerCase();
-        const safeExtension = extension.replace(/[^a-z0-9]/gi, "") || "jpg";
-        const path = `child-${activeChildId}/month-${monthNumber}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExtension}`;
-
-        const { error: uploadError } = await supabaseClient
-          .storage.from(PHOTOS_BUCKET).upload(path, file);
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabaseClient
-          .storage.from(PHOTOS_BUCKET).getPublicUrl(path);
-        const photoUrl = publicUrlData?.publicUrl;
-        if (!photoUrl) throw new Error("Не удалось получить ссылку на фото.");
-
-        const { error: insertError } = await supabaseClient
-          .from(PHOTOS_TABLE)
-          .insert({
-            month_number: monthNumber,
-            storage_path: path,
-            photo_url: photoUrl,
-            child_id: activeChildId,
-            family_id: familyId
-          });
-        if (insertError) throw insertError;
-
-        photoMonthInput.value = "";
-        photoFileInput.value = "";
-        photoHint.textContent = `${getMonthTitle(monthNumber)}: фото добавлено.`;
-
-        hapticSuccess();
-        await loadPhotos();
-
-      } catch (error) {
-        console.error(error);
-        photoHint.textContent = error.message || "Не удалось загрузить фото.";
-      } finally {
-        uploadPhotoBtn.disabled = false;
-      }
-    }
-
-    async function deletePhoto(photo) {
-
-      const confirmed = confirm(`Удалить это фото из раздела «${getMonthTitle(photo.month_number)}»?`);
-      if (!confirmed) return;
-
-      hideError();
-
-      try {
-        const { error: storageError } = await supabaseClient
-          .storage.from(PHOTOS_BUCKET).remove([photo.storage_path]);
-        if (storageError) throw storageError;
-
-        const { error } = await supabaseClient
-          .from(PHOTOS_TABLE).delete().eq("id", photo.id);
-        if (error) throw error;
-
-        hapticSuccess();
-        await loadPhotos();
-      } catch (error) {
-        console.error(error);
-        showError(error.message || "Не удалось удалить фото.");
-      }
-    }
-
-
-    // ============================================================
-    // LIGHTBOX
-    // ============================================================
-
-    function openLightbox(index) {
-      if (!galleryPhotos.length) return;
-      currentPhotoIndex = index;
-      renderLightboxPhoto();
-      lightbox.classList.add("visible");
-      document.body.style.overflow = "hidden";
-    }
-
-    function closeLightbox() {
-      lightbox.classList.remove("visible");
-      document.body.style.overflow = "";
-    }
-
-    function renderLightboxPhoto() {
-      const photo = galleryPhotos[currentPhotoIndex];
-      if (!photo) return;
-
-      lightboxImage.src = photo.photo_url;
-      lightboxImage.alt = getMonthTitle(photo.month_number);
-      lightboxCounter.textContent = `${currentPhotoIndex + 1} / ${galleryPhotos.length}`;
-
-      if (galleryPhotos.length <= 1) {
-        lightboxPrev.classList.add("hidden");
-        lightboxNext.classList.add("hidden");
-      } else {
-        lightboxPrev.classList.remove("hidden");
-        lightboxNext.classList.remove("hidden");
-      }
-    }
-
-    function showPreviousPhoto() {
-      if (!galleryPhotos.length) return;
-      currentPhotoIndex--;
-      if (currentPhotoIndex < 0) currentPhotoIndex = galleryPhotos.length - 1;
-      renderLightboxPhoto();
-    }
-
-    function showNextPhoto() {
-      if (!galleryPhotos.length) return;
-      currentPhotoIndex++;
-      if (currentPhotoIndex >= galleryPhotos.length) currentPhotoIndex = 0;
-      renderLightboxPhoto();
-    }
-
-    let touchStartX = null;
-
-    lightboxContent.addEventListener("touchstart", event => {
-      if (event.touches && event.touches.length === 1) touchStartX = event.touches[0].clientX;
-    }, { passive: true });
-
-    lightboxContent.addEventListener("touchend", event => {
-      if (touchStartX === null) return;
-      const endX = event.changedTouches && event.changedTouches[0]
-        ? event.changedTouches[0].clientX : touchStartX;
-      const diff = endX - touchStartX;
-      touchStartX = null;
-      if (Math.abs(diff) < 50) return;
-      if (diff > 0) showPreviousPhoto();
-      else showNextPhoto();
-    }, { passive: true });
-
-
-    // ============================================================
-    // ОБНОВЛЕНИЕ ДАННЫХ
-    // ============================================================
-
-    async function refreshAll() {
-
-      if (!activeChildId) return;
-
-      await safeCall(loadLastCompletedEnd);
-      await safeCall(loadOpenSession);
-      await safeCall(loadRecentHistory);
-      await safeCall(loadRecentEvents);
-
-      if (currentView === "stats") {
-        refreshYesterdayRangeIfNeeded();
-        await safeCall(() => loadRangeStats(false));
-      }
-      if (currentView === "gallery") {
-        await safeCall(loadPhotos);
-      }
-    }
-
-    async function manualRefresh() {
-      refreshBtn.disabled = true;
-      refreshBtn.classList.add("spinning");
-      try {
-        await safeCall(loadFamilyInfo);
-        await safeCall(loadChildren);
-        await refreshAll();
-        hapticLight();
-      } finally {
-        refreshBtn.classList.remove("spinning");
-        refreshBtn.disabled = false;
-      }
-    }
-
-
-    // ============================================================
-    // ОБРАБОТЧИКИ
-    // ============================================================
-
-    navMainBtn.addEventListener("click", () => setView("main"));
-    navStatsBtn.addEventListener("click", () => setView("stats"));
-    navGalleryBtn.addEventListener("click", () => setView("gallery"));
-
-    refreshBtn.addEventListener("click", manualRefresh);
-
-    actionBtn.addEventListener("click", toggleSleep);
-    editCurrentBtn.addEventListener("click", openEditCurrentModal);
-    cancelEditBtn.addEventListener("click", closeEditModal);
-    saveEditBtn.addEventListener("click", saveEdit);
-
-    peeBtn.addEventListener("click", () => addBabyEvent("pee"));
-    poopBtn.addEventListener("click", () => addBabyEvent("poop"));
-
-    modeYesterdayBtn.addEventListener("click", () => setPeriodMode("yesterday"));
-    modeDayBtn.addEventListener("click", () => setPeriodMode("day"));
-    modeRangeBtn.addEventListener("click", () => setPeriodMode("range"));
-    applyRangeBtn.addEventListener("click", applyCustomRange);
-
-    csvBtn.addEventListener("click", downloadCSV);
-    uploadPhotoBtn.addEventListener("click", uploadPhoto);
-
-    editModal.addEventListener("click", event => {
-      if (event.target === editModal) closeEditModal();
-    });
-
-    lightboxClose.addEventListener("click", closeLightbox);
-    lightboxPrev.addEventListener("click", showPreviousPhoto);
-    lightboxNext.addEventListener("click", showNextPhoto);
-
-    lightbox.addEventListener("click", event => {
-      if (event.target === lightbox) closeLightbox();
-    });
-
-    document.addEventListener("keydown", event => {
-      if (!lightbox.classList.contains("visible")) return;
-      if (event.key === "Escape") closeLightbox();
-      else if (event.key === "ArrowLeft") showPreviousPhoto();
-      else if (event.key === "ArrowRight") showNextPhoto();
-    });
-
-    childSelectorBtn.addEventListener("click", openChildPicker);
-    closeChildPickerBtn.addEventListener("click", closeChildPicker);
-    childPickerModal.addEventListener("click", event => {
-      if (event.target === childPickerModal) closeChildPicker();
-    });
-    addChildBtn.addEventListener("click", () => openChildForm("add", null));
-    cancelChildFormBtn.addEventListener("click", closeChildForm);
-    childFormModal.addEventListener("click", event => {
-      if (event.target === childFormModal) closeChildForm();
-    });
-    saveChildBtn.addEventListener("click", saveChildForm);
-    deleteChildBtn.addEventListener("click", deleteChild);
-    childNameInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") { event.preventDefault(); saveChildForm(); }
-    });
-
-    familySettingsBtn.addEventListener("click", openFamilyModal);
-    closeFamilyBtn.addEventListener("click", closeFamilyModal);
-    familyModal.addEventListener("click", event => {
-      if (event.target === familyModal) { saveFamilyName(); closeFamilyModal(); }
-    });
-    copyInviteBtn.addEventListener("click", copyInviteCode);
-    shareInviteBtn.addEventListener("click", shareInviteLink);
-    leaveFamilyBtn.addEventListener("click", leaveFamily);
-    familyNameInput.addEventListener("blur", saveFamilyName);
-    familyNameInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") { event.preventDefault(); familyNameInput.blur(); }
-    });
-
-    createFamilyBtn.addEventListener("click", async () => {
-      createFamilyBtn.disabled = true;
-      try {
-        await createFamilyInternal("Наша семья", { attachOrphans: false });
-        showAppScreen();
-        await loadChildren();
-        await refreshAll();
-      } catch (error) {
-        console.error(error);
-        alert("Не удалось создать семью: " + (error.message || "неизвестная ошибка"));
-      } finally {
-        createFamilyBtn.disabled = false;
-      }
-    });
-
-    joinFamilyBtn.addEventListener("click", async () => {
-      joinFamilyBtn.disabled = true;
-      try {
-        await joinFamily(joinCodeInput.value);
-        await loadFamilyInfo();
-        showAppScreen();
-        await loadChildren();
-        await refreshAll();
-        hapticSuccess();
-      } catch (error) {
-        console.error(error);
-        alert("Не удалось присоединиться: " + (error.message || "неизвестная ошибка"));
-      } finally {
-        joinFamilyBtn.disabled = false;
-      }
-    });
-
-    joinCodeInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") { event.preventDefault(); joinFamilyBtn.click(); }
-    });
-
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && activeChildId) refreshAll();
-    });
-
-
-    // ============================================================
-    // ПЕРВИЧНАЯ ЗАГРУЗКА
-    // ============================================================
-
-    versionLabel.textContent = `Режим дня · ${APP_VERSION}`;
-    versionLabelSetup.textContent = `Режим дня · ${APP_VERSION}`;
-
-    const todayForInputs = dateToInputValue(new Date());
-    const yesterdayForInputs = dateToInputValue(new Date(Date.now() - 24 * 60 * 60 * 1000));
-
-    statsSingleDate.value = todayForInputs;
-    statsFromDate.value = yesterdayForInputs;
-    statsToDate.value = todayForInputs;
-
-    (async function bootstrap() {
-      try {
-        await bootstrapFamily();
-        if (familyId) {
-          await loadChildren();
-          await refreshAll();
-        }
-      } catch (error) {
-        console.error(error);
-        setupView.classList.remove("hidden");
-        setupSubtitle.textContent =
-          "Ошибка запуска: " + (error.message || "неизвестная ошибка") +
-          ". Проверь, что таблицы families и family_members созданы.";
-      }
-
-      setInterval(() => { if (activeChildId) renderStatus(); }, 60000);
-    })();
-
-  </script>
-
-</body>
-</html>
+        const empty = document.createElement("div
