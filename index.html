@@ -171,11 +171,6 @@
 
     .diaper-button:active { transform: scale(0.98); }
 
-    .diaper-hidden-hint {
-      text-align: center;
-      padding: 6px 0 2px;
-    }
-
     .stats-row {
       display: flex;
       justify-content: space-between;
@@ -231,7 +226,18 @@
 
     .timeline-segment.selected {
       box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.9);
-      z-index: 2;
+      z-index: 4;
+    }
+
+    .timeline-awake-overlay {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.35);
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.95);
+      border-radius: 3px;
+      pointer-events: none;
+      z-index: 3;
     }
 
     .timeline-tooltip {
@@ -330,7 +336,7 @@
       top: 0; bottom: 0;
       width: 1px;
       background: rgba(255, 255, 255, 0.6);
-      z-index: 1;
+      z-index: 2;
       pointer-events: none;
     }
 
@@ -719,17 +725,6 @@
 
 <body>
 
-<script>
-window.addEventListener("error", function (e) {
-  var msg = (e.message || "error") + "\n" +
-            (e.filename || "") + " : " + (e.lineno || "?") + ":" + (e.colno || "?") + "\n\n" +
-            (e.error && e.error.stack ? e.error.stack : "");
-  document.body.innerHTML = '<pre style="position:fixed;inset:0;margin:0;padding:16px;font:12px monospace;color:#b00;background:#fff;overflow:auto;z-index:99999;white-space:pre-wrap;">' +
-    msg.replace(/[<>&]/g, function (c) { return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c]; }) +
-    "</pre>";
-});
-</script>
-
   <!-- ЭКРАН НАСТРОЙКИ СЕМЬИ -->
   <div class="setup-screen hidden" id="setupView">
     <div class="setup-title">👨‍👩‍👧 Семейный доступ</div>
@@ -797,17 +792,12 @@ window.addEventListener("error", function (e) {
         <button class="secondary-button" id="editCurrentBtn" style="display: none;">✏️ Изменить время</button>
       </div>
 
-      <div class="card">
+      <div class="card" id="diaperCard">
         <div class="hint" style="margin-bottom: 10px;">Подгузник</div>
 
         <div class="diaper-buttons" id="diaperButtons">
           <button class="diaper-button" id="peeBtn">💧 Пописал</button>
           <button class="diaper-button" id="poopBtn">💩 Покакал</button>
-        </div>
-
-        <div class="diaper-hidden-hint" id="diaperHiddenHint" style="display: none;">
-          <div class="hint">Показатели подгузника скрыты.</div>
-          <button class="secondary-button" id="openSettingsFromDiaperBtn" style="margin-top: 8px;">⚙️ Настроить показатели</button>
         </div>
       </div>
 
@@ -871,23 +861,13 @@ window.addEventListener("error", function (e) {
           <span id="rangeNightSleep">—</span>
         </div>
 
-        <div class="stats-row" id="avgDayRow" style="display: none;">
-          <span>Средний дневной сон</span>
-          <span id="rangeAvgDaySleep">—</span>
-        </div>
-
-        <div class="stats-row" id="avgNightRow" style="display: none;">
-          <span>Средний ночной сон</span>
-          <span id="rangeAvgNightSleep">—</span>
-        </div>
-
         <div class="event-stats" id="eventStatsBlock" style="display: none;">
           <div class="stats-row" id="peeStatsRow">
-            <span>💧 Пописал</span>
+            <span id="labelPeeStats">💧 Пописал</span>
             <span id="rangePeeCount">—</span>
           </div>
           <div class="stats-row" id="poopStatsRow">
-            <span>💩 Покакал</span>
+            <span id="labelPoopStats">💩 Покакал</span>
             <span id="rangePoopCount">—</span>
           </div>
         </div>
@@ -1089,7 +1069,7 @@ window.addEventListener("error", function (e) {
 
   <script>
 
-    const APP_VERSION = "5.0.1";
+    const APP_VERSION = "5.1.0";
 
     const BOT_USERNAME = "Ivanregimebot";
     const MINIAPP_SHORT_NAME = "Babybabysleep";
@@ -1146,11 +1126,10 @@ window.addEventListener("error", function (e) {
     const historyList = document.getElementById("historyList");
     const eventsList = document.getElementById("eventsList");
 
+    const diaperCard = document.getElementById("diaperCard");
     const peeBtn = document.getElementById("peeBtn");
     const poopBtn = document.getElementById("poopBtn");
     const diaperButtons = document.getElementById("diaperButtons");
-    const diaperHiddenHint = document.getElementById("diaperHiddenHint");
-    const openSettingsFromDiaperBtn = document.getElementById("openSettingsFromDiaperBtn");
 
     const modeYesterdayBtn = document.getElementById("modeYesterdayBtn");
     const modeDayBtn = document.getElementById("modeDayBtn");
@@ -1169,17 +1148,15 @@ window.addEventListener("error", function (e) {
     const labelAwakeTotal = document.getElementById("labelAwakeTotal");
     const labelDaySleep = document.getElementById("labelDaySleep");
     const labelNightSleep = document.getElementById("labelNightSleep");
-    const avgDayRow = document.getElementById("avgDayRow");
-    const avgNightRow = document.getElementById("avgNightRow");
     const rangeSleepTotal = document.getElementById("rangeSleepTotal");
     const rangeAwakeTotal = document.getElementById("rangeAwakeTotal");
     const rangeDaySleep = document.getElementById("rangeDaySleep");
     const rangeNightSleep = document.getElementById("rangeNightSleep");
-    const rangeAvgDaySleep = document.getElementById("rangeAvgDaySleep");
-    const rangeAvgNightSleep = document.getElementById("rangeAvgNightSleep");
     const eventStatsBlock = document.getElementById("eventStatsBlock");
     const peeStatsRow = document.getElementById("peeStatsRow");
     const poopStatsRow = document.getElementById("poopStatsRow");
+    const labelPeeStats = document.getElementById("labelPeeStats");
+    const labelPoopStats = document.getElementById("labelPoopStats");
     const rangePeeCount = document.getElementById("rangePeeCount");
     const rangePoopCount = document.getElementById("rangePoopCount");
 
@@ -1269,6 +1246,7 @@ window.addEventListener("error", function (e) {
 
     let rangeChartInstance = null;
     let selectedTimelineSegment = null;
+    let selectedAwakeOverlay = null;
 
     let galleryPhotos = [];
     let currentPhotoIndex = 0;
@@ -1371,6 +1349,13 @@ window.addEventListener("error", function (e) {
 
     function formatDateTime(date) {
       return `${formatDateShort(date)} ${formatClock(date)}`;
+    }
+
+    function formatCountAverage(value) {
+      // Для счётчиков — одно число после запятой, если не целое
+      if (!Number.isFinite(value)) return "0";
+      const rounded = Math.round(value * 10) / 10;
+      return (rounded === Math.floor(rounded)) ? String(rounded) : rounded.toFixed(1);
     }
 
     function isoToLocalInput(iso) {
@@ -1726,13 +1711,12 @@ window.addEventListener("error", function (e) {
       const poop = isPoopVisible();
 
       if (!pee && !poop) {
-        diaperButtons.style.display = "none";
-        diaperHiddenHint.style.display = "block";
+        diaperCard.style.display = "none";
         return;
       }
 
+      diaperCard.style.display = "";
       diaperButtons.style.display = "flex";
-      diaperHiddenHint.style.display = "none";
       peeBtn.style.display = pee ? "" : "none";
       poopBtn.style.display = poop ? "" : "none";
     }
@@ -2613,6 +2597,7 @@ window.addEventListener("error", function (e) {
         rangeStartMs, effectiveEndMs, totalRangeMs, sleepPieces,
         sleepMs, awakeMs, daySleepMs, daySleepCount, nightSleepMs, nightSleepCount,
         avgDaySleepMs, avgNightSleepMs,
+        daysInRange,
         avgSleepPerDayMs: daysInRange > 0 ? sleepMs / daysInRange : 0,
         avgAwakePerDayMs: daysInRange > 0 ? awakeMs / daysInRange : 0,
         avgDaySleepPerDayMs: daysInRange > 0 ? daySleepMs / daysInRange : 0,
@@ -2710,7 +2695,7 @@ window.addEventListener("error", function (e) {
 
       renderRangeSummary(stats);
       renderRangeLabel(stats);
-      renderEventCounts(events);
+      renderEventCounts(events, stats);
       renderRangeChart(stats.sleepMs, stats.awakeMs);
       renderTimeline(stats.sleepPieces, rangeStart, new Date(stats.effectiveEndMs));
     }
@@ -2743,9 +2728,6 @@ window.addEventListener("error", function (e) {
         rangeDaySleep.textContent = formatDuration(stats.avgDaySleepPerDayMs);
         rangeNightSleep.textContent = formatDuration(stats.avgNightSleepPerDayMs);
 
-        avgDayRow.style.display = "none";
-        avgNightRow.style.display = "none";
-
       } else {
         labelSleepTotal.textContent = "😴 Сон всего";
         labelAwakeTotal.textContent = "🙂 Бодрствование всего";
@@ -2756,16 +2738,15 @@ window.addEventListener("error", function (e) {
         rangeAwakeTotal.textContent = formatDuration(stats.awakeMs);
         rangeDaySleep.textContent = `${formatDuration(stats.daySleepMs)} (${stats.daySleepCount})`;
         rangeNightSleep.textContent = `${formatDuration(stats.nightSleepMs)} (${stats.nightSleepCount})`;
-
-        avgDayRow.style.display = "none";
-        avgNightRow.style.display = "none";
       }
     }
 
-    function renderEventCounts(events) {
+    function renderEventCounts(events, stats) {
 
       const pee = isPeeVisible();
       const poop = isPoopVisible();
+      const isRange = periodMode === "range";
+      const days = stats.daysInRange;
 
       let peeCount = 0, poopCount = 0;
       events.forEach(e => {
@@ -2775,14 +2756,26 @@ window.addEventListener("error", function (e) {
 
       if (pee) {
         peeStatsRow.style.display = "";
-        rangePeeCount.textContent = String(peeCount);
+        if (isRange && days > 0) {
+          labelPeeStats.textContent = "💧 Пописов в сутки";
+          rangePeeCount.textContent = `≈ ${formatCountAverage(peeCount / days)}`;
+        } else {
+          labelPeeStats.textContent = "💧 Пописал";
+          rangePeeCount.textContent = String(peeCount);
+        }
       } else {
         peeStatsRow.style.display = "none";
       }
 
       if (poop) {
         poopStatsRow.style.display = "";
-        rangePoopCount.textContent = String(poopCount);
+        if (isRange && days > 0) {
+          labelPoopStats.textContent = "💩 Покаков в сутки";
+          rangePoopCount.textContent = `≈ ${formatCountAverage(poopCount / days)}`;
+        } else {
+          labelPoopStats.textContent = "💩 Покакал";
+          rangePoopCount.textContent = String(poopCount);
+        }
       } else {
         poopStatsRow.style.display = "none";
       }
@@ -2885,6 +2878,10 @@ window.addEventListener("error", function (e) {
         selectedTimelineSegment.classList.remove("selected");
         selectedTimelineSegment = null;
       }
+      if (selectedAwakeOverlay && selectedAwakeOverlay.parentNode) {
+        selectedAwakeOverlay.parentNode.removeChild(selectedAwakeOverlay);
+      }
+      selectedAwakeOverlay = null;
     }
 
     function showTimelineTooltip(text) {
@@ -2961,6 +2958,18 @@ window.addEventListener("error", function (e) {
           track.appendChild(segment);
         });
 
+        // --- Сетка и подписи часов идут ПОСЛЕ сегментов, чтобы не перекрывать их ---
+        const hourTicks = buildHourTicks(rowStartMs, rowEndMs);
+
+        hourTicks.forEach(tick => {
+          const leftPercent = ((tick.time - rowStartMs) / rowTotalMs) * 100;
+          const gridline = document.createElement("div");
+          gridline.className = "timeline-gridline";
+          gridline.style.left = `${leftPercent}%`;
+          track.appendChild(gridline);
+        });
+
+        // --- Клик по треку (по фону / бодрствованию) ---
         track.addEventListener("click", event => {
           const rect = track.getBoundingClientRect();
           if (rect.width <= 0) return;
@@ -2974,20 +2983,18 @@ window.addEventListener("error", function (e) {
 
           clearTimelineSelection();
 
+          // Накладываем полупрозрачный белый прямоугольник ровно по границам окна бодрствования
+          const overlay = document.createElement("div");
+          overlay.className = "timeline-awake-overlay";
+          overlay.style.left = `${((gap.start - rowStartMs) / rowTotalMs) * 100}%`;
+          overlay.style.width = `${((gap.end - gap.start) / rowTotalMs) * 100}%`;
+          track.appendChild(overlay);
+          selectedAwakeOverlay = overlay;
+
           showTimelineTooltip(
             `🙂 ${formatClock(new Date(gap.start))} → ${formatClock(new Date(gap.end))} · ` +
             `${formatDuration(gap.end - gap.start)}`
           );
-        });
-
-        const hourTicks = buildHourTicks(rowStartMs, rowEndMs);
-
-        hourTicks.forEach(tick => {
-          const leftPercent = ((tick.time - rowStartMs) / rowTotalMs) * 100;
-          const gridline = document.createElement("div");
-          gridline.className = "timeline-gridline";
-          gridline.style.left = `${leftPercent}%`;
-          track.appendChild(gridline);
         });
 
         const tickLabels = document.createElement("div");
@@ -3486,8 +3493,6 @@ window.addEventListener("error", function (e) {
       if (event.target === settingsModal) closeSettingsModal();
     });
 
-    openSettingsFromDiaperBtn.addEventListener("click", openSettingsModal);
-
     settingsRefreshBtn.addEventListener("click", manualRefresh);
 
     showPeeCheckbox.addEventListener("change", async () => {
@@ -3674,4 +3679,4 @@ window.addEventListener("error", function (e) {
   </script>
 
 </body>
-        </html>
+  </html>
