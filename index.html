@@ -71,11 +71,7 @@
 
     .name-button:active { opacity: 0.7; }
 
-    .icon-buttons {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
-    }
+    .icon-buttons { display: flex; gap: 6px; flex-shrink: 0; }
 
     .icon-btn {
       width: 40px;
@@ -155,14 +151,15 @@
       cursor: pointer;
     }
 
-    .diaper-buttons { display: flex; gap: 8px; }
+    .diaper-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
     .diaper-button {
       flex: 1;
+      min-width: 90px;
       padding: 15px 8px;
       border: none;
       border-radius: 12px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 600;
       background: rgba(128, 128, 128, 0.12);
       color: var(--text);
@@ -279,8 +276,8 @@
 
     .empty { color: var(--hint); font-size: 14px; padding: 4px 0; }
 
-    .nav-row { display: flex; gap: 8px; margin-bottom: 12px; }
-    .nav-button { flex: 1; padding: 10px 4px; margin-top: 0; font-size: 13px; }
+    .nav-row { display: flex; gap: 6px; margin-bottom: 12px; }
+    .nav-button { flex: 1; padding: 10px 2px; margin-top: 0; font-size: 12px; }
     .nav-button.active { background: var(--button); color: var(--button-text); }
 
     .period-buttons { display: flex; gap: 8px; margin-bottom: 10px; }
@@ -678,11 +675,7 @@
       min-width: 100px;
     }
 
-    .invite-actions {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
-    }
+    .invite-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
     .invite-copy {
       border: none;
@@ -725,7 +718,6 @@
 
 <body>
 
-  <!-- ЭКРАН НАСТРОЙКИ СЕМЬИ -->
   <div class="setup-screen hidden" id="setupView">
     <div class="setup-title">👨‍👩‍👧 Семейный доступ</div>
     <div class="setup-sub" id="setupSubtitle">
@@ -748,7 +740,6 @@
     <div class="version-label" id="versionLabelSetup"></div>
   </div>
 
-  <!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
   <div id="appRoot" class="hidden">
 
     <div class="title-row">
@@ -777,8 +768,9 @@
 
     <div class="nav-row">
       <button class="secondary-button nav-button active" id="navMainBtn">😴 Сон</button>
-      <button class="secondary-button nav-button" id="navStatsBtn">📊 Статистика</button>
-      <button class="secondary-button nav-button" id="navGalleryBtn">📷 Галерея</button>
+      <button class="secondary-button nav-button" id="navFeedBtn">🍼 Еда</button>
+      <button class="secondary-button nav-button" id="navStatsBtn">📊 Стата</button>
+      <button class="secondary-button nav-button" id="navGalleryBtn">📷 Фото</button>
     </div>
 
     <div id="error"></div>
@@ -794,7 +786,6 @@
 
       <div class="card" id="diaperCard">
         <div class="hint" style="margin-bottom: 10px;">Подгузник</div>
-
         <div class="diaper-buttons" id="diaperButtons">
           <button class="diaper-button" id="peeBtn">💧 Пописал</button>
           <button class="diaper-button" id="poopBtn">💩 Покакал</button>
@@ -809,6 +800,32 @@
       <div class="card" id="eventsCard">
         <div class="hint" style="margin-bottom: 8px;">Последние события</div>
         <div id="eventsList"><div class="empty">Загрузка...</div></div>
+      </div>
+
+    </div>
+
+    <!-- ВКЛАДКА КОРМЛЕНИЯ -->
+    <div id="feedView" style="display: none;">
+
+      <div class="card">
+        <div class="status-line" id="feedStatus">Загрузка...</div>
+        <div class="diaper-buttons" id="feedStartButtons" style="display: none;">
+          <button class="diaper-button" id="startBreastLeftBtn">🍼 Левая</button>
+          <button class="diaper-button" id="startBreastRightBtn">🍼 Правая</button>
+          <button class="diaper-button" id="startBottleBtn">🍼 Бутылочка</button>
+        </div>
+        <button class="big-button" id="endFeedBtn" style="display: none;">☑️ Закончить кормление</button>
+        <button class="secondary-button" id="editOpenFeedBtn" style="display: none;">✏️ Изменить время</button>
+      </div>
+
+      <div class="card">
+        <div class="hint" style="margin-bottom: 8px;">Сегодня</div>
+        <div id="feedTodaySummary">—</div>
+      </div>
+
+      <div class="card">
+        <div class="hint" style="margin-bottom: 8px;">Последние кормления</div>
+        <div id="feedHistoryList"><div class="empty">Загрузка...</div></div>
       </div>
 
     </div>
@@ -869,6 +886,14 @@
           <div class="stats-row" id="poopStatsRow">
             <span id="labelPoopStats">💩 Покакал</span>
             <span id="rangePoopCount">—</span>
+          </div>
+          <div class="stats-row" id="breastStatsRow">
+            <span id="labelBreastStats">🍼 Грудь</span>
+            <span id="rangeBreastCount">—</span>
+          </div>
+          <div class="stats-row" id="bottleStatsRow">
+            <span id="labelBottleStats">🍼 Бутылочка</span>
+            <span id="rangeBottleCount">—</span>
           </div>
         </div>
       </div>
@@ -953,6 +978,47 @@
     </div>
   </div>
 
+  <!-- РЕДАКТИРОВАНИЕ КОРМЛЕНИЯ -->
+  <div class="modal-backdrop" id="editFeedModal">
+    <div class="modal">
+      <div class="modal-title">✏️ Изменить кормление</div>
+      <div class="field">
+        <label for="editFeedStart">Начало</label>
+        <input type="datetime-local" id="editFeedStart" />
+      </div>
+      <div class="field">
+        <label for="editFeedEnd">Конец</label>
+        <input type="datetime-local" id="editFeedEnd" />
+        <div class="modal-hint">Если оставить пустым — кормление останется незавершённым.</div>
+      </div>
+      <div class="field" id="editFeedVolumeField">
+        <label for="editFeedVolume">Объём, мл</label>
+        <input type="number" id="editFeedVolume" min="0" max="1000" step="5" placeholder="Необязательно" />
+      </div>
+      <div class="modal-buttons">
+        <button class="cancel-btn" id="cancelEditFeedBtn">Отмена</button>
+        <button class="save-btn" id="saveEditFeedBtn">Сохранить</button>
+      </div>
+      <button class="danger-button" id="deleteFeedBtn">🗑 Удалить</button>
+    </div>
+  </div>
+
+  <!-- ОБЪЁМ БУТЫЛОЧКИ -->
+  <div class="modal-backdrop" id="bottleVolumeModal">
+    <div class="modal">
+      <div class="modal-title">🍼 Объём</div>
+      <div class="field">
+        <label for="bottleVolumeInput">Сколько миллилитров?</label>
+        <input type="number" id="bottleVolumeInput" min="0" max="1000" step="5" placeholder="Например, 120" />
+        <div class="modal-hint">Можно пропустить — сохранится только время.</div>
+      </div>
+      <div class="modal-buttons">
+        <button class="cancel-btn" id="skipBottleVolumeBtn">Пропустить</button>
+        <button class="save-btn" id="saveBottleVolumeBtn">Сохранить</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ВЫБОР РЕБЁНКА -->
   <div class="modal-backdrop" id="childPickerModal">
     <div class="modal">
@@ -1030,6 +1096,16 @@
         <span>💩 Покакал</span>
       </label>
 
+      <label class="checkbox-row">
+        <input type="checkbox" id="showBreastCheckbox" />
+        <span>🍼 Грудь</span>
+      </label>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="showBottleCheckbox" />
+        <span>🍼 Бутылочка</span>
+      </label>
+
       <button class="secondary-button" id="settingsRefreshBtn" style="margin-top: 16px;">🔄 Обновить данные</button>
 
       <div class="modal-buttons">
@@ -1059,6 +1135,16 @@
         <span>💩 Покакал</span>
       </label>
 
+      <label class="checkbox-row">
+        <input type="checkbox" id="csvBreastCheckbox" />
+        <span>🍼 Грудь</span>
+      </label>
+
+      <label class="checkbox-row">
+        <input type="checkbox" id="csvBottleCheckbox" />
+        <span>🍼 Бутылочка</span>
+      </label>
+
       <div class="modal-buttons">
         <button class="cancel-btn" id="cancelCsvBtn">Отмена</button>
         <button class="save-btn" id="confirmCsvBtn">Скопировать</button>
@@ -1069,7 +1155,7 @@
 
   <script>
 
-    const APP_VERSION = "5.1.0";
+    const APP_VERSION = "5.2.0";
 
     const BOT_USERNAME = "Ivanregimebot";
     const MINIAPP_SHORT_NAME = "Babybabysleep";
@@ -1084,6 +1170,8 @@
     const CHILDREN_TABLE = "children";
     const FAMILIES_TABLE = "families";
     const MEMBERS_TABLE = "family_members";
+
+    const FEED_TYPES = ["feed_breast_left", "feed_breast_right", "feed_bottle"];
 
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.ready(); tg.expand(); }
@@ -1111,10 +1199,12 @@
     const settingsBtn = document.getElementById("settingsBtn");
 
     const navMainBtn = document.getElementById("navMainBtn");
+    const navFeedBtn = document.getElementById("navFeedBtn");
     const navStatsBtn = document.getElementById("navStatsBtn");
     const navGalleryBtn = document.getElementById("navGalleryBtn");
 
     const mainView = document.getElementById("mainView");
+    const feedView = document.getElementById("feedView");
     const statsView = document.getElementById("statsView");
     const galleryView = document.getElementById("galleryView");
 
@@ -1131,6 +1221,32 @@
     const poopBtn = document.getElementById("poopBtn");
     const diaperButtons = document.getElementById("diaperButtons");
 
+    // Feed elements
+    const feedStatus = document.getElementById("feedStatus");
+    const feedStartButtons = document.getElementById("feedStartButtons");
+    const startBreastLeftBtn = document.getElementById("startBreastLeftBtn");
+    const startBreastRightBtn = document.getElementById("startBreastRightBtn");
+    const startBottleBtn = document.getElementById("startBottleBtn");
+    const endFeedBtn = document.getElementById("endFeedBtn");
+    const editOpenFeedBtn = document.getElementById("editOpenFeedBtn");
+    const feedTodaySummary = document.getElementById("feedTodaySummary");
+    const feedHistoryList = document.getElementById("feedHistoryList");
+
+    const editFeedModal = document.getElementById("editFeedModal");
+    const editFeedStart = document.getElementById("editFeedStart");
+    const editFeedEnd = document.getElementById("editFeedEnd");
+    const editFeedVolumeField = document.getElementById("editFeedVolumeField");
+    const editFeedVolume = document.getElementById("editFeedVolume");
+    const cancelEditFeedBtn = document.getElementById("cancelEditFeedBtn");
+    const saveEditFeedBtn = document.getElementById("saveEditFeedBtn");
+    const deleteFeedBtn = document.getElementById("deleteFeedBtn");
+
+    const bottleVolumeModal = document.getElementById("bottleVolumeModal");
+    const bottleVolumeInput = document.getElementById("bottleVolumeInput");
+    const skipBottleVolumeBtn = document.getElementById("skipBottleVolumeBtn");
+    const saveBottleVolumeBtn = document.getElementById("saveBottleVolumeBtn");
+
+    // Stats
     const modeYesterdayBtn = document.getElementById("modeYesterdayBtn");
     const modeDayBtn = document.getElementById("modeDayBtn");
     const modeRangeBtn = document.getElementById("modeRangeBtn");
@@ -1159,6 +1275,12 @@
     const labelPoopStats = document.getElementById("labelPoopStats");
     const rangePeeCount = document.getElementById("rangePeeCount");
     const rangePoopCount = document.getElementById("rangePoopCount");
+    const breastStatsRow = document.getElementById("breastStatsRow");
+    const bottleStatsRow = document.getElementById("bottleStatsRow");
+    const labelBreastStats = document.getElementById("labelBreastStats");
+    const labelBottleStats = document.getElementById("labelBottleStats");
+    const rangeBreastCount = document.getElementById("rangeBreastCount");
+    const rangeBottleCount = document.getElementById("rangeBottleCount");
 
     const timelineContainer = document.getElementById("timelineContainer");
     const timelineTooltip = document.getElementById("timelineTooltip");
@@ -1211,6 +1333,8 @@
     const settingsModal = document.getElementById("settingsModal");
     const showPeeCheckbox = document.getElementById("showPeeCheckbox");
     const showPoopCheckbox = document.getElementById("showPoopCheckbox");
+    const showBreastCheckbox = document.getElementById("showBreastCheckbox");
+    const showBottleCheckbox = document.getElementById("showBottleCheckbox");
     const settingsRefreshBtn = document.getElementById("settingsRefreshBtn");
     const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 
@@ -1218,6 +1342,8 @@
     const csvSleepCheckbox = document.getElementById("csvSleepCheckbox");
     const csvPeeCheckbox = document.getElementById("csvPeeCheckbox");
     const csvPoopCheckbox = document.getElementById("csvPoopCheckbox");
+    const csvBreastCheckbox = document.getElementById("csvBreastCheckbox");
+    const csvBottleCheckbox = document.getElementById("csvBottleCheckbox");
     const cancelCsvBtn = document.getElementById("cancelCsvBtn");
     const confirmCsvBtn = document.getElementById("confirmCsvBtn");
 
@@ -1237,6 +1363,11 @@
     let openSession = null;
     let lastCompletedEnd = null;
     let editingSessionId = null;
+
+    let openFeed = null;
+    let editingFeedId = null;
+    let pendingFeedId = null;    // для сохранения объёма бутылки
+    let pendingFeedIsBottle = false;
 
     let currentView = "main";
 
@@ -1352,7 +1483,6 @@
     }
 
     function formatCountAverage(value) {
-      // Для счётчиков — одно число после запятой, если не целое
       if (!Number.isFinite(value)) return "0";
       const rounded = Math.round(value * 10) / 10;
       return (rounded === Math.floor(rounded)) ? String(rounded) : rounded.toFixed(1);
@@ -1388,6 +1518,15 @@
       return { y, m, d };
     }
 
+    function getFeedTypeLabel(type) {
+      switch (type) {
+        case "feed_breast_left": return "🍼 Левая грудь";
+        case "feed_breast_right": return "🍼 Правая грудь";
+        case "feed_bottle": return "🍼 Бутылочка";
+        default: return "Кормление";
+      }
+    }
+
 
     // ============================================================
     // ФЛАГИ ПОКАЗАТЕЛЕЙ
@@ -1401,6 +1540,20 @@
     function isPoopVisible() {
       const c = getActiveChild();
       return !c || c.show_poop !== false;
+    }
+
+    function isBreastVisible() {
+      const c = getActiveChild();
+      return !!c && c.show_breast === true;
+    }
+
+    function isBottleVisible() {
+      const c = getActiveChild();
+      return !!c && c.show_bottle === true;
+    }
+
+    function isFeedVisible() {
+      return isBreastVisible() || isBottleVisible();
     }
 
 
@@ -1679,6 +1832,7 @@
       activeChildId = found ? found.id : children[0].id;
       renderActiveChildName();
       renderDiaperCard();
+      renderFeedStartButtons();
     }
 
     async function saveChildSettings(patch) {
@@ -1698,7 +1852,11 @@
 
     function applyVisibilityChanges() {
       renderDiaperCard();
+      renderFeedStartButtons();
       safeCall(loadRecentEvents);
+      safeCall(loadOpenFeed);
+      safeCall(loadFeedHistory);
+      safeCall(loadFeedTodaySummary);
 
       if (currentView === "stats") {
         safeCall(() => loadRangeStats(false));
@@ -1721,15 +1879,33 @@
       poopBtn.style.display = poop ? "" : "none";
     }
 
+    function renderFeedStartButtons() {
+
+      const breast = isBreastVisible();
+      const bottle = isBottleVisible();
+
+      if (!breast && !bottle) {
+        feedStartButtons.style.display = "none";
+        return;
+      }
+
+      feedStartButtons.style.display = "flex";
+      startBreastLeftBtn.style.display = breast ? "" : "none";
+      startBreastRightBtn.style.display = breast ? "" : "none";
+      startBottleBtn.style.display = bottle ? "" : "none";
+    }
+
     async function selectChild(childId) {
       if (childId === activeChildId) { closeChildPicker(); return; }
       activeChildId = childId;
       renderActiveChildName();
       renderDiaperCard();
+      renderFeedStartButtons();
       closeChildPicker();
       hideError();
       openSession = null;
       lastCompletedEnd = null;
+      openFeed = null;
       await refreshAll();
       hapticLight();
     }
@@ -1845,8 +2021,10 @@
           activeChildId = data.id;
           renderActiveChildName();
           renderDiaperCard();
+          renderFeedStartButtons();
           openSession = null;
           lastCompletedEnd = null;
+          openFeed = null;
         }
 
         closeChildForm();
@@ -1905,8 +2083,10 @@
           activeChildId = children[0].id;
           renderActiveChildName();
           renderDiaperCard();
+          renderFeedStartButtons();
           openSession = null;
           lastCompletedEnd = null;
+          openFeed = null;
         }
 
         closeChildForm();
@@ -2043,6 +2223,8 @@
       const c = getActiveChild();
       showPeeCheckbox.checked = !c || c.show_pee !== false;
       showPoopCheckbox.checked = !c || c.show_poop !== false;
+      showBreastCheckbox.checked = !!c && c.show_breast === true;
+      showBottleCheckbox.checked = !!c && c.show_bottle === true;
       settingsModal.classList.add("visible");
     }
 
@@ -2057,12 +2239,11 @@
 
     function openCsvModal() {
 
-      const pee = isPeeVisible();
-      const poop = isPoopVisible();
-
       csvSleepCheckbox.checked = true;
-      csvPeeCheckbox.checked = pee;
-      csvPoopCheckbox.checked = poop;
+      csvPeeCheckbox.checked = isPeeVisible();
+      csvPoopCheckbox.checked = isPoopVisible();
+      csvBreastCheckbox.checked = isBreastVisible();
+      csvBottleCheckbox.checked = isBottleVisible();
 
       updateCsvConfirmState();
       csvModal.classList.add("visible");
@@ -2073,8 +2254,370 @@
     }
 
     function updateCsvConfirmState() {
-      const any = csvSleepCheckbox.checked || csvPeeCheckbox.checked || csvPoopCheckbox.checked;
+      const any = csvSleepCheckbox.checked || csvPeeCheckbox.checked || csvPoopCheckbox.checked ||
+                  csvBreastCheckbox.checked || csvBottleCheckbox.checked;
       confirmCsvBtn.disabled = !any;
+    }
+
+
+    // ============================================================
+    // КОРМЛЕНИЕ
+    // ============================================================
+
+    async function loadOpenFeed() {
+      if (!activeChildId) { openFeed = null; renderFeedStatus(); return; }
+
+      const { data, error } = await supabaseClient
+        .from(EVENTS_TABLE)
+        .select("*")
+        .eq("child_id", activeChildId)
+        .in("event_type", FEED_TYPES)
+        .is("end_time", null)
+        .order("event_time", { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      openFeed = (data && data.length > 0) ? data[0] : null;
+      renderFeedStatus();
+    }
+
+    function renderFeedStatus() {
+
+      if (!isFeedVisible()) {
+        feedStatus.textContent = "Кормление не включено. Настрой в «⚙️ Показатели».";
+        feedStartButtons.style.display = "none";
+        endFeedBtn.style.display = "none";
+        editOpenFeedBtn.style.display = "none";
+        return;
+      }
+
+      if (openFeed) {
+        const label = getFeedTypeLabel(openFeed.event_type);
+        const startMs = new Date(openFeed.event_time).getTime();
+        const dur = Date.now() - startMs;
+        feedStatus.textContent = `Идёт: ${label} · уже ${formatDuration(dur)}`;
+        feedStartButtons.style.display = "none";
+        endFeedBtn.style.display = "block";
+        editOpenFeedBtn.style.display = "block";
+      } else {
+        feedStatus.textContent = "Кормление не начато";
+        endFeedBtn.style.display = "none";
+        editOpenFeedBtn.style.display = "none";
+        renderFeedStartButtons();
+      }
+    }
+
+    async function startFeed(type) {
+
+      if (!activeChildId || !familyId) return;
+
+      if (openFeed) {
+        showError("Сначала закончи текущее кормление.");
+        return;
+      }
+
+      hideError();
+
+      try {
+        const { error } = await supabaseClient
+          .from(EVENTS_TABLE)
+          .insert({
+            event_type: type,
+            event_time: new Date().toISOString(),
+            child_id: activeChildId,
+            family_id: familyId
+          });
+
+        if (error) throw error;
+
+        hapticSuccess();
+        await refreshFeed();
+
+      } catch (error) {
+        console.error(error);
+        showError(error.message || "Не удалось начать кормление.");
+      }
+    }
+
+    async function endFeed() {
+
+      if (!openFeed) return;
+
+      if (openFeed.event_type === "feed_bottle") {
+        pendingFeedId = openFeed.id;
+        pendingFeedIsBottle = true;
+        bottleVolumeInput.value = "";
+        bottleVolumeModal.classList.add("visible");
+        setTimeout(() => bottleVolumeInput.focus(), 80);
+        return;
+      }
+
+      await finishFeed(null);
+    }
+
+    async function finishFeed(volumeMl) {
+
+      if (!pendingFeedId && !openFeed) return;
+
+      const feedId = pendingFeedId || openFeed.id;
+      const patch = { end_time: new Date().toISOString() };
+      if (volumeMl !== null) patch.volume_ml = volumeMl;
+
+      try {
+        const { error } = await supabaseClient
+          .from(EVENTS_TABLE)
+          .update(patch)
+          .eq("id", feedId);
+
+        if (error) throw error;
+
+        pendingFeedId = null;
+        pendingFeedIsBottle = false;
+        openFeed = null;
+
+        hapticSuccess();
+        await refreshFeed();
+
+      } catch (error) {
+        console.error(error);
+        showError(error.message || "Не удалось завершить кормление.");
+      }
+    }
+
+    async function refreshFeed() {
+      await safeCall(loadOpenFeed);
+      await safeCall(loadFeedTodaySummary);
+      await safeCall(loadFeedHistory);
+
+      if (currentView === "stats") {
+        await safeCall(() => loadRangeStats(false));
+      }
+    }
+
+    async function loadFeedTodaySummary() {
+
+      if (!activeChildId) { feedTodaySummary.textContent = "—"; return; }
+
+      const types = [];
+      if (isBreastVisible()) { types.push("feed_breast_left", "feed_breast_right"); }
+      if (isBottleVisible()) types.push("feed_bottle");
+
+      if (types.length === 0) { feedTodaySummary.textContent = "—"; return; }
+
+      const startOfDay = new Date(); startOfDay.setHours(0,0,0,0);
+      const endOfDay = new Date(); endOfDay.setHours(23,59,59,999);
+
+      const { data, error } = await supabaseClient
+        .from(EVENTS_TABLE)
+        .select("event_type,event_time,end_time,volume_ml")
+        .eq("child_id", activeChildId)
+        .in("event_type", types)
+        .gte("event_time", startOfDay.toISOString())
+        .lte("event_time", endOfDay.toISOString());
+
+      if (error) { console.error(error); return; }
+
+      let breastCount = 0, breastMs = 0;
+      let bottleCount = 0, bottleMs = 0, bottleVolume = 0;
+
+      (data || []).forEach(f => {
+        if (!f.end_time) return;
+        const dur = new Date(f.end_time).getTime() - new Date(f.event_time).getTime();
+        if (f.event_type === "feed_bottle") {
+          bottleCount++;
+          bottleMs += dur;
+          if (f.volume_ml) bottleVolume += f.volume_ml;
+        } else {
+          breastCount++;
+          breastMs += dur;
+        }
+      });
+
+      let html = "";
+
+      if (isBreastVisible()) {
+        html += `<div class="stats-row"><span>🍼 Грудь</span><span>${breastCount} раз${breastCount > 0 ? " · " + formatDuration(breastMs) : ""}</span></div>`;
+      }
+      if (isBottleVisible()) {
+        const volPart = bottleVolume > 0 ? " · " + bottleVolume + " мл" : "";
+        html += `<div class="stats-row"><span>🍼 Бутылочка</span><span>${bottleCount} раз${bottleCount > 0 ? " · " + formatDuration(bottleMs) : ""}${volPart}</span></div>`;
+      }
+
+      feedTodaySummary.innerHTML = html || "—";
+    }
+
+    async function loadFeedHistory() {
+
+      if (!activeChildId) { renderFeedHistory([]); return; }
+
+      const types = [];
+      if (isBreastVisible()) { types.push("feed_breast_left", "feed_breast_right"); }
+      if (isBottleVisible()) types.push("feed_bottle");
+
+      if (types.length === 0) { renderFeedHistory([]); return; }
+
+      const { data, error } = await supabaseClient
+        .from(EVENTS_TABLE)
+        .select("id,event_type,event_time,end_time,volume_ml")
+        .eq("child_id", activeChildId)
+        .in("event_type", types)
+        .not("end_time", "is", null)
+        .order("event_time", { ascending: false })
+        .limit(10);
+
+      if (error) { console.error(error); return; }
+      renderFeedHistory(data || []);
+    }
+
+    function renderFeedHistory(data) {
+
+      feedHistoryList.innerHTML = "";
+
+      if (!data.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Пока ничего";
+        feedHistoryList.appendChild(empty);
+        return;
+      }
+
+      data.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "history-item";
+
+        const start = new Date(item.event_time);
+        const end = new Date(item.end_time);
+        const dur = end - start;
+        const label = getFeedTypeLabel(item.event_type);
+        const volumePart = item.volume_ml ? " · " + item.volume_ml + " мл" : "";
+
+        const info = document.createElement("div");
+        info.className = "history-info";
+        info.innerHTML = `
+          <div class="history-time">${label}</div>
+          <div class="history-duration">${formatTime(item.event_time)} → ${formatClock(end)} · ${formatDuration(dur)}${volumePart}</div>
+        `;
+
+        const editBtn = document.createElement("button");
+        editBtn.className = "edit-btn";
+        editBtn.textContent = "Изменить";
+        editBtn.addEventListener("click", () => openEditFeedModal(item));
+
+        row.appendChild(info);
+        row.appendChild(editBtn);
+        feedHistoryList.appendChild(row);
+      });
+    }
+
+    function openEditFeedModal(feed) {
+
+      editingFeedId = feed.id;
+      editFeedStart.value = isoToLocalInput(feed.event_time);
+      editFeedEnd.value = isoToLocalInput(feed.end_time);
+      saveEditFeedBtn.disabled = false;
+
+      if (feed.event_type === "feed_bottle") {
+        editFeedVolumeField.style.display = "";
+        editFeedVolume.value = feed.volume_ml != null ? String(feed.volume_ml) : "";
+      } else {
+        editFeedVolumeField.style.display = "none";
+        editFeedVolume.value = "";
+      }
+
+      editFeedModal.classList.add("visible");
+    }
+
+    function closeEditFeedModal() {
+      editFeedModal.classList.remove("visible");
+      editingFeedId = null;
+    }
+
+    async function saveEditFeed() {
+
+      if (!editingFeedId) return;
+
+      const startValue = editFeedStart.value;
+      const endValue = editFeedEnd.value;
+
+      if (!startValue) { alert("Укажи время начала."); return; }
+
+      const startISO = localInputToISO(startValue);
+      const endISO = localInputToISO(endValue);
+
+      if (!startISO) { alert("Некорректное время начала."); return; }
+      if (endValue && !endISO) { alert("Некорректное время окончания."); return; }
+      if (endISO && new Date(endISO) <= new Date(startISO)) {
+        alert("Конец должен быть позже начала."); return;
+      }
+
+      const volumeRaw = editFeedVolume.value.trim();
+      let volumeMl = null;
+      if (volumeRaw !== "") {
+        const n = Number(volumeRaw);
+        if (!Number.isFinite(n) || n < 0) { alert("Некорректный объём."); return; }
+        volumeMl = Math.round(n);
+      }
+
+      saveEditFeedBtn.disabled = true;
+      hideError();
+
+      try {
+
+        const patch = { start_time: undefined, event_time: startISO, end_time: endISO };
+
+        // В baby_events поле времени начала называется event_time
+        const updatePatch = { event_time: startISO, end_time: endISO };
+
+        // Поле объёма — только если редактируется бутылочка
+        const feed = { id: editingFeedId };
+        const isBottleRow = editFeedVolumeField.style.display !== "none";
+        if (isBottleRow) {
+          updatePatch.volume_ml = volumeMl;
+        }
+
+        const { error } = await supabaseClient
+          .from(EVENTS_TABLE)
+          .update(updatePatch)
+          .eq("id", editingFeedId);
+
+        if (error) throw error;
+
+        closeEditFeedModal();
+        hapticSuccess();
+        await refreshFeed();
+
+      } catch (error) {
+        console.error(error);
+        showError(error.message || "Не удалось сохранить.");
+        saveEditFeedBtn.disabled = false;
+      }
+    }
+
+    async function deleteFeed() {
+
+      if (!editingFeedId) return;
+
+      const confirmed = confirm("Удалить это кормление?");
+      if (!confirmed) return;
+
+      hideError();
+
+      try {
+        const { error } = await supabaseClient
+          .from(EVENTS_TABLE).delete().eq("id", editingFeedId);
+
+        if (error) throw error;
+
+        closeEditFeedModal();
+        openFeed = null;
+        hapticSuccess();
+        await refreshFeed();
+
+      } catch (error) {
+        console.error(error);
+        showError(error.message || "Не удалось удалить.");
+      }
     }
 
 
@@ -2096,14 +2639,20 @@
       currentView = view;
 
       mainView.style.display = view === "main" ? "block" : "none";
+      feedView.style.display = view === "feed" ? "block" : "none";
       statsView.style.display = view === "stats" ? "block" : "none";
       galleryView.style.display = view === "gallery" ? "block" : "none";
 
       navMainBtn.classList.toggle("active", view === "main");
+      navFeedBtn.classList.toggle("active", view === "feed");
       navStatsBtn.classList.toggle("active", view === "stats");
       navGalleryBtn.classList.toggle("active", view === "gallery");
 
-      if (view === "stats") {
+      if (view === "feed") {
+        safeCall(loadOpenFeed);
+        safeCall(loadFeedTodaySummary);
+        safeCall(loadFeedHistory);
+      } else if (view === "stats") {
         refreshYesterdayRangeIfNeeded();
         safeCall(() => loadRangeStats(true), "Не удалось загрузить статистику.");
       } else if (view === "gallery") {
@@ -2587,16 +3136,12 @@
       sleepMs = Math.min(sleepMs, totalRangeMs);
       const awakeMs = Math.max(totalRangeMs - sleepMs, 0);
 
-      const avgDaySleepMs = daySleepCount > 0 ? daySleepMs / daySleepCount : 0;
-      const avgNightSleepMs = nightSleepCount > 0 ? nightSleepMs / nightSleepCount : 0;
-
       const dayMs = 24 * 60 * 60 * 1000;
       const daysInRange = totalRangeMs > 0 ? totalRangeMs / dayMs : 0;
 
       return {
         rangeStartMs, effectiveEndMs, totalRangeMs, sleepPieces,
         sleepMs, awakeMs, daySleepMs, daySleepCount, nightSleepMs, nightSleepCount,
-        avgDaySleepMs, avgNightSleepMs,
         daysInRange,
         avgSleepPerDayMs: daysInRange > 0 ? sleepMs / daysInRange : 0,
         avgAwakePerDayMs: daysInRange > 0 ? awakeMs / daysInRange : 0,
@@ -2632,19 +3177,21 @@
       return [...completed, ...open];
     }
 
-    async function fetchEventsInRange(startDate, endDate, categories) {
+    async function fetchEventsInRange(startDate, endDate) {
 
       if (!activeChildId) return [];
 
       const types = [];
-      if (categories.includes("pee")) types.push("pee");
-      if (categories.includes("poop")) types.push("poop");
+      if (isPeeVisible()) types.push("pee");
+      if (isPoopVisible()) types.push("poop");
+      if (isBreastVisible()) { types.push("feed_breast_left", "feed_breast_right"); }
+      if (isBottleVisible()) types.push("feed_bottle");
 
       if (types.length === 0) return [];
 
       const { data, error } = await supabaseClient
         .from(EVENTS_TABLE)
-        .select("event_type,event_time")
+        .select("event_type,event_time,end_time,volume_ml")
         .eq("child_id", activeChildId)
         .in("event_type", types)
         .gte("event_time", startDate.toISOString())
@@ -2680,17 +3227,9 @@
 
       const stats = calculateSleepStats(rawSessions, rangeStart.getTime(), rangeEnd.getTime(), nowMs);
 
-      const activeCategories = [];
-      if (isPeeVisible()) activeCategories.push("pee");
-      if (isPoopVisible()) activeCategories.push("poop");
-
       let events = [];
       try {
-        events = await fetchEventsInRange(
-          rangeStart,
-          new Date(stats.effectiveEndMs),
-          activeCategories
-        );
+        events = await fetchEventsInRange(rangeStart, new Date(stats.effectiveEndMs));
       } catch (error) { console.error(error); }
 
       renderRangeSummary(stats);
@@ -2743,18 +3282,32 @@
 
     function renderEventCounts(events, stats) {
 
-      const pee = isPeeVisible();
-      const poop = isPoopVisible();
       const isRange = periodMode === "range";
       const days = stats.daysInRange;
 
       let peeCount = 0, poopCount = 0;
-      events.forEach(e => {
+      let breastCount = 0, breastMs = 0;
+      let bottleCount = 0, bottleMs = 0, bottleVolume = 0;
+
+      (events || []).forEach(e => {
         if (e.event_type === "pee") peeCount++;
         else if (e.event_type === "poop") poopCount++;
+        else if (e.event_type === "feed_breast_left" || e.event_type === "feed_breast_right") {
+          if (e.end_time) {
+            breastCount++;
+            breastMs += new Date(e.end_time).getTime() - new Date(e.event_time).getTime();
+          }
+        } else if (e.event_type === "feed_bottle") {
+          if (e.end_time) {
+            bottleCount++;
+            bottleMs += new Date(e.end_time).getTime() - new Date(e.event_time).getTime();
+            if (e.volume_ml) bottleVolume += e.volume_ml;
+          }
+        }
       });
 
-      if (pee) {
+      // --- Пописал / покакал ---
+      if (isPeeVisible()) {
         peeStatsRow.style.display = "";
         if (isRange && days > 0) {
           labelPeeStats.textContent = "💧 Пописов в сутки";
@@ -2767,7 +3320,7 @@
         peeStatsRow.style.display = "none";
       }
 
-      if (poop) {
+      if (isPoopVisible()) {
         poopStatsRow.style.display = "";
         if (isRange && days > 0) {
           labelPoopStats.textContent = "💩 Покаков в сутки";
@@ -2780,7 +3333,51 @@
         poopStatsRow.style.display = "none";
       }
 
-      eventStatsBlock.style.display = (pee || poop) ? "" : "none";
+      // --- Грудь ---
+      if (isBreastVisible()) {
+        breastStatsRow.style.display = "";
+        const avgMs = breastCount > 0 ? breastMs / breastCount : 0;
+
+        if (isRange && days > 0) {
+          labelBreastStats.textContent = "🍼 Грудь в сутки";
+          rangeBreastCount.textContent = `≈ ${formatCountAverage(breastCount / days)}`;
+        } else {
+          labelBreastStats.textContent = "🍼 Грудь";
+          rangeBreastCount.textContent = breastCount > 0
+            ? `${breastCount} раз · ср. ${formatDuration(avgMs)}`
+            : "0";
+        }
+      } else {
+        breastStatsRow.style.display = "none";
+      }
+
+      // --- Бутылочка ---
+      if (isBottleVisible()) {
+        bottleStatsRow.style.display = "";
+        const avgVol = bottleCount > 0 ? bottleVolume / bottleCount : 0;
+
+        if (isRange && days > 0) {
+          labelBottleStats.textContent = "🍼 Бутылочка в сутки";
+          const parts = [`≈ ${formatCountAverage(bottleCount / days)}`];
+          if (avgVol > 0) parts.push(`${formatCountAverage(bottleVolume / days)} мл`);
+          rangeBottleCount.textContent = parts.join(" · ");
+        } else {
+          labelBottleStats.textContent = "🍼 Бутылочка";
+          if (bottleCount > 0) {
+            const parts = [`${bottleCount} раз`];
+            if (avgVol > 0) parts.push(`ср. ${Math.round(avgVol)} мл`);
+            rangeBottleCount.textContent = parts.join(" · ");
+          } else {
+            rangeBottleCount.textContent = "0";
+          }
+        }
+      } else {
+        bottleStatsRow.style.display = "none";
+      }
+
+      const anyVisible =
+        isPeeVisible() || isPoopVisible() || isBreastVisible() || isBottleVisible();
+      eventStatsBlock.style.display = anyVisible ? "" : "none";
     }
 
     function renderRangeChart(sleepMs, awakeMs) {
@@ -2958,7 +3555,6 @@
           track.appendChild(segment);
         });
 
-        // --- Сетка и подписи часов идут ПОСЛЕ сегментов, чтобы не перекрывать их ---
         const hourTicks = buildHourTicks(rowStartMs, rowEndMs);
 
         hourTicks.forEach(tick => {
@@ -2969,7 +3565,6 @@
           track.appendChild(gridline);
         });
 
-        // --- Клик по треку (по фону / бодрствованию) ---
         track.addEventListener("click", event => {
           const rect = track.getBoundingClientRect();
           if (rect.width <= 0) return;
@@ -2983,7 +3578,6 @@
 
           clearTimelineSelection();
 
-          // Накладываем полупрозрачный белый прямоугольник ровно по границам окна бодрствования
           const overlay = document.createElement("div");
           overlay.className = "timeline-awake-overlay";
           overlay.style.left = `${((gap.start - rowStartMs) / rowTotalMs) * 100}%`;
@@ -3081,11 +3675,9 @@
 
       if (!activeChildId) return;
 
-      const includeSleep = options.includeSleep;
-      const includePee = options.includePee;
-      const includePoop = options.includePoop;
+      const { includeSleep, includePee, includePoop, includeBreast, includeBottle } = options;
 
-      if (!includeSleep && !includePee && !includePoop) return;
+      if (!includeSleep && !includePee && !includePoop && !includeBreast && !includeBottle) return;
 
       csvBtn.disabled = true;
       hideError();
@@ -3102,14 +3694,16 @@
           );
         }
 
-        let eventData = [];
         const types = [];
         if (includePee) types.push("pee");
         if (includePoop) types.push("poop");
+        if (includeBreast) { types.push("feed_breast_left", "feed_breast_right"); }
+        if (includeBottle) types.push("feed_bottle");
 
+        let eventData = [];
         if (types.length > 0) {
           eventData = await fetchAllPages(
-            EVENTS_TABLE, "id,event_type,event_time",
+            EVENTS_TABLE, "id,event_type,event_time,end_time,volume_ml",
             q => q.eq("child_id", activeChildId).in("event_type", types),
             "event_time", true
           );
@@ -3126,24 +3720,42 @@
             "Сон",
             formatDuration(end - start),
             start.toISOString(),
-            end.toISOString()
+            end.toISOString(),
+            ""
           ]);
         });
 
         eventData.forEach(event => {
           const date = new Date(event.event_time);
-          const eventName = event.event_type === "pee" ? "Пописал" : "Покакал";
-          rows.push([
-            date.toLocaleDateString("ru-RU"),
-            date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
-            eventName, "", date.toISOString(), ""
-          ]);
+
+          if (event.event_type === "pee" || event.event_type === "poop") {
+            const name = event.event_type === "pee" ? "Пописал" : "Покакал";
+            rows.push([
+              date.toLocaleDateString("ru-RU"),
+              date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+              name, "", date.toISOString(), "", ""
+            ]);
+          } else {
+            const end = event.end_time ? new Date(event.end_time) : null;
+            const dur = end ? formatDuration(end - date) : "";
+            const name = getFeedTypeLabel(event.event_type).replace(/^🍼 /, "");
+            const vol = event.volume_ml ? String(event.volume_ml) + " мл" : "";
+            rows.push([
+              date.toLocaleDateString("ru-RU"),
+              date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
+              name,
+              dur,
+              date.toISOString(),
+              end ? end.toISOString() : "",
+              vol
+            ]);
+          }
         });
 
         rows.sort((a, b) => new Date(a[4]) - new Date(b[4]));
 
         const csvRows = [
-          ["Дата", "Время", "Событие", "Продолжительность", "Начало / время события", "Конец сна"],
+          ["Дата", "Время", "Событие", "Продолжительность", "Начало", "Конец", "Объём"],
           ...rows
         ];
 
@@ -3452,6 +4064,9 @@
       await safeCall(loadOpenSession);
       await safeCall(loadRecentHistory);
       await safeCall(loadRecentEvents);
+      await safeCall(loadOpenFeed);
+      await safeCall(loadFeedTodaySummary);
+      await safeCall(loadFeedHistory);
 
       if (currentView === "stats") {
         refreshYesterdayRangeIfNeeded();
@@ -3484,6 +4099,7 @@
     // ============================================================
 
     navMainBtn.addEventListener("click", () => setView("main"));
+    navFeedBtn.addEventListener("click", () => setView("feed"));
     navStatsBtn.addEventListener("click", () => setView("stats"));
     navGalleryBtn.addEventListener("click", () => setView("gallery"));
 
@@ -3519,6 +4135,30 @@
       }
     });
 
+    showBreastCheckbox.addEventListener("change", async () => {
+      try {
+        await saveChildSettings({ show_breast: showBreastCheckbox.checked });
+        applyVisibilityChanges();
+        hapticLight();
+      } catch (error) {
+        console.error(error);
+        showBreastCheckbox.checked = !showBreastCheckbox.checked;
+        showError(error.message || "Не удалось сохранить.");
+      }
+    });
+
+    showBottleCheckbox.addEventListener("change", async () => {
+      try {
+        await saveChildSettings({ show_bottle: showBottleCheckbox.checked });
+        applyVisibilityChanges();
+        hapticLight();
+      } catch (error) {
+        console.error(error);
+        showBottleCheckbox.checked = !showBottleCheckbox.checked;
+        showError(error.message || "Не удалось сохранить.");
+      }
+    });
+
     actionBtn.addEventListener("click", toggleSleep);
     editCurrentBtn.addEventListener("click", openEditCurrentModal);
     cancelEditBtn.addEventListener("click", closeEditModal);
@@ -3526,6 +4166,41 @@
 
     peeBtn.addEventListener("click", () => addBabyEvent("pee"));
     poopBtn.addEventListener("click", () => addBabyEvent("poop"));
+
+    startBreastLeftBtn.addEventListener("click", () => startFeed("feed_breast_left"));
+    startBreastRightBtn.addEventListener("click", () => startFeed("feed_breast_right"));
+    startBottleBtn.addEventListener("click", () => startFeed("feed_bottle"));
+
+    endFeedBtn.addEventListener("click", endFeed);
+    editOpenFeedBtn.addEventListener("click", () => { if (openFeed) openEditFeedModal(openFeed); });
+
+    cancelEditFeedBtn.addEventListener("click", closeEditFeedModal);
+    editFeedModal.addEventListener("click", event => {
+      if (event.target === editFeedModal) closeEditFeedModal();
+    });
+    saveEditFeedBtn.addEventListener("click", saveEditFeed);
+    deleteFeedBtn.addEventListener("click", deleteFeed);
+
+    skipBottleVolumeBtn.addEventListener("click", async () => {
+      bottleVolumeModal.classList.remove("visible");
+      await finishFeed(null);
+    });
+
+    saveBottleVolumeBtn.addEventListener("click", async () => {
+      const raw = bottleVolumeInput.value.trim();
+      let volume = null;
+      if (raw !== "") {
+        const n = Number(raw);
+        if (!Number.isFinite(n) || n < 0) { alert("Некорректный объём."); return; }
+        volume = Math.round(n);
+      }
+      bottleVolumeModal.classList.remove("visible");
+      await finishFeed(volume);
+    });
+
+    bottleVolumeInput.addEventListener("keydown", event => {
+      if (event.key === "Enter") { event.preventDefault(); saveBottleVolumeBtn.click(); }
+    });
 
     modeYesterdayBtn.addEventListener("click", () => setPeriodMode("yesterday"));
     modeDayBtn.addEventListener("click", () => setPeriodMode("day"));
@@ -3538,15 +4213,16 @@
       if (event.target === csvModal) closeCsvModal();
     });
 
-    csvSleepCheckbox.addEventListener("change", updateCsvConfirmState);
-    csvPeeCheckbox.addEventListener("change", updateCsvConfirmState);
-    csvPoopCheckbox.addEventListener("change", updateCsvConfirmState);
+    [csvSleepCheckbox, csvPeeCheckbox, csvPoopCheckbox, csvBreastCheckbox, csvBottleCheckbox]
+      .forEach(cb => cb.addEventListener("change", updateCsvConfirmState));
 
     confirmCsvBtn.addEventListener("click", async () => {
       const options = {
         includeSleep: csvSleepCheckbox.checked,
         includePee: csvPeeCheckbox.checked,
-        includePoop: csvPoopCheckbox.checked
+        includePoop: csvPoopCheckbox.checked,
+        includeBreast: csvBreastCheckbox.checked,
+        includeBottle: csvBottleCheckbox.checked
       };
 
       closeCsvModal();
@@ -3673,7 +4349,12 @@
           ". Проверь, что таблицы families и family_members созданы.";
       }
 
-      setInterval(() => { if (activeChildId) renderStatus(); }, 60000);
+      setInterval(() => {
+        if (activeChildId) {
+          renderStatus();
+          renderFeedStatus();
+        }
+      }, 60000);
     })();
 
   </script>
