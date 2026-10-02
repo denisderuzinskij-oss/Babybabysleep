@@ -682,7 +682,7 @@
 </div>
 
 <script>
-const APP_VERSION = "6.2.0";
+const APP_VERSION = "6.2.1";
 const BOT_USERNAME = "Ivanregimebot";
 const MINIAPP_SHORT_NAME = "Babybabysleep";
 
@@ -1461,7 +1461,7 @@ async function toggleSleep() {
   } catch (e) { console.error(e); showError(e.message || "Ошибка."); actionBtn.disabled = false; }
 }
 
-// EVENTS (popisal/pokakal)
+// EVENTS
 async function addBabyEvent(type) {
   if (!activeChildId || !familyId) return;
   peeBtn.disabled = true; poopBtn.disabled = true; hideError();
@@ -1990,17 +1990,49 @@ function renderRangeChart(sleepMs, awakeMs) {
   if (typeof Chart === "undefined") return;
   const canvas = document.getElementById("rangeChart");
   if (!canvas) return;
-  const sh = Number((sleepMs / 3600000).toFixed(2));
-  const ah = Number((awakeMs / 3600000).toFixed(2));
+
+  const total = sleepMs + awakeMs;
+  const sleepPct = total > 0 ? Number(((sleepMs / total) * 100).toFixed(1)) : 0;
+  const awakePct = total > 0 ? Number((100 - sleepPct).toFixed(1)) : 0;
+
+  const labels = [
+    `Сон · ${sleepPct}%`,
+    `Бодрствование · ${awakePct}%`
+  ];
+
   if (rangeChartInstance) {
-    rangeChartInstance.data.datasets[0].data = [sh, ah];
+    rangeChartInstance.data.datasets[0].data = [sleepPct, awakePct];
+    rangeChartInstance.data.labels = labels;
     rangeChartInstance.update("none");
     return;
   }
+
   rangeChartInstance = new Chart(canvas.getContext("2d"), {
     type: "doughnut",
-    data: { labels: ["Сон", "Бодрствование"], datasets: [{ data: [sh, ah], backgroundColor: ["#2481cc", "#f2a154"] }] },
-    options: { animation: false, plugins: { legend: { position: "bottom" } } }
+    data: {
+      labels,
+      datasets: [{
+        data: [sleepPct, awakePct],
+        backgroundColor: ["#2481cc", "#f2a154"],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      animation: false,
+      cutout: "60%",
+      plugins: {
+        legend: { position: "bottom" },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const v = ctx.parsed || 0;
+              const ms = ctx.dataIndex === 0 ? sleepMs : awakeMs;
+              return `${v}% · ${formatDuration(ms)}`;
+            }
+          }
+        }
+      }
+    }
   });
 }
 
@@ -2547,4 +2579,4 @@ statsToDate.value = todayV;
 })();
 </script>
 </body>
-  </html>
+</html>
