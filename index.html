@@ -32,7 +32,7 @@
     -webkit-touch-callout: none;
   }
   .title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; }
-  .title-row h1 { margin: 0; font-size: 20px; display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px; min-width: 0; }
+  .title-row h1 { margin: 0; font-size: 20px; display: flex; align-items: baseline; gap: 5px; min-width: 0; }
   .name-button {
     background: none; border: none; padding: 0 2px; font: inherit; font-size: 20px;
     color: var(--button); cursor: pointer; border-bottom: 1px dashed rgba(128,128,128,0.45);
@@ -107,6 +107,52 @@
   .collapsible-body { margin-top: 10px; }
   .collapsible.collapsed .collapsible-body { display: none; }
   .collapsible.collapsed .collapsible-header { margin-bottom: 0; }
+
+  /* FULLSCREEN */
+  .fullscreen-view {
+    position: fixed; inset: 0; background: var(--bg);
+    z-index: 500; overflow-y: auto;
+    padding: 16px; padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  .fullscreen-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    position: sticky; top: 0; background: var(--bg); padding: 4px 0 12px; z-index: 2;
+  }
+  .back-btn {
+    width: 40px; height: 40px; border-radius: 50%; border: none;
+    background: rgba(128,128,128,0.12); color: var(--text); font-size: 20px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;
+    flex-shrink: 0;
+  }
+  .fullscreen-title { font-size: 18px; font-weight: 600; }
+
+  /* ИЗМЕРЕНИЯ */
+  .metric-switch { display: flex; gap: 6px; margin-bottom: 12px; }
+  .metric-btn {
+    flex: 1; padding: 8px 4px; border: none; border-radius: 9px;
+    background: rgba(128,128,128,0.12); color: var(--text);
+    font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit;
+  }
+  .metric-btn.active { background: var(--button); color: var(--button-text); }
+
+  .measurement-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .measurement-row:last-child { border-bottom: none; }
+  .measurement-info { min-width: 0; flex: 1; }
+  .measurement-date { color: var(--hint); font-size: 12px; margin-bottom: 3px; }
+  .measurement-values { display: flex; gap: 14px; flex-wrap: wrap; }
+  .measurement-value { font-weight: 600; display: inline-flex; align-items: baseline; gap: 3px; }
+  .measurement-unit { font-weight: 400; font-size: 11px; color: var(--hint); }
+  .measurement-note { color: var(--hint); font-size: 12px; margin-top: 3px; font-style: italic; }
+
+  .chart-wrap { position: relative; height: 220px; margin: 4px 0 8px; }
+  .chart-empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 220px; color: var(--hint); font-size: 13px;
+    background: rgba(128,128,128,0.06); border-radius: 10px;
+  }
 
   .timeline-segment { cursor: pointer; touch-action: manipulation; }
   .timeline-segment:active { opacity: 0.78; }
@@ -255,14 +301,18 @@
   .modal-title { font-size: 19px; font-weight: 600; margin-bottom: 18px; }
   .field { margin-bottom: 14px; }
   .field label { display: block; margin-bottom: 6px; color: var(--hint); font-size: 13px; }
-  .field input {
-    width: 100%; height: 46px; padding: 0 12px; border: none; border-radius: 10px;
+  .field input, .field textarea {
+    width: 100%; padding: 0 12px; border: none; border-radius: 10px;
     background: var(--secondary-bg); color: var(--text); font-size: 16px; font-family: inherit;
   }
+  .field input { height: 46px; }
+  .field textarea { padding: 12px; resize: vertical; min-height: 60px; }
   .field input.code-input {
     text-transform: uppercase; letter-spacing: 3px;
     font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 20px; text-align: center;
   }
+  .field-row { display: flex; gap: 8px; }
+  .field-row .field { flex: 1; margin-bottom: 14px; }
   .modal-hint { color: var(--hint); font-size: 12px; margin-top: 5px; }
   .modal-buttons { display: flex; gap: 8px; margin-top: 18px; }
   .modal-buttons button {
@@ -337,7 +387,7 @@
 <div id="appRoot" class="hidden">
 
   <div class="title-row">
-    <h1>Режим дня <button class="name-button" id="childSelectorBtn" title="Выбрать ребёнка">…</button></h1>
+    <h1><button class="name-button" id="childSelectorBtn" title="Выбрать ребёнка">…</button></h1>
     <div class="icon-buttons">
       <button class="icon-btn" id="familySettingsBtn" aria-label="Семья" title="Семья">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -345,6 +395,13 @@
           <circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="statsBtn" aria-label="Статистика" title="Статистика">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="6" y1="20" x2="6" y2="12"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="18" y1="20" x2="18" y2="10"/>
         </svg>
       </button>
       <button class="icon-btn" id="settingsBtn" aria-label="Показатели" title="Показатели">
@@ -360,12 +417,13 @@
 
   <div class="nav-row">
     <button class="secondary-button nav-button active" id="navMainBtn">🏠 Режим</button>
-    <button class="secondary-button nav-button" id="navStatsBtn">📊 Стата</button>
+    <button class="secondary-button nav-button" id="navDevBtn">📏 Развитие</button>
     <button class="secondary-button nav-button" id="navGalleryBtn">📷 Фото</button>
   </div>
 
   <div id="error"></div>
 
+  <!-- ГЛАВНЫЙ -->
   <div id="mainView">
     <div class="card">
       <div class="status-line" id="statusLine">Загрузка...</div>
@@ -414,102 +472,42 @@
     </div>
   </div>
 
-  <div id="statsView" style="display: none;">
+  <!-- РАЗВИТИЕ -->
+  <div id="devView" style="display: none;">
     <div class="card">
-      <div class="hint" style="margin-bottom: 8px;">Период</div>
-      <div class="period-buttons">
-        <button class="secondary-button active" id="modeYesterdayBtn">Вчера</button>
-        <button class="secondary-button" id="modeDayBtn">Дата</button>
-        <button class="secondary-button" id="modeRangeBtn">Период</button>
-      </div>
-      <div class="date-row" id="singleDateRow" style="display: none;">
-        <input type="date" class="date-input" id="statsSingleDate" />
-      </div>
-      <div class="date-row" id="rangeDateRow" style="display: none;">
-        <input type="date" class="date-input" id="statsFromDate" />
-        <input type="date" class="date-input" id="statsToDate" />
-      </div>
-      <button class="secondary-button" id="applyRangeBtn" style="display: none;">Показать</button>
+      <button class="big-button" id="addMeasurementBtn">➕ Добавить замер</button>
     </div>
 
-    <div class="card collapsible" data-collapsible="statsSummary">
+    <div class="card collapsible" data-collapsible="devChart">
       <div class="collapsible-header">
-        <div class="hint">Сводка</div>
+        <div class="hint">Динамика</div>
         <span class="chevron">▾</span>
       </div>
       <div class="collapsible-body">
-        <div class="range-label" id="rangeLabel">—</div>
-        <div class="range-sublabel" id="rangeSublabel"></div>
-        <div class="stats-row">
-          <span id="labelSleepTotal">😴 Сон всего</span>
-          <span id="rangeSleepTotal">—</span>
+        <div class="metric-switch">
+          <button class="metric-btn active" data-metric="weight">⚖️ Вес</button>
+          <button class="metric-btn" data-metric="height">📏 Рост</button>
+          <button class="metric-btn" data-metric="head">🧠 Окружность</button>
         </div>
-        <div class="stats-row">
-          <span id="labelAwakeTotal">🙂 Бодрствование всего</span>
-          <span id="rangeAwakeTotal">—</span>
-        </div>
-        <div class="stats-row">
-          <span id="labelDaySleep">☀️ Дневной сон</span>
-          <span id="rangeDaySleep">—</span>
-        </div>
-        <div class="stats-row">
-          <span id="labelNightSleep">🌙 Ночной сон</span>
-          <span id="rangeNightSleep">—</span>
-        </div>
-        <div class="event-stats" id="eventStatsBlock" style="display: none;">
-          <div class="stats-row" id="peeStatsRow">
-            <span id="labelPeeStats">💧 Пописал</span>
-            <span id="rangePeeCount">—</span>
-          </div>
-          <div class="stats-row" id="poopStatsRow">
-            <span id="labelPoopStats">💩 Покакал</span>
-            <span id="rangePoopCount">—</span>
-          </div>
-          <div class="stats-row" id="breastStatsRow">
-            <span id="labelBreastStats">🍼 Грудь</span>
-            <span id="rangeBreastCount">—</span>
-          </div>
-          <div class="stats-row" id="bottleStatsRow">
-            <span id="labelBottleStats">🍼 Бутылочка</span>
-            <span id="rangeBottleCount">—</span>
-          </div>
+        <div class="chart-wrap" id="devChartWrap">
+          <div class="chart-empty" id="devChartEmpty">Пока нет данных</div>
+          <canvas id="devChart" style="display: none;"></canvas>
         </div>
       </div>
     </div>
 
-    <div class="card collapsible" data-collapsible="statsChart">
+    <div class="card collapsible" data-collapsible="devList">
       <div class="collapsible-header">
-        <div class="hint">Соотношение за период</div>
+        <div class="hint">Замеры</div>
         <span class="chevron">▾</span>
       </div>
       <div class="collapsible-body">
-        <canvas id="rangeChart" height="200"></canvas>
+        <div id="measurementsList"><div class="empty">Загрузка...</div></div>
       </div>
-    </div>
-
-    <div class="card collapsible" data-collapsible="statsTimeline">
-      <div class="collapsible-header">
-        <div class="hint">Хронология сна</div>
-        <span class="chevron">▾</span>
-      </div>
-      <div class="collapsible-body">
-        <div id="timelineContainer"><div class="empty">Загрузка...</div></div>
-        <div class="timeline-tooltip" id="timelineTooltip"></div>
-        <div class="timeline-legend">
-          <span><span class="legend-dot" style="background:var(--day);"></span>Дневной сон</span>
-          <span><span class="legend-dot" style="background:var(--night);"></span>Ночной сон</span>
-          <span><span class="legend-dot" style="background:var(--awake);"></span>Бодрствование</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <button class="secondary-button" id="csvBtn" style="margin-top: 0;">📊 Скопировать статистику (CSV)</button>
-      <textarea class="csv-textarea" id="csvOutput" style="display: none; margin-top: 10px;" readonly></textarea>
-      <div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">Текст скопирован в буфер обмена.</div>
     </div>
   </div>
 
+  <!-- ГАЛЕРЕЯ -->
   <div id="galleryView" style="display: none;">
     <div class="card">
       <div class="hint" style="margin-bottom: 8px;">📷 Добавить фото</div>
@@ -527,7 +525,108 @@
   </div>
 
   <div class="version-label" id="versionLabel"></div>
+</div>
 
+<!-- FULLSCREEN СТАТИСТИКА -->
+<div class="fullscreen-view" id="statsView" style="display: none;">
+  <div class="fullscreen-header">
+    <button class="back-btn" id="closeStatsBtn" aria-label="Назад">←</button>
+    <div class="fullscreen-title">📊 Статистика</div>
+  </div>
+
+  <div class="card">
+    <div class="hint" style="margin-bottom: 8px;">Период</div>
+    <div class="period-buttons">
+      <button class="secondary-button active" id="modeYesterdayBtn">Вчера</button>
+      <button class="secondary-button" id="modeDayBtn">Дата</button>
+      <button class="secondary-button" id="modeRangeBtn">Период</button>
+    </div>
+    <div class="date-row" id="singleDateRow" style="display: none;">
+      <input type="date" class="date-input" id="statsSingleDate" />
+    </div>
+    <div class="date-row" id="rangeDateRow" style="display: none;">
+      <input type="date" class="date-input" id="statsFromDate" />
+      <input type="date" class="date-input" id="statsToDate" />
+    </div>
+    <button class="secondary-button" id="applyRangeBtn" style="display: none;">Показать</button>
+  </div>
+
+  <div class="card collapsible" data-collapsible="statsSummary">
+    <div class="collapsible-header">
+      <div class="hint">Сводка</div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="collapsible-body">
+      <div class="range-label" id="rangeLabel">—</div>
+      <div class="range-sublabel" id="rangeSublabel"></div>
+      <div class="stats-row">
+        <span id="labelSleepTotal">😴 Сон всего</span>
+        <span id="rangeSleepTotal">—</span>
+      </div>
+      <div class="stats-row">
+        <span id="labelAwakeTotal">🙂 Бодрствование всего</span>
+        <span id="rangeAwakeTotal">—</span>
+      </div>
+      <div class="stats-row">
+        <span id="labelDaySleep">☀️ Дневной сон</span>
+        <span id="rangeDaySleep">—</span>
+      </div>
+      <div class="stats-row">
+        <span id="labelNightSleep">🌙 Ночной сон</span>
+        <span id="rangeNightSleep">—</span>
+      </div>
+      <div class="event-stats" id="eventStatsBlock" style="display: none;">
+        <div class="stats-row" id="peeStatsRow">
+          <span id="labelPeeStats">💧 Пописал</span>
+          <span id="rangePeeCount">—</span>
+        </div>
+        <div class="stats-row" id="poopStatsRow">
+          <span id="labelPoopStats">💩 Покакал</span>
+          <span id="rangePoopCount">—</span>
+        </div>
+        <div class="stats-row" id="breastStatsRow">
+          <span id="labelBreastStats">🍼 Грудь</span>
+          <span id="rangeBreastCount">—</span>
+        </div>
+        <div class="stats-row" id="bottleStatsRow">
+          <span id="labelBottleStats">🍼 Бутылочка</span>
+          <span id="rangeBottleCount">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card collapsible" data-collapsible="statsChart">
+    <div class="collapsible-header">
+      <div class="hint">Соотношение за период</div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="collapsible-body">
+      <canvas id="rangeChart" height="200"></canvas>
+    </div>
+  </div>
+
+  <div class="card collapsible" data-collapsible="statsTimeline">
+    <div class="collapsible-header">
+      <div class="hint">Хронология сна</div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="collapsible-body">
+      <div id="timelineContainer"><div class="empty">Загрузка...</div></div>
+      <div class="timeline-tooltip" id="timelineTooltip"></div>
+      <div class="timeline-legend">
+        <span><span class="legend-dot" style="background:var(--day);"></span>Дневной сон</span>
+        <span><span class="legend-dot" style="background:var(--night);"></span>Ночной сон</span>
+        <span><span class="legend-dot" style="background:var(--awake);"></span>Бодрствование</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <button class="secondary-button" id="csvBtn" style="margin-top: 0;">📊 Скопировать статистику (CSV)</button>
+    <textarea class="csv-textarea" id="csvOutput" style="display: none; margin-top: 10px;" readonly></textarea>
+    <div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">Текст скопирован в буфер обмена.</div>
+  </div>
 </div>
 
 <div class="lightbox-backdrop" id="lightbox">
@@ -593,6 +692,40 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="measurementModal">
+  <div class="modal">
+    <div class="modal-title" id="measurementModalTitle">📏 Добавить замер</div>
+    <div class="field">
+      <label for="measurementDate">Дата</label>
+      <input type="date" id="measurementDate" />
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="measurementWeight">Вес, кг</label>
+        <input type="number" id="measurementWeight" min="0" max="50" step="0.01" placeholder="—" />
+      </div>
+      <div class="field">
+        <label for="measurementHeight">Рост, см</label>
+        <input type="number" id="measurementHeight" min="0" max="200" step="0.1" placeholder="—" />
+      </div>
+    </div>
+    <div class="field">
+      <label for="measurementHead">Окружность головы, см</label>
+      <input type="number" id="measurementHead" min="0" max="80" step="0.1" placeholder="—" />
+    </div>
+    <div class="field">
+      <label for="measurementNote">Заметка</label>
+      <textarea id="measurementNote" maxlength="200" placeholder="Необязательно"></textarea>
+    </div>
+    <div class="modal-hint">Заполни хотя бы одно измерение.</div>
+    <div class="modal-buttons">
+      <button class="cancel-btn" id="cancelMeasurementBtn">Отмена</button>
+      <button class="save-btn" id="saveMeasurementBtn">Сохранить</button>
+    </div>
+    <button class="danger-button" id="deleteMeasurementBtn" style="display: none;">🗑 Удалить замер</button>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="childPickerModal">
   <div class="modal">
     <div class="modal-title">👶 Ребёнок</div>
@@ -610,7 +743,7 @@
     <div class="field">
       <label for="childNameInput">Имя</label>
       <input type="text" id="childNameInput" maxlength="30" placeholder="Например, Аня" />
-      <div class="modal-hint">Будет показано в заголовке: «Режим дня Аня».</div>
+      <div class="modal-hint">Будет показано в заголовке.</div>
     </div>
     <div class="modal-buttons">
       <button class="cancel-btn" id="cancelChildFormBtn">Отмена</button>
@@ -682,7 +815,7 @@
 </div>
 
 <script>
-const APP_VERSION = "6.2.1";
+const APP_VERSION = "6.3.0";
 const BOT_USERNAME = "Ivanregimebot";
 const MINIAPP_SHORT_NAME = "Babybabysleep";
 
@@ -696,6 +829,7 @@ const PHOTOS_BUCKET = "baby-photos";
 const CHILDREN_TABLE = "children";
 const FAMILIES_TABLE = "families";
 const MEMBERS_TABLE = "family_members";
+const MEASUREMENTS_TABLE = "measurements";
 
 const FEED_TYPES = ["feed_breast_left", "feed_breast_right", "feed_bottle"];
 
@@ -715,13 +849,16 @@ const appRoot = document.getElementById("appRoot");
 const versionLabel = document.getElementById("versionLabel");
 const childSelectorBtn = document.getElementById("childSelectorBtn");
 const familySettingsBtn = document.getElementById("familySettingsBtn");
+const statsBtn = document.getElementById("statsBtn");
 const settingsBtn = document.getElementById("settingsBtn");
 const navMainBtn = document.getElementById("navMainBtn");
-const navStatsBtn = document.getElementById("navStatsBtn");
+const navDevBtn = document.getElementById("navDevBtn");
 const navGalleryBtn = document.getElementById("navGalleryBtn");
 const mainView = document.getElementById("mainView");
-const statsView = document.getElementById("statsView");
+const devView = document.getElementById("devView");
 const galleryView = document.getElementById("galleryView");
+const statsView = document.getElementById("statsView");
+const closeStatsBtn = document.getElementById("closeStatsBtn");
 const statusLine = document.getElementById("statusLine");
 const actionBtn = document.getElementById("actionBtn");
 const editCurrentBtn = document.getElementById("editCurrentBtn");
@@ -844,6 +981,23 @@ const csvBottleCheckbox = document.getElementById("csvBottleCheckbox");
 const cancelCsvBtn = document.getElementById("cancelCsvBtn");
 const confirmCsvBtn = document.getElementById("confirmCsvBtn");
 
+// Dev / measurements
+const addMeasurementBtn = document.getElementById("addMeasurementBtn");
+const devChartWrap = document.getElementById("devChartWrap");
+const devChartEmpty = document.getElementById("devChartEmpty");
+const devChartCanvas = document.getElementById("devChart");
+const measurementsList = document.getElementById("measurementsList");
+const measurementModal = document.getElementById("measurementModal");
+const measurementModalTitle = document.getElementById("measurementModalTitle");
+const measurementDate = document.getElementById("measurementDate");
+const measurementWeight = document.getElementById("measurementWeight");
+const measurementHeight = document.getElementById("measurementHeight");
+const measurementHead = document.getElementById("measurementHead");
+const measurementNote = document.getElementById("measurementNote");
+const cancelMeasurementBtn = document.getElementById("cancelMeasurementBtn");
+const saveMeasurementBtn = document.getElementById("saveMeasurementBtn");
+const deleteMeasurementBtn = document.getElementById("deleteMeasurementBtn");
+
 // STATE
 let familyId = null;
 let familyInfo = null;
@@ -869,6 +1023,12 @@ let selectedTimelineSegment = null;
 let selectedAwakeOverlay = null;
 let galleryPhotos = [];
 let currentPhotoIndex = 0;
+
+// Measurements state
+let measurements = [];
+let currentMetric = "weight";
+let devChartInstance = null;
+let editingMeasurementId = null;
 
 // UTILS
 function showError(m) { errorDiv.textContent = m; errorDiv.style.display = "block"; }
@@ -915,6 +1075,8 @@ function formatTime(iso) {
 function formatClock(d) { return d.toLocaleTimeString("ru-RU", { hour:"2-digit", minute:"2-digit" }); }
 function formatDateShort(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"2-digit" }); }
 function formatDateTime(d) { return `${formatDateShort(d)} ${formatClock(d)}`; }
+function formatDateOnly(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"long", year:"numeric" }); }
+function formatDateShortYear(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"2-digit", year:"2-digit" }); }
 function formatCountAverage(v) {
   if (!Number.isFinite(v)) return "0";
   const r = Math.round(v * 10) / 10;
@@ -949,6 +1111,30 @@ function getFeedTypeLabel(t) {
     case "feed_bottle": return "🍼 Бутылочка";
     default: return "Кормление";
   }
+}
+function getMetricLabel(m) {
+  if (m === "weight") return "Вес";
+  if (m === "height") return "Рост";
+  if (m === "head") return "Окружность головы";
+  return "";
+}
+function getMetricUnit(m) {
+  if (m === "weight") return "кг";
+  if (m === "height") return "см";
+  if (m === "head") return "см";
+  return "";
+}
+function getMetricField(m) {
+  if (m === "weight") return "weight_kg";
+  if (m === "height") return "height_cm";
+  if (m === "head") return "head_circumference_cm";
+  return "";
+}
+function getMetricColor(m) {
+  if (m === "weight") return "#2481cc";
+  if (m === "height") return "#48a860";
+  if (m === "head") return "#b88de0";
+  return "#2481cc";
 }
 
 // VISIBILITY FLAGS
@@ -1147,7 +1333,9 @@ async function selectChild(childId) {
   closeChildPicker();
   hideError();
   openSession = null; lastCompletedEnd = null; openFeed = null;
+  measurements = [];
   await refreshAll();
+  await safeCall(loadMeasurements);
   hapticLight();
 }
 
@@ -1187,9 +1375,11 @@ async function saveChildForm() {
       renderActiveChildName();
       updateEventsCardUI();
       openSession = null; lastCompletedEnd = null; openFeed = null;
+      measurements = [];
     }
     closeChildForm(); hapticSuccess();
     await refreshAll();
+    await safeCall(loadMeasurements);
   } catch (e) {
     console.error(e); showError(e.message || "Не удалось сохранить."); saveChildBtn.disabled = false;
   }
@@ -1213,6 +1403,7 @@ async function deleteChild() {
     await supabaseClient.from(TABLE).delete().eq("child_id", editingChildId);
     await supabaseClient.from(EVENTS_TABLE).delete().eq("child_id", editingChildId);
     await supabaseClient.from(PHOTOS_TABLE).delete().eq("child_id", editingChildId);
+    await supabaseClient.from(MEASUREMENTS_TABLE).delete().eq("child_id", editingChildId);
     const { error } = await supabaseClient.from(CHILDREN_TABLE).delete().eq("id", editingChildId);
     if (error) throw error;
     const wasActive = editingChildId === activeChildId;
@@ -1222,9 +1413,11 @@ async function deleteChild() {
       renderActiveChildName();
       updateEventsCardUI();
       openSession = null; lastCompletedEnd = null; openFeed = null;
+      measurements = [];
     }
     closeChildForm(); hapticSuccess();
     await refreshAll();
+    await safeCall(loadMeasurements);
   } catch (e) {
     console.error(e); showError(e.message || "Не удалось удалить.");
   }
@@ -1297,6 +1490,7 @@ async function createFamilyInternal(name, { attachOrphans }) {
     await supabaseClient.from(TABLE).update({ family_id: familyId }).is("family_id", null);
     await supabaseClient.from(EVENTS_TABLE).update({ family_id: familyId }).is("family_id", null);
     await supabaseClient.from(PHOTOS_TABLE).update({ family_id: familyId }).is("family_id", null);
+    await supabaseClient.from(MEASUREMENTS_TABLE).update({ family_id: familyId }).is("family_id", null);
   }
   const dn = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || tgUser.username || "Родитель";
   const { error: merr } = await supabaseClient.from(MEMBERS_TABLE).insert({ family_id: familyId, telegram_id: tgUser.id, display_name: dn, role: "owner" });
@@ -1393,15 +1587,30 @@ function shareInviteLink() {
 function setView(view) {
   currentView = view;
   mainView.style.display = view === "main" ? "block" : "none";
-  statsView.style.display = view === "stats" ? "block" : "none";
+  devView.style.display = view === "dev" ? "block" : "none";
   galleryView.style.display = view === "gallery" ? "block" : "none";
   navMainBtn.classList.toggle("active", view === "main");
-  navStatsBtn.classList.toggle("active", view === "stats");
+  navDevBtn.classList.toggle("active", view === "dev");
   navGalleryBtn.classList.toggle("active", view === "gallery");
-  if (view === "stats") { refreshYesterdayRangeIfNeeded(); safeCall(() => loadRangeStats(true)); }
-  else if (view === "gallery") safeCall(loadPhotos);
+  if (view === "dev") {
+    safeCall(loadMeasurements);
+  } else if (view === "gallery") {
+    safeCall(loadPhotos);
+  }
   window.scrollTo(0, 0);
 }
+
+function openStatsView() {
+  statsView.style.display = "block";
+  document.body.style.overflow = "hidden";
+  refreshYesterdayRangeIfNeeded();
+  safeCall(() => loadRangeStats(true));
+}
+function closeStatsView() {
+  statsView.style.display = "none";
+  document.body.style.overflow = "";
+}
+
 function refreshYesterdayRangeIfNeeded() {
   if (periodMode === "yesterday") {
     const now = new Date();
@@ -1761,6 +1970,263 @@ async function deleteFeed() {
     await loadOpenFeed();
     await safeCall(loadRecentEvents);
     if (currentView === "stats") await safeCall(() => loadRangeStats(false));
+  } catch (e) { console.error(e); showError(e.message || "Не удалось."); }
+}
+
+// MEASUREMENTS
+async function loadMeasurements() {
+  if (!activeChildId) { measurements = []; renderMeasurements(); return; }
+  const { data, error } = await supabaseClient
+    .from(MEASUREMENTS_TABLE)
+    .select("*")
+    .eq("child_id", activeChildId)
+    .order("measured_at", { ascending: false });
+  if (error) { console.error(error); return; }
+  measurements = data || [];
+  renderMeasurements();
+}
+
+function renderMeasurements() {
+  renderMeasurementsList();
+  renderDevChart();
+}
+
+function renderMeasurementsList() {
+  measurementsList.innerHTML = "";
+  if (!measurements.length) {
+    const e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = "Замеров пока нет";
+    measurementsList.appendChild(e);
+    return;
+  }
+
+  measurements.forEach(m => {
+    const row = document.createElement("div");
+    row.className = "measurement-row";
+
+    const info = document.createElement("div");
+    info.className = "measurement-info";
+
+    const d = document.createElement("div");
+    d.className = "measurement-date";
+    d.textContent = formatDateOnly(new Date(m.measured_at));
+    info.appendChild(d);
+
+    const vals = document.createElement("div");
+    vals.className = "measurement-values";
+
+    if (m.weight_kg != null) {
+      const v = document.createElement("div");
+      v.className = "measurement-value";
+      v.innerHTML = `${m.weight_kg}<span class="measurement-unit">кг</span>`;
+      vals.appendChild(v);
+    }
+    if (m.height_cm != null) {
+      const v = document.createElement("div");
+      v.className = "measurement-value";
+      v.innerHTML = `${m.height_cm}<span class="measurement-unit">см</span>`;
+      vals.appendChild(v);
+    }
+    if (m.head_circumference_cm != null) {
+      const v = document.createElement("div");
+      v.className = "measurement-value";
+      v.innerHTML = `${m.head_circumference_cm}<span class="measurement-unit">см голова</span>`;
+      vals.appendChild(v);
+    }
+    info.appendChild(vals);
+
+    if (m.note) {
+      const n = document.createElement("div");
+      n.className = "measurement-note";
+      n.textContent = m.note;
+      info.appendChild(n);
+    }
+
+    row.appendChild(info);
+
+    const btn = document.createElement("button");
+    btn.className = "edit-btn";
+    btn.textContent = "Изменить";
+    btn.addEventListener("click", () => openMeasurementModal(m));
+    row.appendChild(btn);
+
+    measurementsList.appendChild(row);
+  });
+}
+
+function renderDevChart() {
+  if (typeof Chart === "undefined") return;
+
+  const field = getMetricField(currentMetric);
+  const points = measurements
+    .filter(m => m[field] != null)
+    .slice()
+    .sort((a, b) => new Date(a.measured_at) - new Date(b.measured_at));
+
+  if (points.length === 0) {
+    devChartEmpty.style.display = "flex";
+    devChartCanvas.style.display = "none";
+    if (devChartInstance) { devChartInstance.destroy(); devChartInstance = null; }
+    return;
+  }
+
+  devChartEmpty.style.display = "none";
+  devChartCanvas.style.display = "block";
+
+  const labels = points.map(p => {
+    const d = new Date(p.measured_at);
+    return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+  });
+  const values = points.map(p => Number(p[field]));
+  const color = getMetricColor(currentMetric);
+
+  if (devChartInstance) {
+    devChartInstance.data.labels = labels;
+    devChartInstance.data.datasets[0].data = values;
+    devChartInstance.data.datasets[0].borderColor = color;
+    devChartInstance.data.datasets[0].backgroundColor = color + "33";
+    devChartInstance.update("none");
+    return;
+  }
+
+  devChartInstance = new Chart(devChartCanvas.getContext("2d"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: color,
+        backgroundColor: color + "33",
+        borderWidth: 2,
+        tension: 0.3,
+        fill: false,
+        pointRadius: 4,
+        pointBackgroundColor: color
+      }]
+    },
+    options: {
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.parsed.y} ${getMetricUnit(currentMetric)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 10 } }
+        },
+        y: {
+          grid: { color: "rgba(128,128,128,0.15)" },
+          ticks: { font: { size: 10 } }
+        }
+      }
+    }
+  });
+}
+
+function openMeasurementModal(m) {
+  if (m) {
+    editingMeasurementId = m.id;
+    measurementModalTitle.textContent = "✏️ Изменить замер";
+    measurementDate.value = dateToInputValue(new Date(m.measured_at));
+    measurementWeight.value = m.weight_kg != null ? String(m.weight_kg) : "";
+    measurementHeight.value = m.height_cm != null ? String(m.height_cm) : "";
+    measurementHead.value = m.head_circumference_cm != null ? String(m.head_circumference_cm) : "";
+    measurementNote.value = m.note || "";
+    deleteMeasurementBtn.style.display = "block";
+  } else {
+    editingMeasurementId = null;
+    measurementModalTitle.textContent = "📏 Добавить замер";
+    measurementDate.value = dateToInputValue(new Date());
+    measurementWeight.value = "";
+    measurementHeight.value = "";
+    measurementHead.value = "";
+    measurementNote.value = "";
+    deleteMeasurementBtn.style.display = "none";
+  }
+  saveMeasurementBtn.disabled = false;
+  measurementModal.classList.add("visible");
+}
+
+function closeMeasurementModal() {
+  measurementModal.classList.remove("visible");
+  editingMeasurementId = null;
+}
+
+async function saveMeasurement() {
+  if (!activeChildId || !familyId) return;
+
+  const dateVal = measurementDate.value;
+  if (!dateVal) { alert("Укажи дату."); return; }
+
+  const parsedDate = new Date(dateVal + "T12:00:00");
+  if (Number.isNaN(parsedDate.getTime())) { alert("Некорректная дата."); return; }
+
+  const wRaw = measurementWeight.value.trim();
+  const hRaw = measurementHeight.value.trim();
+  const hcRaw = measurementHead.value.trim();
+  const noteRaw = measurementNote.value.trim();
+
+  const w = wRaw === "" ? null : Number(wRaw);
+  const h = hRaw === "" ? null : Number(hRaw);
+  const hc = hcRaw === "" ? null : Number(hcRaw);
+
+  if (w === null && h === null && hc === null) {
+    alert("Заполни хотя бы одно измерение.");
+    return;
+  }
+  if (w !== null && (!Number.isFinite(w) || w <= 0 || w > 50)) { alert("Некорректный вес."); return; }
+  if (h !== null && (!Number.isFinite(h) || h <= 0 || h > 200)) { alert("Некорректный рост."); return; }
+  if (hc !== null && (!Number.isFinite(hc) || hc <= 0 || hc > 80)) { alert("Некорректная окружность."); return; }
+
+  saveMeasurementBtn.disabled = true;
+  hideError();
+
+  const payload = {
+    child_id: activeChildId,
+    family_id: familyId,
+    measured_at: parsedDate.toISOString(),
+    weight_kg: w,
+    height_cm: h,
+    head_circumference_cm: hc,
+    note: noteRaw || null
+  };
+
+  try {
+    if (editingMeasurementId) {
+      const { error } = await supabaseClient.from(MEASUREMENTS_TABLE).update(payload).eq("id", editingMeasurementId);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from(MEASUREMENTS_TABLE).insert(payload);
+      if (error) throw error;
+    }
+    closeMeasurementModal();
+    hapticSuccess();
+    await loadMeasurements();
+  } catch (e) {
+    console.error(e);
+    showError(e.message || "Не удалось сохранить.");
+    saveMeasurementBtn.disabled = false;
+  }
+}
+
+async function deleteMeasurement() {
+  if (!editingMeasurementId) return;
+  if (!confirm("Удалить этот замер?")) return;
+  hideError();
+  try {
+    const { error } = await supabaseClient.from(MEASUREMENTS_TABLE).delete().eq("id", editingMeasurementId);
+    if (error) throw error;
+    closeMeasurementModal();
+    hapticSuccess();
+    await loadMeasurements();
   } catch (e) { console.error(e); showError(e.message || "Не удалось."); }
 }
 
@@ -2374,7 +2840,8 @@ async function refreshAll() {
   await safeCall(loadRecentHistory);
   await safeCall(loadRecentEvents);
   await safeCall(loadOpenFeed);
-  if (currentView === "stats") { refreshYesterdayRangeIfNeeded(); await safeCall(() => loadRangeStats(false)); }
+  if (currentView === "dev") await safeCall(loadMeasurements);
+  if (statsView.style.display === "block") { refreshYesterdayRangeIfNeeded(); await safeCall(() => loadRangeStats(false)); }
   if (currentView === "gallery") await safeCall(loadPhotos);
 }
 
@@ -2417,8 +2884,11 @@ function updateCsvConfirmState() {
 
 // HANDLERS
 navMainBtn.addEventListener("click", () => setView("main"));
-navStatsBtn.addEventListener("click", () => setView("stats"));
+navDevBtn.addEventListener("click", () => setView("dev"));
 navGalleryBtn.addEventListener("click", () => setView("gallery"));
+
+statsBtn.addEventListener("click", openStatsView);
+closeStatsBtn.addEventListener("click", closeStatsView);
 
 settingsBtn.addEventListener("click", openSettingsModal);
 closeSettingsBtn.addEventListener("click", closeSettingsModal);
@@ -2483,6 +2953,24 @@ csvModal.addEventListener("click", e => { if (e.target === csvModal) closeCsvMod
 confirmCsvBtn.addEventListener("click", async () => {
   const o = { includeSleep: csvSleepCheckbox.checked, includePee: csvPeeCheckbox.checked, includePoop: csvPoopCheckbox.checked, includeBreast: csvBreastCheckbox.checked, includeBottle: csvBottleCheckbox.checked };
   closeCsvModal(); await downloadCSV(o);
+});
+
+// Measurements handlers
+addMeasurementBtn.addEventListener("click", () => openMeasurementModal(null));
+cancelMeasurementBtn.addEventListener("click", closeMeasurementModal);
+measurementModal.addEventListener("click", e => { if (e.target === measurementModal) closeMeasurementModal(); });
+saveMeasurementBtn.addEventListener("click", saveMeasurement);
+deleteMeasurementBtn.addEventListener("click", deleteMeasurement);
+
+document.querySelectorAll(".metric-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const metric = btn.dataset.metric;
+    if (metric === currentMetric) return;
+    currentMetric = metric;
+    document.querySelectorAll(".metric-btn").forEach(b => b.classList.toggle("active", b.dataset.metric === metric));
+    hapticLight();
+    renderDevChart();
+  });
 });
 
 uploadPhotoBtn.addEventListener("click", uploadPhoto);
