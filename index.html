@@ -178,7 +178,7 @@
   #error { color: var(--danger); font-size: 14px; margin-bottom: 12px; display: none; }
   .empty { color: var(--hint); font-size: 14px; padding: 4px 0; }
   .nav-row { display: flex; gap: 6px; margin-bottom: 12px; }
-  .nav-button { flex: 1; padding: 10px 2px; margin-top: 0; font-size: 12px; }
+  .nav-button { flex: 1; padding: 10px 2px; margin-top: 0; font-size: 13px; }
   .nav-button.active { background: var(--button); color: var(--button-text); }
   .period-buttons { display: flex; gap: 8px; margin-bottom: 10px; }
   .period-buttons .secondary-button { margin-top: 0; font-size: 13px; }
@@ -362,6 +362,9 @@
     background: var(--secondary-bg); color: var(--text);
     font-family: monospace; font-size: 12px; padding: 10px; resize: none;
   }
+  .divider-line {
+    height: 1px; background: var(--border); margin: 18px 0 12px;
+  }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -389,12 +392,11 @@
   <div class="title-row">
     <h1><button class="name-button" id="childSelectorBtn" title="Выбрать ребёнка">…</button></h1>
     <div class="icon-buttons">
-      <button class="icon-btn" id="familySettingsBtn" aria-label="Семья" title="Семья">
+      <button class="icon-btn" id="galleryBtn" aria-label="Фото" title="Фото">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          <rect x="3" y="5" width="18" height="14" rx="2"/>
+          <circle cx="9" cy="11" r="2"/>
+          <path d="M21 17l-5-5-4 4-3-3-6 6"/>
         </svg>
       </button>
       <button class="icon-btn" id="statsBtn" aria-label="Статистика" title="Статистика">
@@ -418,7 +420,6 @@
   <div class="nav-row">
     <button class="secondary-button nav-button active" id="navMainBtn">🏠 Режим</button>
     <button class="secondary-button nav-button" id="navDevBtn">📏 Развитие</button>
-    <button class="secondary-button nav-button" id="navGalleryBtn">📷 Фото</button>
   </div>
 
   <div id="error"></div>
@@ -507,27 +508,10 @@
     </div>
   </div>
 
-  <!-- ГАЛЕРЕЯ -->
-  <div id="galleryView" style="display: none;">
-    <div class="card">
-      <div class="hint" style="margin-bottom: 8px;">📷 Добавить фото</div>
-      <div class="photo-input-row">
-        <input type="number" class="photo-month-input" id="photoMonthInput" placeholder="Месяц" min="1" max="24" step="1" />
-        <input type="file" class="photo-file-input" id="photoFileInput" accept="image/*" />
-      </div>
-      <button class="secondary-button" id="uploadPhotoBtn">Добавить фото</button>
-      <div class="hint" id="photoHint" style="margin-top: 8px; display: none;"></div>
-    </div>
-    <div class="card">
-      <div class="hint" style="margin-bottom: 8px;">Галерея по месяцам</div>
-      <div id="photoGroups"><div class="empty">Загрузка...</div></div>
-    </div>
-  </div>
-
   <div class="version-label" id="versionLabel"></div>
 </div>
 
-<!-- FULLSCREEN СТАТИСТИКА -->
+<!-- FULLSCREEN: СТАТИСТИКА -->
 <div class="fullscreen-view" id="statsView" style="display: none;">
   <div class="fullscreen-header">
     <button class="back-btn" id="closeStatsBtn" aria-label="Назад">←</button>
@@ -626,6 +610,29 @@
     <button class="secondary-button" id="csvBtn" style="margin-top: 0;">📊 Скопировать статистику (CSV)</button>
     <textarea class="csv-textarea" id="csvOutput" style="display: none; margin-top: 10px;" readonly></textarea>
     <div class="modal-hint" id="csvHint" style="display: none; margin-top: 6px;">Текст скопирован в буфер обмена.</div>
+  </div>
+</div>
+
+<!-- FULLSCREEN: ГАЛЕРЕЯ -->
+<div class="fullscreen-view" id="galleryView" style="display: none;">
+  <div class="fullscreen-header">
+    <button class="back-btn" id="closeGalleryBtn" aria-label="Назад">←</button>
+    <div class="fullscreen-title">📷 Фото</div>
+  </div>
+
+  <div class="card">
+    <div class="hint" style="margin-bottom: 8px;">📷 Добавить фото</div>
+    <div class="photo-input-row">
+      <input type="number" class="photo-month-input" id="photoMonthInput" placeholder="Месяц" min="1" max="24" step="1" />
+      <input type="file" class="photo-file-input" id="photoFileInput" accept="image/*" />
+    </div>
+    <button class="secondary-button" id="uploadPhotoBtn">Добавить фото</button>
+    <div class="hint" id="photoHint" style="margin-top: 8px; display: none;"></div>
+  </div>
+
+  <div class="card">
+    <div class="hint" style="margin-bottom: 8px;">Галерея по месяцам</div>
+    <div id="photoGroups"><div class="empty">Загрузка...</div></div>
   </div>
 </div>
 
@@ -728,9 +735,14 @@
 
 <div class="modal-backdrop" id="childPickerModal">
   <div class="modal">
-    <div class="modal-title">👶 Ребёнок</div>
+    <div class="modal-title">👶 Дети</div>
     <div id="childListContainer"><div class="empty">Загрузка...</div></div>
     <button class="secondary-button" id="addChildBtn" style="margin-top: 14px;">➕ Добавить ребёнка</button>
+
+    <div class="divider-line"></div>
+
+    <button class="secondary-button" id="openFamilyFromPickerBtn" style="margin-top: 0;">👥 Семья и приглашение</button>
+
     <div class="modal-buttons">
       <button class="cancel-btn" id="closeChildPickerBtn">Закрыть</button>
     </div>
@@ -815,7 +827,7 @@
 </div>
 
 <script>
-const APP_VERSION = "6.3.0";
+const APP_VERSION = "6.3.1";
 const BOT_USERNAME = "Ivanregimebot";
 const MINIAPP_SHORT_NAME = "Babybabysleep";
 
@@ -848,17 +860,17 @@ const versionLabelSetup = document.getElementById("versionLabelSetup");
 const appRoot = document.getElementById("appRoot");
 const versionLabel = document.getElementById("versionLabel");
 const childSelectorBtn = document.getElementById("childSelectorBtn");
-const familySettingsBtn = document.getElementById("familySettingsBtn");
+const galleryBtn = document.getElementById("galleryBtn");
 const statsBtn = document.getElementById("statsBtn");
 const settingsBtn = document.getElementById("settingsBtn");
 const navMainBtn = document.getElementById("navMainBtn");
 const navDevBtn = document.getElementById("navDevBtn");
-const navGalleryBtn = document.getElementById("navGalleryBtn");
 const mainView = document.getElementById("mainView");
 const devView = document.getElementById("devView");
-const galleryView = document.getElementById("galleryView");
 const statsView = document.getElementById("statsView");
+const galleryView = document.getElementById("galleryView");
 const closeStatsBtn = document.getElementById("closeStatsBtn");
+const closeGalleryBtn = document.getElementById("closeGalleryBtn");
 const statusLine = document.getElementById("statusLine");
 const actionBtn = document.getElementById("actionBtn");
 const editCurrentBtn = document.getElementById("editCurrentBtn");
@@ -951,6 +963,7 @@ const childPickerModal = document.getElementById("childPickerModal");
 const childListContainer = document.getElementById("childListContainer");
 const addChildBtn = document.getElementById("addChildBtn");
 const closeChildPickerBtn = document.getElementById("closeChildPickerBtn");
+const openFamilyFromPickerBtn = document.getElementById("openFamilyFromPickerBtn");
 const childFormModal = document.getElementById("childFormModal");
 const childFormTitle = document.getElementById("childFormTitle");
 const childNameInput = document.getElementById("childNameInput");
@@ -981,7 +994,6 @@ const csvBottleCheckbox = document.getElementById("csvBottleCheckbox");
 const cancelCsvBtn = document.getElementById("cancelCsvBtn");
 const confirmCsvBtn = document.getElementById("confirmCsvBtn");
 
-// Dev / measurements
 const addMeasurementBtn = document.getElementById("addMeasurementBtn");
 const devChartWrap = document.getElementById("devChartWrap");
 const devChartEmpty = document.getElementById("devChartEmpty");
@@ -1024,7 +1036,6 @@ let selectedAwakeOverlay = null;
 let galleryPhotos = [];
 let currentPhotoIndex = 0;
 
-// Measurements state
 let measurements = [];
 let currentMetric = "weight";
 let devChartInstance = null;
@@ -1076,7 +1087,6 @@ function formatClock(d) { return d.toLocaleTimeString("ru-RU", { hour:"2-digit",
 function formatDateShort(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"2-digit" }); }
 function formatDateTime(d) { return `${formatDateShort(d)} ${formatClock(d)}`; }
 function formatDateOnly(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"long", year:"numeric" }); }
-function formatDateShortYear(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"2-digit", year:"2-digit" }); }
 function formatCountAverage(v) {
   if (!Number.isFinite(v)) return "0";
   const r = Math.round(v * 10) / 10;
@@ -1216,7 +1226,7 @@ function applyVisibilityChanges() {
   updateEventsCardUI();
   safeCall(loadOpenFeed);
   safeCall(loadRecentEvents);
-  if (currentView === "stats") safeCall(() => loadRangeStats(false));
+  if (statsView.style.display === "block") safeCall(() => loadRangeStats(false));
 }
 
 function updateEventsCardUI() {
@@ -1588,15 +1598,9 @@ function setView(view) {
   currentView = view;
   mainView.style.display = view === "main" ? "block" : "none";
   devView.style.display = view === "dev" ? "block" : "none";
-  galleryView.style.display = view === "gallery" ? "block" : "none";
   navMainBtn.classList.toggle("active", view === "main");
   navDevBtn.classList.toggle("active", view === "dev");
-  navGalleryBtn.classList.toggle("active", view === "gallery");
-  if (view === "dev") {
-    safeCall(loadMeasurements);
-  } else if (view === "gallery") {
-    safeCall(loadPhotos);
-  }
+  if (view === "dev") safeCall(loadMeasurements);
   window.scrollTo(0, 0);
 }
 
@@ -1608,6 +1612,16 @@ function openStatsView() {
 }
 function closeStatsView() {
   statsView.style.display = "none";
+  document.body.style.overflow = "";
+}
+
+function openGalleryView() {
+  galleryView.style.display = "block";
+  document.body.style.overflow = "hidden";
+  safeCall(loadPhotos);
+}
+function closeGalleryView() {
+  galleryView.style.display = "none";
   document.body.style.overflow = "";
 }
 
@@ -1679,7 +1693,7 @@ async function addBabyEvent(type) {
     if (error) throw error;
     hapticSuccess();
     await safeCall(loadRecentEvents);
-    if (currentView === "stats") await safeCall(() => loadRangeStats(false));
+    if (statsView.style.display === "block") await safeCall(() => loadRangeStats(false));
   } catch (e) { console.error(e); showError(e.message || "Ошибка."); }
   finally { peeBtn.disabled = false; poopBtn.disabled = false; }
 }
@@ -1864,7 +1878,7 @@ async function finishFeed(volumeMl) {
     hapticSuccess();
     await loadOpenFeed();
     await safeCall(loadRecentEvents);
-    if (currentView === "stats") await safeCall(() => loadRangeStats(false));
+    if (statsView.style.display === "block") await safeCall(() => loadRangeStats(false));
   } catch (e) { console.error(e); showError(e.message || "Не удалось."); }
 }
 
@@ -1947,7 +1961,7 @@ async function saveEditFeed() {
     hapticSuccess();
     await loadOpenFeed();
     await safeCall(loadRecentEvents);
-    if (currentView === "stats") await safeCall(() => loadRangeStats(false));
+    if (statsView.style.display === "block") await safeCall(() => loadRangeStats(false));
   } catch (e) {
     console.error(e);
     showError(e.message || "Не удалось.");
@@ -1969,7 +1983,7 @@ async function deleteFeed() {
     hapticSuccess();
     await loadOpenFeed();
     await safeCall(loadRecentEvents);
-    if (currentView === "stats") await safeCall(() => loadRangeStats(false));
+    if (statsView.style.display === "block") await safeCall(() => loadRangeStats(false));
   } catch (e) { console.error(e); showError(e.message || "Не удалось."); }
 }
 
@@ -2118,14 +2132,8 @@ function renderDevChart() {
         }
       },
       scales: {
-        x: {
-          grid: { display: false },
-          ticks: { font: { size: 10 } }
-        },
-        y: {
-          grid: { color: "rgba(128,128,128,0.15)" },
-          ticks: { font: { size: 10 } }
-        }
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: "rgba(128,128,128,0.15)" }, ticks: { font: { size: 10 } } }
       }
     }
   });
@@ -2842,7 +2850,7 @@ async function refreshAll() {
   await safeCall(loadOpenFeed);
   if (currentView === "dev") await safeCall(loadMeasurements);
   if (statsView.style.display === "block") { refreshYesterdayRangeIfNeeded(); await safeCall(() => loadRangeStats(false)); }
-  if (currentView === "gallery") await safeCall(loadPhotos);
+  if (galleryView.style.display === "block") await safeCall(loadPhotos);
 }
 
 async function manualRefresh() {
@@ -2885,7 +2893,9 @@ function updateCsvConfirmState() {
 // HANDLERS
 navMainBtn.addEventListener("click", () => setView("main"));
 navDevBtn.addEventListener("click", () => setView("dev"));
-navGalleryBtn.addEventListener("click", () => setView("gallery"));
+
+galleryBtn.addEventListener("click", openGalleryView);
+closeGalleryBtn.addEventListener("click", closeGalleryView);
 
 statsBtn.addEventListener("click", openStatsView);
 closeStatsBtn.addEventListener("click", closeStatsView);
@@ -2955,7 +2965,6 @@ confirmCsvBtn.addEventListener("click", async () => {
   closeCsvModal(); await downloadCSV(o);
 });
 
-// Measurements handlers
 addMeasurementBtn.addEventListener("click", () => openMeasurementModal(null));
 cancelMeasurementBtn.addEventListener("click", closeMeasurementModal);
 measurementModal.addEventListener("click", e => { if (e.target === measurementModal) closeMeasurementModal(); });
@@ -2990,13 +2999,13 @@ childSelectorBtn.addEventListener("click", openChildPicker);
 closeChildPickerBtn.addEventListener("click", closeChildPicker);
 childPickerModal.addEventListener("click", e => { if (e.target === childPickerModal) closeChildPicker(); });
 addChildBtn.addEventListener("click", () => openChildForm("add", null));
+openFamilyFromPickerBtn.addEventListener("click", () => { closeChildPicker(); openFamilyModal(); });
 cancelChildFormBtn.addEventListener("click", closeChildForm);
 childFormModal.addEventListener("click", e => { if (e.target === childFormModal) closeChildForm(); });
 saveChildBtn.addEventListener("click", saveChildForm);
 deleteChildBtn.addEventListener("click", deleteChild);
 childNameInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); saveChildForm(); } });
 
-familySettingsBtn.addEventListener("click", openFamilyModal);
 closeFamilyBtn.addEventListener("click", closeFamilyModal);
 familyModal.addEventListener("click", e => { if (e.target === familyModal) { saveFamilyName(); closeFamilyModal(); } });
 copyInviteBtn.addEventListener("click", copyInviteCode);
@@ -3033,14 +3042,12 @@ joinCodeInput.addEventListener("keydown", e => { if (e.key === "Enter") { e.prev
 
 document.addEventListener("visibilitychange", () => { if (!document.hidden && activeChildId) refreshAll(); });
 
-// LONG PRESS
 attachLongPressHide(peeBtn, "show_pee", "Пописал");
 attachLongPressHide(poopBtn, "show_poop", "Покакал");
 attachLongPressHide(startBreastLeftBtn, "show_breast", "Грудь");
 attachLongPressHide(startBreastRightBtn, "show_breast", "Грудь");
 attachLongPressHide(startBottleBtn, "show_bottle", "Бутылочка");
 
-// INIT
 versionLabel.textContent = `Режим дня · ${APP_VERSION}`;
 versionLabelSetup.textContent = `Режим дня · ${APP_VERSION}`;
 initCollapsibleHeaders();
