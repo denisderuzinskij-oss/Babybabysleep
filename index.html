@@ -52,7 +52,23 @@
     margin-top: 22px; margin-bottom: 6px; user-select: none; opacity: 0.7;
   }
   .card { background: var(--secondary-bg); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
-  .status-line { font-size: 16px; margin-bottom: 12px; }
+
+  /* СТАТУС СНА */
+  .status-line { margin-bottom: 12px; }
+  .status-main { display: flex; align-items: center; gap: 8px; }
+  .status-dot {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    flex-shrink: 0; animation: pulse-dot 2.2s ease-in-out infinite;
+  }
+  .status-dot.sleeping { background: var(--night); }
+  .status-dot.awake { background: var(--awake); }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.7); }
+  }
+  .status-text { font-size: 16px; line-height: 1.3; }
+  .status-sub { margin-top: 5px; margin-left: 18px; color: var(--hint); font-size: 13px; line-height: 1.3; }
+
   .big-button {
     width: 100%; padding: 16px; border: none; border-radius: 12px;
     font-size: 17px; font-weight: 600;
@@ -83,6 +99,26 @@
   .stats-row:last-child { margin-bottom: 0; }
   .hint { color: var(--hint); font-size: 13px; }
   .event-stats { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+  .history-day-divider {
+    font-size: 11px; font-weight: 600; color: var(--hint);
+    text-transform: uppercase; letter-spacing: 0.4px; padding: 12px 0 4px;
+  }
+  .history-day-divider:first-child { padding-top: 2px; }
+  .history-compact { display: flex; align-items: center; gap: 8px; padding: 7px 0; font-size: 14px; }
+  .history-compact-icon { flex-shrink: 0; font-size: 14px; line-height: 1; }
+  .history-compact-time { flex: 1; min-width: 0; color: var(--text); white-space: nowrap; }
+  .history-compact-duration { font-weight: 600; white-space: nowrap; color: var(--text); }
+  .edit-btn-compact {
+    flex-shrink: 0; border: none; background: transparent; font-size: 13px;
+    padding: 2px 4px; cursor: pointer; opacity: 0.5; line-height: 1; font-family: inherit;
+  }
+  .edit-btn-compact:active { opacity: 1; }
+  .history-gap-line {
+    font-size: 12px; color: var(--hint); padding: 0 0 7px 22px;
+    margin-top: -4px; line-height: 1.2;
+  }
+
   .history-item {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
@@ -91,7 +127,11 @@
   .history-info { min-width: 0; flex: 1; }
   .history-time { line-height: 1.35; }
   .history-duration { margin-top: 3px; color: var(--hint); font-size: 13px; }
-  .awake-gap { text-align: center; color: var(--hint); font-size: 12px; line-height: 1.3; padding: 5px 0; }
+  .edit-btn {
+    flex-shrink: 0; border: none; border-radius: 9px; padding: 8px 11px;
+    background: rgba(128,128,128,0.14); color: var(--text); font-size: 13px;
+    cursor: pointer; font-family: inherit;
+  }
 
   .collapsible-header {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -100,15 +140,13 @@
   .collapsible-header .hint { margin-bottom: 0; }
   .collapsible-header .chevron {
     color: var(--hint); font-size: 14px; line-height: 1;
-    transition: transform 0.18s ease;
-    display: inline-block; width: 16px; text-align: center;
+    transition: transform 0.18s ease; display: inline-block; width: 16px; text-align: center;
   }
   .collapsible.collapsed .collapsible-header .chevron { transform: rotate(-90deg); }
   .collapsible-body { margin-top: 10px; }
   .collapsible.collapsed .collapsible-body { display: none; }
   .collapsible.collapsed .collapsible-header { margin-bottom: 0; }
 
-  /* FULLSCREEN */
   .fullscreen-view {
     position: fixed; inset: 0; background: var(--bg);
     z-index: 500; overflow-y: auto;
@@ -126,7 +164,6 @@
   }
   .fullscreen-title { font-size: 18px; font-weight: 600; }
 
-  /* ИЗМЕРЕНИЯ */
   .metric-switch { display: flex; gap: 6px; margin-bottom: 12px; }
   .metric-btn {
     flex: 1; padding: 8px 4px; border: none; border-radius: 9px;
@@ -170,11 +207,6 @@
     visibility: hidden; opacity: 0; transition: opacity 0.15s ease;
   }
   .timeline-tooltip.visible { visibility: visible; opacity: 1; }
-  .edit-btn {
-    flex-shrink: 0; border: none; border-radius: 9px; padding: 8px 11px;
-    background: rgba(128,128,128,0.14); color: var(--text); font-size: 13px;
-    cursor: pointer; font-family: inherit;
-  }
   #error { color: var(--danger); font-size: 14px; margin-bottom: 12px; display: none; }
   .empty { color: var(--hint); font-size: 14px; padding: 4px 0; }
   .nav-row { display: flex; gap: 6px; margin-bottom: 12px; }
@@ -362,9 +394,7 @@
     background: var(--secondary-bg); color: var(--text);
     font-family: monospace; font-size: 12px; padding: 10px; resize: none;
   }
-  .divider-line {
-    height: 1px; background: var(--border); margin: 18px 0 12px;
-  }
+  .divider-line { height: 1px; background: var(--border); margin: 18px 0 12px; }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -424,7 +454,6 @@
 
   <div id="error"></div>
 
-  <!-- ГЛАВНЫЙ -->
   <div id="mainView">
     <div class="card">
       <div class="status-line" id="statusLine">Загрузка...</div>
@@ -473,7 +502,6 @@
     </div>
   </div>
 
-  <!-- РАЗВИТИЕ -->
   <div id="devView" style="display: none;">
     <div class="card">
       <button class="big-button" id="addMeasurementBtn">➕ Добавить замер</button>
@@ -511,7 +539,6 @@
   <div class="version-label" id="versionLabel"></div>
 </div>
 
-<!-- FULLSCREEN: СТАТИСТИКА -->
 <div class="fullscreen-view" id="statsView" style="display: none;">
   <div class="fullscreen-header">
     <button class="back-btn" id="closeStatsBtn" aria-label="Назад">←</button>
@@ -613,7 +640,6 @@
   </div>
 </div>
 
-<!-- FULLSCREEN: ГАЛЕРЕЯ -->
 <div class="fullscreen-view" id="galleryView" style="display: none;">
   <div class="fullscreen-header">
     <button class="back-btn" id="closeGalleryBtn" aria-label="Назад">←</button>
@@ -827,7 +853,7 @@
 </div>
 
 <script>
-const APP_VERSION = "6.3.1";
+const APP_VERSION = "6.3.2";
 const BOT_USERNAME = "Ivanregimebot";
 const MINIAPP_SHORT_NAME = "Babybabysleep";
 
@@ -844,6 +870,10 @@ const MEMBERS_TABLE = "family_members";
 const MEASUREMENTS_TABLE = "measurements";
 
 const FEED_TYPES = ["feed_breast_left", "feed_breast_right", "feed_bottle"];
+
+const NIGHT_START_HOUR = 20;
+const NIGHT_END_HOUR = 9;
+const LONG_SLEEP_MS = 4 * 60 * 60 * 1000;
 
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
@@ -1035,6 +1065,7 @@ let selectedTimelineSegment = null;
 let selectedAwakeOverlay = null;
 let galleryPhotos = [];
 let currentPhotoIndex = 0;
+let refreshing = false;
 
 let measurements = [];
 let currentMetric = "weight";
@@ -1087,6 +1118,14 @@ function formatClock(d) { return d.toLocaleTimeString("ru-RU", { hour:"2-digit",
 function formatDateShort(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"2-digit" }); }
 function formatDateTime(d) { return `${formatDateShort(d)} ${formatClock(d)}`; }
 function formatDateOnly(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"long", year:"numeric" }); }
+function getDayLabel(date) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  const d = new Date(date); d.setHours(0, 0, 0, 0);
+  if (d.getTime() === today.getTime()) return "Сегодня";
+  if (d.getTime() === yesterday.getTime()) return "Вчера";
+  return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "long" });
+}
 function formatCountAverage(v) {
   if (!Number.isFinite(v)) return "0";
   const r = Math.round(v * 10) / 10;
@@ -1122,10 +1161,10 @@ function getFeedTypeLabel(t) {
     default: return "Кормление";
   }
 }
-function getMetricLabel(m) {
-  if (m === "weight") return "Вес";
-  if (m === "height") return "Рост";
-  if (m === "head") return "Окружность головы";
+function getMetricField(m) {
+  if (m === "weight") return "weight_kg";
+  if (m === "height") return "height_cm";
+  if (m === "head") return "head_circumference_cm";
   return "";
 }
 function getMetricUnit(m) {
@@ -1134,17 +1173,22 @@ function getMetricUnit(m) {
   if (m === "head") return "см";
   return "";
 }
-function getMetricField(m) {
-  if (m === "weight") return "weight_kg";
-  if (m === "height") return "height_cm";
-  if (m === "head") return "head_circumference_cm";
-  return "";
-}
 function getMetricColor(m) {
   if (m === "weight") return "#2481cc";
   if (m === "height") return "#48a860";
   if (m === "head") return "#b88de0";
   return "#2481cc";
+}
+
+// КЛАССИФИКАЦИЯ СНА
+function isNightMoment(ms) {
+  const d = new Date(ms);
+  const h = d.getHours() + d.getMinutes() / 60;
+  return h >= NIGHT_START_HOUR || h < NIGHT_END_HOUR;
+}
+function classifySleepType(startMs, endMs) {
+  if (endMs - startMs >= LONG_SLEEP_MS) return "night";
+  return isNightMoment(startMs) ? "night" : "day";
 }
 
 // VISIBILITY FLAGS
@@ -1648,26 +1692,59 @@ async function loadLastCompletedEnd() {
   if (error) throw error;
   lastCompletedEnd = (data && data.length > 0) ? data[0].end_time : null;
 }
+
 function renderStatus() {
   if (openSession) {
-    const s = new Date(openSession.start_time).getTime();
-    statusLine.textContent = `Спит уже ${formatDuration(Date.now() - s)} (с ${formatTime(openSession.start_time)})`;
+    const startMs = new Date(openSession.start_time).getTime();
+    const sleepMs = Date.now() - startMs;
+
+    let subLine = "";
+    if (lastCompletedEnd) {
+      const prevEndMs = new Date(lastCompletedEnd).getTime();
+      const awakeMs = startMs - prevEndMs;
+      if (awakeMs > 0) {
+        subLine = `<div class="status-sub">до этого бодрствовал ${formatDuration(awakeMs)}</div>`;
+      }
+    }
+
+    statusLine.innerHTML = `
+      <div class="status-main">
+        <span class="status-dot sleeping"></span>
+        <span class="status-text">😴 Спит ${formatDuration(sleepMs)} (с ${formatClock(new Date(openSession.start_time))})</span>
+      </div>
+      ${subLine}
+    `;
+
     actionBtn.textContent = "☀️ Закончить сон";
     actionBtn.disabled = false;
     editCurrentBtn.style.display = "block";
   } else if (lastCompletedEnd) {
     const since = new Date(lastCompletedEnd).getTime();
-    statusLine.textContent = `Не спит уже ${formatDuration(Date.now() - since)} (с ${formatTime(lastCompletedEnd)})`;
+    const duration = Date.now() - since;
+
+    statusLine.innerHTML = `
+      <div class="status-main">
+        <span class="status-dot awake"></span>
+        <span class="status-text">🙂 Не спит ${formatDuration(duration)} (с ${formatClock(new Date(lastCompletedEnd))})</span>
+      </div>
+    `;
+
     actionBtn.textContent = "😴 Начать сон";
     actionBtn.disabled = false;
     editCurrentBtn.style.display = "none";
   } else {
-    statusLine.textContent = "Сейчас не спит";
+    statusLine.innerHTML = `
+      <div class="status-main">
+        <span class="status-dot awake"></span>
+        <span class="status-text">Сейчас не спит</span>
+      </div>
+    `;
     actionBtn.textContent = "😴 Начать сон";
     actionBtn.disabled = false;
     editCurrentBtn.style.display = "none";
   }
 }
+
 async function toggleSleep() {
   if (!activeChildId || !familyId) return;
   actionBtn.disabled = true; hideError();
@@ -1708,28 +1785,68 @@ async function loadRecentHistory() {
 function renderHistory(data) {
   historyList.innerHTML = "";
   if (!data || data.length === 0) {
-    const e = document.createElement("div"); e.className = "empty"; e.textContent = "Записей пока нет"; historyList.appendChild(e); return;
+    const e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = "Записей пока нет";
+    historyList.appendChild(e);
+    return;
   }
+
+  let lastDayKey = null;
+
   data.forEach((s, i) => {
-    const start = new Date(s.start_time), end = new Date(s.end_time);
-    const row = document.createElement("div"); row.className = "history-item";
-    const info = document.createElement("div"); info.className = "history-info";
-    const t = document.createElement("div"); t.className = "history-time";
-    t.textContent = `${formatTime(s.start_time)} → ${formatTime(s.end_time)}`;
-    const d = document.createElement("div"); d.className = "history-duration";
-    d.textContent = formatDuration(end - start);
-    info.appendChild(t); info.appendChild(d);
-    const btn = document.createElement("button"); btn.className = "edit-btn"; btn.textContent = "Изменить";
+    const start = new Date(s.start_time);
+    const end = new Date(s.end_time);
+    const duration = end - start;
+
+    const type = classifySleepType(start.getTime(), end.getTime());
+    const isNight = type === "night";
+
+    const dayKey = `${end.getFullYear()}-${end.getMonth()}-${end.getDate()}`;
+    if (dayKey !== lastDayKey) {
+      const divider = document.createElement("div");
+      divider.className = "history-day-divider";
+      divider.textContent = getDayLabel(end);
+      historyList.appendChild(divider);
+      lastDayKey = dayKey;
+    }
+
+    const row = document.createElement("div");
+    row.className = "history-compact";
+
+    const icon = document.createElement("span");
+    icon.className = "history-compact-icon";
+    icon.textContent = isNight ? "🌙" : "☀️";
+
+    const time = document.createElement("span");
+    time.className = "history-compact-time";
+    time.textContent = `${formatClock(start)} → ${formatClock(end)}`;
+
+    const dur = document.createElement("span");
+    dur.className = "history-compact-duration";
+    dur.textContent = formatDuration(duration);
+
+    const btn = document.createElement("button");
+    btn.className = "edit-btn-compact";
+    btn.textContent = "✏️";
+    btn.title = "Изменить";
     btn.addEventListener("click", () => openEditModal(s));
-    row.appendChild(info); row.appendChild(btn); historyList.appendChild(row);
+
+    row.appendChild(icon);
+    row.appendChild(time);
+    row.appendChild(dur);
+    row.appendChild(btn);
+    historyList.appendChild(row);
+
     const next = data[i + 1];
     if (next) {
       const ne = new Date(next.end_time);
       const aw = start.getTime() - ne.getTime();
       if (aw > 0) {
-        const ar = document.createElement("div"); ar.className = "awake-gap";
-        ar.textContent = `🙂 бодрствовал ${formatDuration(aw)}`;
-        historyList.appendChild(ar);
+        const gap = document.createElement("div");
+        gap.className = "history-gap-line";
+        gap.textContent = `·  бодрствовал ${formatDuration(aw)}`;
+        historyList.appendChild(gap);
       }
     }
   });
@@ -1991,9 +2108,7 @@ async function deleteFeed() {
 async function loadMeasurements() {
   if (!activeChildId) { measurements = []; renderMeasurements(); return; }
   const { data, error } = await supabaseClient
-    .from(MEASUREMENTS_TABLE)
-    .select("*")
-    .eq("child_id", activeChildId)
+    .from(MEASUREMENTS_TABLE).select("*").eq("child_id", activeChildId)
     .order("measured_at", { ascending: false });
   if (error) { console.error(error); return; }
   measurements = data || [];
@@ -2014,22 +2129,17 @@ function renderMeasurementsList() {
     measurementsList.appendChild(e);
     return;
   }
-
   measurements.forEach(m => {
     const row = document.createElement("div");
     row.className = "measurement-row";
-
     const info = document.createElement("div");
     info.className = "measurement-info";
-
     const d = document.createElement("div");
     d.className = "measurement-date";
     d.textContent = formatDateOnly(new Date(m.measured_at));
     info.appendChild(d);
-
     const vals = document.createElement("div");
     vals.className = "measurement-values";
-
     if (m.weight_kg != null) {
       const v = document.createElement("div");
       v.className = "measurement-value";
@@ -2049,52 +2159,43 @@ function renderMeasurementsList() {
       vals.appendChild(v);
     }
     info.appendChild(vals);
-
     if (m.note) {
       const n = document.createElement("div");
       n.className = "measurement-note";
       n.textContent = m.note;
       info.appendChild(n);
     }
-
     row.appendChild(info);
-
     const btn = document.createElement("button");
     btn.className = "edit-btn";
     btn.textContent = "Изменить";
     btn.addEventListener("click", () => openMeasurementModal(m));
     row.appendChild(btn);
-
     measurementsList.appendChild(row);
   });
 }
 
 function renderDevChart() {
   if (typeof Chart === "undefined") return;
-
   const field = getMetricField(currentMetric);
   const points = measurements
     .filter(m => m[field] != null)
     .slice()
     .sort((a, b) => new Date(a.measured_at) - new Date(b.measured_at));
-
   if (points.length === 0) {
     devChartEmpty.style.display = "flex";
     devChartCanvas.style.display = "none";
     if (devChartInstance) { devChartInstance.destroy(); devChartInstance = null; }
     return;
   }
-
   devChartEmpty.style.display = "none";
   devChartCanvas.style.display = "block";
-
   const labels = points.map(p => {
     const d = new Date(p.measured_at);
     return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
   });
   const values = points.map(p => Number(p[field]));
   const color = getMetricColor(currentMetric);
-
   if (devChartInstance) {
     devChartInstance.data.labels = labels;
     devChartInstance.data.datasets[0].data = values;
@@ -2103,33 +2204,20 @@ function renderDevChart() {
     devChartInstance.update("none");
     return;
   }
-
   devChartInstance = new Chart(devChartCanvas.getContext("2d"), {
     type: "line",
     data: {
       labels,
       datasets: [{
-        data: values,
-        borderColor: color,
-        backgroundColor: color + "33",
-        borderWidth: 2,
-        tension: 0.3,
-        fill: false,
-        pointRadius: 4,
-        pointBackgroundColor: color
+        data: values, borderColor: color, backgroundColor: color + "33",
+        borderWidth: 2, tension: 0.3, fill: false, pointRadius: 4, pointBackgroundColor: color
       }]
     },
     options: {
-      animation: false,
-      responsive: true,
-      maintainAspectRatio: false,
+      animation: false, responsive: true, maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => `${ctx.parsed.y} ${getMetricUnit(currentMetric)}`
-          }
-        }
+        tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y} ${getMetricUnit(currentMetric)}` } }
       },
       scales: {
         x: { grid: { display: false }, ticks: { font: { size: 10 } } },
@@ -2170,43 +2258,29 @@ function closeMeasurementModal() {
 
 async function saveMeasurement() {
   if (!activeChildId || !familyId) return;
-
   const dateVal = measurementDate.value;
   if (!dateVal) { alert("Укажи дату."); return; }
-
   const parsedDate = new Date(dateVal + "T12:00:00");
   if (Number.isNaN(parsedDate.getTime())) { alert("Некорректная дата."); return; }
-
   const wRaw = measurementWeight.value.trim();
   const hRaw = measurementHeight.value.trim();
   const hcRaw = measurementHead.value.trim();
   const noteRaw = measurementNote.value.trim();
-
   const w = wRaw === "" ? null : Number(wRaw);
   const h = hRaw === "" ? null : Number(hRaw);
   const hc = hcRaw === "" ? null : Number(hcRaw);
-
-  if (w === null && h === null && hc === null) {
-    alert("Заполни хотя бы одно измерение.");
-    return;
-  }
+  if (w === null && h === null && hc === null) { alert("Заполни хотя бы одно измерение."); return; }
   if (w !== null && (!Number.isFinite(w) || w <= 0 || w > 50)) { alert("Некорректный вес."); return; }
   if (h !== null && (!Number.isFinite(h) || h <= 0 || h > 200)) { alert("Некорректный рост."); return; }
   if (hc !== null && (!Number.isFinite(hc) || hc <= 0 || hc > 80)) { alert("Некорректная окружность."); return; }
-
   saveMeasurementBtn.disabled = true;
   hideError();
-
   const payload = {
-    child_id: activeChildId,
-    family_id: familyId,
+    child_id: activeChildId, family_id: familyId,
     measured_at: parsedDate.toISOString(),
-    weight_kg: w,
-    height_cm: h,
-    head_circumference_cm: hc,
+    weight_kg: w, height_cm: h, head_circumference_cm: hc,
     note: noteRaw || null
   };
-
   try {
     if (editingMeasurementId) {
       const { error } = await supabaseClient.from(MEASUREMENTS_TABLE).update(payload).eq("id", editingMeasurementId);
@@ -2215,13 +2289,10 @@ async function saveMeasurement() {
       const { error } = await supabaseClient.from(MEASUREMENTS_TABLE).insert(payload);
       if (error) throw error;
     }
-    closeMeasurementModal();
-    hapticSuccess();
+    closeMeasurementModal(); hapticSuccess();
     await loadMeasurements();
   } catch (e) {
-    console.error(e);
-    showError(e.message || "Не удалось сохранить.");
-    saveMeasurementBtn.disabled = false;
+    console.error(e); showError(e.message || "Не удалось сохранить."); saveMeasurementBtn.disabled = false;
   }
 }
 
@@ -2232,8 +2303,7 @@ async function deleteMeasurement() {
   try {
     const { error } = await supabaseClient.from(MEASUREMENTS_TABLE).delete().eq("id", editingMeasurementId);
     if (error) throw error;
-    closeMeasurementModal();
-    hapticSuccess();
+    closeMeasurementModal(); hapticSuccess();
     await loadMeasurements();
   } catch (e) { console.error(e); showError(e.message || "Не удалось."); }
 }
@@ -2261,43 +2331,10 @@ function clipRawSessionsToRange(rawSessions, rsMs, reMs, nowMs) {
     if (se <= rsMs || ss >= reMs) return;
     const start = Math.max(ss, rsMs), end = Math.min(se, reMs);
     if (end <= start) return;
-    clipped.push({ start, end });
-    overlapping.push({ sessionStartMs: ss });
+    clipped.push({ start, end, originalStart: ss, originalEnd: se });
+    overlapping.push({ sessionStartMs: ss, originalStart: ss, originalEnd: se });
   });
   return { clippedIntervals: clipped, overlappingSessions: overlapping };
-}
-
-function isNightMoment(ms) {
-  const d = new Date(ms);
-  const h = d.getHours() + d.getMinutes() / 60;
-  return h >= 20 || h < 9;
-}
-
-function getDayNightBoundaries(s, e) {
-  const b = [];
-  const dayMs = 24 * 60 * 60 * 1000;
-  const cursor = new Date(s - dayMs); cursor.setHours(0,0,0,0);
-  while (cursor.getTime() <= e + dayMs) {
-    const ev = new Date(cursor); ev.setHours(20,0,0,0);
-    const mo = new Date(cursor); mo.setHours(9,0,0,0);
-    if (ev.getTime() > s && ev.getTime() < e) b.push(ev.getTime());
-    if (mo.getTime() > s && mo.getTime() < e) b.push(mo.getTime());
-    cursor.setTime(cursor.getTime() + dayMs);
-  }
-  return b.sort((a,b) => a-b);
-}
-
-function splitIntervalByDayNight(interval) {
-  const bounds = getDayNightBoundaries(interval.start, interval.end);
-  const pts = [interval.start, ...bounds, interval.end];
-  const pieces = [];
-  for (let i = 0; i < pts.length - 1; i++) {
-    const s = pts[i], e = pts[i+1];
-    if (e <= s) continue;
-    const mid = (s + e) / 2;
-    pieces.push({ start: s, end: e, type: isNightMoment(mid) ? "night" : "day" });
-  }
-  return pieces;
 }
 
 function calculateSleepStats(raw, rsMs, reMs, nowMs) {
@@ -2305,25 +2342,48 @@ function calculateSleepStats(raw, rsMs, reMs, nowMs) {
   const totalMs = Math.max(eeMs - rsMs, 0);
   const { clippedIntervals, overlappingSessions } = clipRawSessionsToRange(raw, rsMs, eeMs, nowMs);
   const merged = mergeIntervals(clippedIntervals);
-  const pieces = [];
-  merged.forEach(i => pieces.push(...splitIntervalByDayNight(i)));
+
+  // Классифицируем каждый объединённый интервал целиком
+  const sleepPieces = merged.map(iv => {
+    // Для классификации используем оригинальные границы (до обрезки по диапазону)
+    // Находим исходную сессию, которая содержит этот интервал
+    let originalStart = iv.start;
+    let originalEnd = iv.end;
+    // Ищем среди overlapping сессий ту, что содержит этот интервал
+    for (const s of overlappingSessions) {
+      if (s.originalStart <= iv.start && s.originalEnd >= iv.end) {
+        originalStart = s.originalStart;
+        originalEnd = s.originalEnd;
+        break;
+      }
+    }
+    const type = classifySleepType(originalStart, originalEnd);
+    return { start: iv.start, end: iv.end, type };
+  });
+
   let sleepMs = 0, dayMs = 0, dayCnt = 0, nightMs = 0, nightCnt = 0;
-  overlappingSessions.forEach(({ sessionStartMs }) => {
+
+  // Считаем эпизоды по оригинальным сессиям
+  overlappingSessions.forEach(({ sessionStartMs, originalStart, originalEnd }) => {
     if (sessionStartMs >= rsMs && sessionStartMs < eeMs) {
-      if (isNightMoment(sessionStartMs)) nightCnt++; else dayCnt++;
+      const type = classifySleepType(originalStart, originalEnd);
+      if (type === "night") nightCnt++; else dayCnt++;
     }
   });
-  pieces.forEach(p => {
+
+  sleepPieces.forEach(p => {
     const d = Math.max(p.end - p.start, 0);
     sleepMs += d;
     if (p.type === "night") nightMs += d; else dayMs += d;
   });
+
   sleepMs = Math.min(sleepMs, totalMs);
   const awakeMs = Math.max(totalMs - sleepMs, 0);
   const dayMsInDay = 24 * 60 * 60 * 1000;
   const days = totalMs > 0 ? totalMs / dayMsInDay : 0;
+
   return {
-    rangeStartMs: rsMs, effectiveEndMs: eeMs, totalRangeMs: totalMs, sleepPieces: pieces,
+    rangeStartMs: rsMs, effectiveEndMs: eeMs, totalRangeMs: totalMs, sleepPieces,
     sleepMs, awakeMs, daySleepMs: dayMs, daySleepCount: dayCnt, nightSleepMs: nightMs, nightSleepCount: nightCnt,
     daysInRange: days,
     avgSleepPerDayMs: days > 0 ? sleepMs / days : 0,
@@ -2464,36 +2524,24 @@ function renderRangeChart(sleepMs, awakeMs) {
   if (typeof Chart === "undefined") return;
   const canvas = document.getElementById("rangeChart");
   if (!canvas) return;
-
   const total = sleepMs + awakeMs;
   const sleepPct = total > 0 ? Number(((sleepMs / total) * 100).toFixed(1)) : 0;
   const awakePct = total > 0 ? Number((100 - sleepPct).toFixed(1)) : 0;
-
-  const labels = [
-    `Сон · ${sleepPct}%`,
-    `Бодрствование · ${awakePct}%`
-  ];
-
+  const labels = [`Сон · ${sleepPct}%`, `Бодрствование · ${awakePct}%`];
   if (rangeChartInstance) {
     rangeChartInstance.data.datasets[0].data = [sleepPct, awakePct];
     rangeChartInstance.data.labels = labels;
     rangeChartInstance.update("none");
     return;
   }
-
   rangeChartInstance = new Chart(canvas.getContext("2d"), {
     type: "doughnut",
     data: {
       labels,
-      datasets: [{
-        data: [sleepPct, awakePct],
-        backgroundColor: ["#2481cc", "#f2a154"],
-        borderWidth: 0
-      }]
+      datasets: [{ data: [sleepPct, awakePct], backgroundColor: ["#2481cc", "#f2a154"], borderWidth: 0 }]
     },
     options: {
-      animation: false,
-      cutout: "60%",
+      animation: false, cutout: "60%",
       plugins: {
         legend: { position: "bottom" },
         tooltip: {
@@ -2670,7 +2718,6 @@ async function downloadCSV(opts) {
     if (includeBottle) types.push("feed_bottle");
     let eventData = [];
     if (types.length > 0) eventData = await fetchAllPages(EVENTS_TABLE, "id,event_type,event_time,end_time,volume_ml", q => q.eq("child_id", activeChildId).in("event_type", types), "event_time", true);
-
     const rows = [];
     sleepData.forEach(s => {
       const st = new Date(s.start_time), en = new Date(s.end_time);
@@ -2731,7 +2778,6 @@ function renderPhotos(data) {
     const g = document.createElement("div"); g.className = "month-group";
     const key = `month-${m}`;
     const isCollapsed = !!collapsed[key];
-
     const header = document.createElement("div");
     header.className = "collapsible-header";
     header.style.marginBottom = isCollapsed ? "0" : "10px";
@@ -2741,10 +2787,8 @@ function renderPhotos(data) {
     ch.style.transform = isCollapsed ? "rotate(-90deg)" : "";
     ch.textContent = "▾";
     header.appendChild(title); header.appendChild(ch);
-
     const body = document.createElement("div");
     body.style.display = isCollapsed ? "none" : "block";
-
     const grid = document.createElement("div"); grid.className = "photo-grid";
     photos.forEach(p => {
       const idx = galleryPhotos.findIndex(x => x.id === p.id);
@@ -2756,7 +2800,6 @@ function renderPhotos(data) {
       it.appendChild(img); it.appendChild(del); grid.appendChild(it);
     });
     body.appendChild(grid);
-
     header.addEventListener("click", async () => {
       hapticLight();
       const wasCollapsed = body.style.display === "none";
@@ -2766,7 +2809,6 @@ function renderPhotos(data) {
       try { await setCollapsed(key, !wasCollapsed); }
       catch (e) { console.error(e); }
     });
-
     g.appendChild(header); g.appendChild(body); photoGroups.appendChild(g);
   });
 }
@@ -2842,15 +2884,21 @@ lightboxContent.addEventListener("touchend", e => {
 
 // REFRESH
 async function refreshAll() {
-  if (!activeChildId) return;
-  await safeCall(loadLastCompletedEnd);
-  await safeCall(loadOpenSession);
-  await safeCall(loadRecentHistory);
-  await safeCall(loadRecentEvents);
-  await safeCall(loadOpenFeed);
-  if (currentView === "dev") await safeCall(loadMeasurements);
-  if (statsView.style.display === "block") { refreshYesterdayRangeIfNeeded(); await safeCall(() => loadRangeStats(false)); }
-  if (galleryView.style.display === "block") await safeCall(loadPhotos);
+  if (refreshing) return;
+  refreshing = true;
+  try {
+    if (!activeChildId) return;
+    await safeCall(loadLastCompletedEnd);
+    await safeCall(loadOpenSession);
+    await safeCall(loadRecentHistory);
+    await safeCall(loadRecentEvents);
+    await safeCall(loadOpenFeed);
+    if (currentView === "dev") await safeCall(loadMeasurements);
+    if (statsView.style.display === "block") { refreshYesterdayRangeIfNeeded(); await safeCall(() => loadRangeStats(false)); }
+    if (galleryView.style.display === "block") await safeCall(loadPhotos);
+  } finally {
+    refreshing = false;
+  }
 }
 
 async function manualRefresh() {
