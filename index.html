@@ -53,7 +53,6 @@
   }
   .card { background: var(--secondary-bg); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
 
-  /* СТАТУС СНА */
   .status-line { margin-bottom: 12px; }
   .status-main { display: flex; align-items: center; gap: 8px; }
   .status-dot {
@@ -164,14 +163,6 @@
   }
   .fullscreen-title { font-size: 18px; font-weight: 600; }
 
-  .metric-switch { display: flex; gap: 6px; margin-bottom: 12px; }
-  .metric-btn {
-    flex: 1; padding: 8px 4px; border: none; border-radius: 9px;
-    background: rgba(128,128,128,0.12); color: var(--text);
-    font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit;
-  }
-  .metric-btn.active { background: var(--button); color: var(--button-text); }
-
   .measurement-row {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
@@ -184,12 +175,37 @@
   .measurement-unit { font-weight: 400; font-size: 11px; color: var(--hint); }
   .measurement-note { color: var(--hint); font-size: 12px; margin-top: 3px; font-style: italic; }
 
-  .chart-wrap { position: relative; height: 220px; margin: 4px 0 8px; }
+  .chart-wrap { position: relative; height: 240px; margin: 4px 0 8px; }
   .chart-empty {
     display: flex; align-items: center; justify-content: center;
-    height: 220px; color: var(--hint); font-size: 13px;
+    height: 240px; color: var(--hint); font-size: 13px;
     background: rgba(128,128,128,0.06); border-radius: 10px;
   }
+
+  /* ВИЗИТЫ И ПРИВИВКИ */
+  .list-item-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .list-item-row:last-child { border-bottom: none; }
+  .list-item-row:active { opacity: 0.6; }
+  .list-item-icon {
+    flex-shrink: 0; font-size: 15px; line-height: 1.4; width: 20px; text-align: center;
+  }
+  .list-item-main { flex: 1; min-width: 0; }
+  .list-item-title { font-size: 14px; line-height: 1.35; font-weight: 500; }
+  .list-item-sub { font-size: 12px; color: var(--hint); margin-top: 3px; line-height: 1.35; }
+  .list-item-sub-italic { font-size: 12px; color: var(--hint); margin-top: 3px; font-style: italic; line-height: 1.35; }
+  .list-item-meta { font-size: 11px; color: var(--hint); margin-top: 4px; }
+
+  .vacc-group-title {
+    font-size: 11px; font-weight: 600; color: var(--hint);
+    text-transform: uppercase; letter-spacing: 0.4px;
+    padding: 12px 0 4px;
+  }
+  .vacc-group-title:first-child { padding-top: 2px; }
 
   .timeline-segment { cursor: pointer; touch-action: manipulation; }
   .timeline-segment:active { opacity: 0.78; }
@@ -333,11 +349,11 @@
   .modal-title { font-size: 19px; font-weight: 600; margin-bottom: 18px; }
   .field { margin-bottom: 14px; }
   .field label { display: block; margin-bottom: 6px; color: var(--hint); font-size: 13px; }
-  .field input, .field textarea {
+  .field input, .field textarea, .field select {
     width: 100%; padding: 0 12px; border: none; border-radius: 10px;
     background: var(--secondary-bg); color: var(--text); font-size: 16px; font-family: inherit;
   }
-  .field input { height: 46px; }
+  .field input, .field select { height: 46px; }
   .field textarea { padding: 12px; resize: vertical; min-height: 60px; }
   .field input.code-input {
     text-transform: uppercase; letter-spacing: 3px;
@@ -513,11 +529,6 @@
         <span class="chevron">▾</span>
       </div>
       <div class="collapsible-body">
-        <div class="metric-switch">
-          <button class="metric-btn active" data-metric="weight">⚖️ Вес</button>
-          <button class="metric-btn" data-metric="height">📏 Рост</button>
-          <button class="metric-btn" data-metric="head">🧠 Окружность</button>
-        </div>
         <div class="chart-wrap" id="devChartWrap">
           <div class="chart-empty" id="devChartEmpty">Пока нет данных</div>
           <canvas id="devChart" style="display: none;"></canvas>
@@ -532,6 +543,30 @@
       </div>
       <div class="collapsible-body">
         <div id="measurementsList"><div class="empty">Загрузка...</div></div>
+      </div>
+    </div>
+
+    <div class="card collapsible" data-collapsible="doctorVisits">
+      <div class="collapsible-header">
+        <div class="hint">🩺 Визиты к врачу</div>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="collapsible-body">
+        <button class="secondary-button" id="addVisitBtn" style="margin-top: 0;">➕ Добавить визит</button>
+        <div id="visitsList" style="margin-top: 12px;"><div class="empty">Загрузка...</div></div>
+      </div>
+    </div>
+
+    <div class="card collapsible" data-collapsible="vaccinations">
+      <div class="collapsible-header">
+        <div class="hint" id="vaccinationsTitle">💉 Прививки</div>
+        <span class="chevron">▾</span>
+      </div>
+      <div class="collapsible-body">
+        <div id="vaccinationsList"><div class="empty">Загрузка...</div></div>
+        <div class="modal-hint" style="margin-top: 12px;">
+          Календарь носит справочный характер и не заменяет консультацию педиатра.
+        </div>
       </div>
     </div>
   </div>
@@ -759,6 +794,74 @@
   </div>
 </div>
 
+<div class="modal-backdrop" id="visitModal">
+  <div class="modal">
+    <div class="modal-title" id="visitModalTitle">🩺 Добавить визит</div>
+    <div class="field">
+      <label for="visitDate">Дата визита</label>
+      <input type="date" id="visitDate" />
+    </div>
+    <div class="field">
+      <label for="visitDoctor">Врач / специальность</label>
+      <input type="text" id="visitDoctor" maxlength="60" placeholder="Педиатр, невролог, ЛОР..." />
+    </div>
+    <div class="field">
+      <label for="visitReason">Повод</label>
+      <input type="text" id="visitReason" maxlength="100" placeholder="Плановый осмотр, жалоба, справка..." />
+    </div>
+    <div class="field">
+      <label for="visitNotes">Заметки</label>
+      <textarea id="visitNotes" maxlength="2000" placeholder="Что сказали, диагноз, назначения"></textarea>
+    </div>
+    <div class="field">
+      <label for="visitNextDate">Следующий визит</label>
+      <input type="date" id="visitNextDate" />
+      <div class="modal-hint">Необязательно.</div>
+    </div>
+    <div class="modal-buttons">
+      <button class="cancel-btn" id="cancelVisitBtn">Отмена</button>
+      <button class="save-btn" id="saveVisitBtn">Сохранить</button>
+    </div>
+    <button class="danger-button" id="deleteVisitBtn" style="display: none;">🗑 Удалить визит</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="vaccinationModal">
+  <div class="modal">
+    <div class="modal-title" id="vaccinationModalTitle">💉 Прививка</div>
+    <div class="hint" id="vaccinationSubtitle" style="margin-bottom: 14px;"></div>
+
+    <div class="field">
+      <label for="vaccinationStatus">Статус</label>
+      <select id="vaccinationStatus">
+        <option value="pending">Предстоит</option>
+        <option value="done">Сделана</option>
+        <option value="refused">Отказ</option>
+      </select>
+    </div>
+
+    <div class="field" id="vaccinationDateField">
+      <label for="vaccinationDate">Дата</label>
+      <input type="date" id="vaccinationDate" />
+    </div>
+
+    <div class="field" id="vaccinationReactionField">
+      <label for="vaccinationReaction">Реакция</label>
+      <textarea id="vaccinationReaction" maxlength="300" placeholder="Температура, покраснение, ничего"></textarea>
+    </div>
+
+    <div class="field">
+      <label for="vaccinationNotes">Заметки</label>
+      <textarea id="vaccinationNotes" maxlength="500" placeholder="Необязательно"></textarea>
+    </div>
+
+    <div class="modal-buttons">
+      <button class="cancel-btn" id="cancelVaccinationBtn">Отмена</button>
+      <button class="save-btn" id="saveVaccinationBtn">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="childPickerModal">
   <div class="modal">
     <div class="modal-title">👶 Дети</div>
@@ -853,7 +956,7 @@
 </div>
 
 <script>
-const APP_VERSION = "6.3.2";
+const APP_VERSION = "6.3.3";
 const BOT_USERNAME = "Ivanregimebot";
 const MINIAPP_SHORT_NAME = "Babybabysleep";
 
@@ -868,12 +971,38 @@ const CHILDREN_TABLE = "children";
 const FAMILIES_TABLE = "families";
 const MEMBERS_TABLE = "family_members";
 const MEASUREMENTS_TABLE = "measurements";
+const VISITS_TABLE = "doctor_visits";
+const VACCINATIONS_TABLE = "vaccinations";
 
 const FEED_TYPES = ["feed_breast_left", "feed_breast_right", "feed_bottle"];
 
 const NIGHT_START_HOUR = 20;
 const NIGHT_END_HOUR = 9;
 const LONG_SLEEP_MS = 4 * 60 * 60 * 1000;
+
+// Национальный календарь профилактических прививок РФ (основные)
+// ageMonths — рекомендуемый возраст в месяцах
+const VACCINATION_SCHEDULE = [
+  { code: "hepb_1", name: "Гепатит B", dose: 1, ageMonths: 0, note: "в первые 24 часа" },
+  { code: "hepb_2", name: "Гепатит B", dose: 2, ageMonths: 1 },
+  { code: "hepb_3", name: "Гепатит B", dose: 3, ageMonths: 2 },
+  { code: "hepb_4", name: "Гепатит B", dose: 4, ageMonths: 6 },
+  { code: "bcg", name: "БЦЖ", dose: 1, ageMonths: 0, note: "3–7 дней" },
+  { code: "pneumo_1", name: "Пневмококк", dose: 1, ageMonths: 2 },
+  { code: "pneumo_2", name: "Пневмококк", dose: 2, ageMonths: 4.5 },
+  { code: "pneumo_3", name: "Пневмококк", dose: 3, ageMonths: 15 },
+  { code: "dtp_1", name: "АКДС", dose: 1, ageMonths: 3 },
+  { code: "dtp_2", name: "АКДС", dose: 2, ageMonths: 4.5 },
+  { code: "dtp_3", name: "АКДС", dose: 3, ageMonths: 6 },
+  { code: "dtp_r", name: "АКДС (ревакцинация)", dose: 1, ageMonths: 18 },
+  { code: "polio_1", name: "Полиомиелит", dose: 1, ageMonths: 3 },
+  { code: "polio_2", name: "Полиомиелит", dose: 2, ageMonths: 4.5 },
+  { code: "polio_3", name: "Полиомиелит", dose: 3, ageMonths: 6 },
+  { code: "polio_r1", name: "Полиомиелит (ревакцинация)", dose: 1, ageMonths: 18 },
+  { code: "polio_r2", name: "Полиомиелит (ревакцинация)", dose: 2, ageMonths: 20 },
+  { code: "mmr_1", name: "КПК (корь, паротит, краснуха)", dose: 1, ageMonths: 12 },
+  { code: "mmr_2", name: "КПК (корь, паротит, краснуха)", dose: 2, ageMonths: 72 },
+];
 
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
@@ -1040,6 +1169,33 @@ const cancelMeasurementBtn = document.getElementById("cancelMeasurementBtn");
 const saveMeasurementBtn = document.getElementById("saveMeasurementBtn");
 const deleteMeasurementBtn = document.getElementById("deleteMeasurementBtn");
 
+const addVisitBtn = document.getElementById("addVisitBtn");
+const visitsList = document.getElementById("visitsList");
+const visitModal = document.getElementById("visitModal");
+const visitModalTitle = document.getElementById("visitModalTitle");
+const visitDate = document.getElementById("visitDate");
+const visitDoctor = document.getElementById("visitDoctor");
+const visitReason = document.getElementById("visitReason");
+const visitNotes = document.getElementById("visitNotes");
+const visitNextDate = document.getElementById("visitNextDate");
+const cancelVisitBtn = document.getElementById("cancelVisitBtn");
+const saveVisitBtn = document.getElementById("saveVisitBtn");
+const deleteVisitBtn = document.getElementById("deleteVisitBtn");
+
+const vaccinationsTitle = document.getElementById("vaccinationsTitle");
+const vaccinationsList = document.getElementById("vaccinationsList");
+const vaccinationModal = document.getElementById("vaccinationModal");
+const vaccinationModalTitle = document.getElementById("vaccinationModalTitle");
+const vaccinationSubtitle = document.getElementById("vaccinationSubtitle");
+const vaccinationStatus = document.getElementById("vaccinationStatus");
+const vaccinationDateField = document.getElementById("vaccinationDateField");
+const vaccinationDate = document.getElementById("vaccinationDate");
+const vaccinationReactionField = document.getElementById("vaccinationReactionField");
+const vaccinationReaction = document.getElementById("vaccinationReaction");
+const vaccinationNotes = document.getElementById("vaccinationNotes");
+const cancelVaccinationBtn = document.getElementById("cancelVaccinationBtn");
+const saveVaccinationBtn = document.getElementById("saveVaccinationBtn");
+
 // STATE
 let familyId = null;
 let familyInfo = null;
@@ -1068,9 +1224,14 @@ let currentPhotoIndex = 0;
 let refreshing = false;
 
 let measurements = [];
-let currentMetric = "weight";
 let devChartInstance = null;
 let editingMeasurementId = null;
+
+let doctorVisits = [];
+let editingVisitId = null;
+
+let vaccinationRecords = [];
+let editingVaccinationCode = null;
 
 // UTILS
 function showError(m) { errorDiv.textContent = m; errorDiv.style.display = "block"; }
@@ -1118,6 +1279,16 @@ function formatClock(d) { return d.toLocaleTimeString("ru-RU", { hour:"2-digit",
 function formatDateShort(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"2-digit" }); }
 function formatDateTime(d) { return `${formatDateShort(d)} ${formatClock(d)}`; }
 function formatDateOnly(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"long", year:"numeric" }); }
+function formatDateShortYear(d) { return d.toLocaleDateString("ru-RU", { day:"2-digit", month:"long" }); }
+function formatAgeLabel(months) {
+  const m = Number(months);
+  if (m === 0) return "новорождённый";
+  if (m < 1) return "в первые дни";
+  if (m < 12) return `${m} мес`;
+  const years = m / 12;
+  if (Number.isInteger(years)) return years === 1 ? "1 год" : `${years} года`;
+  return `${m} мес`;
+}
 function getDayLabel(date) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
@@ -1160,24 +1331,6 @@ function getFeedTypeLabel(t) {
     case "feed_bottle": return "🍼 Бутылочка";
     default: return "Кормление";
   }
-}
-function getMetricField(m) {
-  if (m === "weight") return "weight_kg";
-  if (m === "height") return "height_cm";
-  if (m === "head") return "head_circumference_cm";
-  return "";
-}
-function getMetricUnit(m) {
-  if (m === "weight") return "кг";
-  if (m === "height") return "см";
-  if (m === "head") return "см";
-  return "";
-}
-function getMetricColor(m) {
-  if (m === "weight") return "#2481cc";
-  if (m === "height") return "#48a860";
-  if (m === "head") return "#b88de0";
-  return "#2481cc";
 }
 
 // КЛАССИФИКАЦИЯ СНА
@@ -1388,8 +1541,12 @@ async function selectChild(childId) {
   hideError();
   openSession = null; lastCompletedEnd = null; openFeed = null;
   measurements = [];
+  doctorVisits = [];
+  vaccinationRecords = [];
   await refreshAll();
   await safeCall(loadMeasurements);
+  await safeCall(loadDoctorVisits);
+  await safeCall(loadVaccinationRecords);
   hapticLight();
 }
 
@@ -1429,11 +1586,13 @@ async function saveChildForm() {
       renderActiveChildName();
       updateEventsCardUI();
       openSession = null; lastCompletedEnd = null; openFeed = null;
-      measurements = [];
+      measurements = []; doctorVisits = []; vaccinationRecords = [];
     }
     closeChildForm(); hapticSuccess();
     await refreshAll();
     await safeCall(loadMeasurements);
+    await safeCall(loadDoctorVisits);
+    await safeCall(loadVaccinationRecords);
   } catch (e) {
     console.error(e); showError(e.message || "Не удалось сохранить."); saveChildBtn.disabled = false;
   }
@@ -1458,6 +1617,8 @@ async function deleteChild() {
     await supabaseClient.from(EVENTS_TABLE).delete().eq("child_id", editingChildId);
     await supabaseClient.from(PHOTOS_TABLE).delete().eq("child_id", editingChildId);
     await supabaseClient.from(MEASUREMENTS_TABLE).delete().eq("child_id", editingChildId);
+    await supabaseClient.from(VISITS_TABLE).delete().eq("child_id", editingChildId);
+    await supabaseClient.from(VACCINATIONS_TABLE).delete().eq("child_id", editingChildId);
     const { error } = await supabaseClient.from(CHILDREN_TABLE).delete().eq("id", editingChildId);
     if (error) throw error;
     const wasActive = editingChildId === activeChildId;
@@ -1467,11 +1628,13 @@ async function deleteChild() {
       renderActiveChildName();
       updateEventsCardUI();
       openSession = null; lastCompletedEnd = null; openFeed = null;
-      measurements = [];
+      measurements = []; doctorVisits = []; vaccinationRecords = [];
     }
     closeChildForm(); hapticSuccess();
     await refreshAll();
     await safeCall(loadMeasurements);
+    await safeCall(loadDoctorVisits);
+    await safeCall(loadVaccinationRecords);
   } catch (e) {
     console.error(e); showError(e.message || "Не удалось удалить.");
   }
@@ -1545,6 +1708,8 @@ async function createFamilyInternal(name, { attachOrphans }) {
     await supabaseClient.from(EVENTS_TABLE).update({ family_id: familyId }).is("family_id", null);
     await supabaseClient.from(PHOTOS_TABLE).update({ family_id: familyId }).is("family_id", null);
     await supabaseClient.from(MEASUREMENTS_TABLE).update({ family_id: familyId }).is("family_id", null);
+    await supabaseClient.from(VISITS_TABLE).update({ family_id: familyId }).is("family_id", null);
+    await supabaseClient.from(VACCINATIONS_TABLE).update({ family_id: familyId }).is("family_id", null);
   }
   const dn = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || tgUser.username || "Родитель";
   const { error: merr } = await supabaseClient.from(MEMBERS_TABLE).insert({ family_id: familyId, telegram_id: tgUser.id, display_name: dn, role: "owner" });
@@ -1644,7 +1809,11 @@ function setView(view) {
   devView.style.display = view === "dev" ? "block" : "none";
   navMainBtn.classList.toggle("active", view === "main");
   navDevBtn.classList.toggle("active", view === "dev");
-  if (view === "dev") safeCall(loadMeasurements);
+  if (view === "dev") {
+    safeCall(loadMeasurements);
+    safeCall(loadDoctorVisits);
+    safeCall(loadVaccinationRecords);
+  }
   window.scrollTo(0, 0);
 }
 
@@ -2175,53 +2344,169 @@ function renderMeasurementsList() {
   });
 }
 
+function getMetricsVisibility() {
+  const c = getActiveChild();
+  const def = { weight: true, height: true, head: true };
+  if (!c || !c.ui_metrics || typeof c.ui_metrics !== "object") return def;
+  return Object.assign({}, def, c.ui_metrics);
+}
+
+async function saveMetricsVisibility(next) {
+  if (!activeChildId) return;
+  try { await saveChildSettings({ ui_metrics: next }); } catch (e) { console.error(e); }
+}
+
 function renderDevChart() {
   if (typeof Chart === "undefined") return;
-  const field = getMetricField(currentMetric);
-  const points = measurements
-    .filter(m => m[field] != null)
-    .slice()
-    .sort((a, b) => new Date(a.measured_at) - new Date(b.measured_at));
-  if (points.length === 0) {
+
+  if (!measurements.length) {
     devChartEmpty.style.display = "flex";
     devChartCanvas.style.display = "none";
     if (devChartInstance) { devChartInstance.destroy(); devChartInstance = null; }
     return;
   }
+
   devChartEmpty.style.display = "none";
   devChartCanvas.style.display = "block";
-  const labels = points.map(p => {
-    const d = new Date(p.measured_at);
-    return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
-  });
-  const values = points.map(p => Number(p[field]));
-  const color = getMetricColor(currentMetric);
+
+  const sorted = measurements.slice().sort(
+    (a, b) => new Date(a.measured_at) - new Date(b.measured_at)
+  );
+
+  function buildPoints(field) {
+    return sorted.filter(m => m[field] != null).map(m => ({
+      x: new Date(m.measured_at).getTime(),
+      y: Number(m[field])
+    }));
+  }
+
+  const weightPoints = buildPoints("weight_kg");
+  const heightPoints = buildPoints("height_cm");
+  const headPoints = buildPoints("head_circumference_cm");
+  const vis = getMetricsVisibility();
+
+  const datasets = [
+    {
+      label: "⚖️ Вес, кг",
+      data: weightPoints,
+      borderColor: "#2481cc",
+      backgroundColor: "#2481cc33",
+      borderWidth: 2,
+      tension: 0.3,
+      fill: false,
+      pointRadius: 4,
+      pointBackgroundColor: "#2481cc",
+      yAxisID: "yWeight",
+      hidden: !vis.weight,
+      spanGaps: true
+    },
+    {
+      label: "📏 Рост, см",
+      data: heightPoints,
+      borderColor: "#48a860",
+      backgroundColor: "#48a86033",
+      borderWidth: 2,
+      tension: 0.3,
+      fill: false,
+      pointRadius: 4,
+      pointBackgroundColor: "#48a860",
+      yAxisID: "yHeight",
+      hidden: !vis.height,
+      spanGaps: true
+    },
+    {
+      label: "🧠 Окружность, см",
+      data: headPoints,
+      borderColor: "#eab308",
+      backgroundColor: "#eab30833",
+      borderWidth: 2,
+      tension: 0.3,
+      fill: false,
+      pointRadius: 4,
+      pointBackgroundColor: "#eab308",
+      yAxisID: "yHeight",
+      hidden: !vis.head,
+      spanGaps: true
+    }
+  ];
+
   if (devChartInstance) {
-    devChartInstance.data.labels = labels;
-    devChartInstance.data.datasets[0].data = values;
-    devChartInstance.data.datasets[0].borderColor = color;
-    devChartInstance.data.datasets[0].backgroundColor = color + "33";
+    devChartInstance.data.datasets = datasets;
     devChartInstance.update("none");
     return;
   }
+
   devChartInstance = new Chart(devChartCanvas.getContext("2d"), {
     type: "line",
-    data: {
-      labels,
-      datasets: [{
-        data: values, borderColor: color, backgroundColor: color + "33",
-        borderWidth: 2, tension: 0.3, fill: false, pointRadius: 4, pointBackgroundColor: color
-      }]
-    },
+    data: { datasets },
     options: {
-      animation: false, responsive: true, maintainAspectRatio: false,
+      animation: false,
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "nearest", intersect: false },
       plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => `${ctx.parsed.y} ${getMetricUnit(currentMetric)}` } }
+        legend: {
+          position: "bottom",
+          labels: {
+            usePointStyle: true,
+            boxWidth: 8,
+            padding: 12,
+            font: { size: 12 }
+          },
+          onClick: async (evt, item, legend) => {
+            const chart = legend.chart;
+            const idx = item.datasetIndex;
+            const meta = chart.getDatasetMeta(idx);
+            meta.hidden = !meta.hidden;
+            const key = idx === 0 ? "weight" : (idx === 1 ? "height" : "head");
+            const next = getMetricsVisibility();
+            next[key] = !meta.hidden;
+            hapticLight();
+            await saveMetricsVisibility(next);
+            chart.update("none");
+          }
+        },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              if (!items.length) return "";
+              const d = new Date(items[0].parsed.x);
+              return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" });
+            },
+            label: (ctx) => {
+              const y = ctx.parsed.y;
+              const unit = ctx.datasetIndex === 0 ? "кг" : "см";
+              return `${ctx.dataset.label}: ${y} ${unit}`;
+            }
+          }
+        }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
-        y: { grid: { color: "rgba(128,128,128,0.15)" }, ticks: { font: { size: 10 } } }
+        x: {
+          type: "linear",
+          grid: { display: false },
+          ticks: {
+            font: { size: 10 },
+            maxRotation: 0,
+            autoSkipPadding: 20,
+            callback: (value) => {
+              const d = new Date(value);
+              return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+            }
+          }
+        },
+        yWeight: {
+          type: "linear",
+          position: "left",
+          grid: { color: "rgba(128,128,128,0.15)" },
+          ticks: { font: { size: 10 }, color: "#2481cc" }
+        },
+        yHeight: {
+          type: "linear",
+          position: "right",
+          grid: { display: false },
+          ticks: { font: { size: 10 }, color: "#8a8a8a" }
+        }
       }
     }
   });
@@ -2308,6 +2593,337 @@ async function deleteMeasurement() {
   } catch (e) { console.error(e); showError(e.message || "Не удалось."); }
 }
 
+// DOCTOR VISITS
+async function loadDoctorVisits() {
+  if (!activeChildId) { doctorVisits = []; renderDoctorVisits(); return; }
+  const { data, error } = await supabaseClient
+    .from(VISITS_TABLE).select("*").eq("child_id", activeChildId)
+    .order("visit_date", { ascending: false });
+  if (error) { console.error(error); return; }
+  doctorVisits = data || [];
+  renderDoctorVisits();
+}
+
+function renderDoctorVisits() {
+  visitsList.innerHTML = "";
+  if (!doctorVisits.length) {
+    const e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = "Визитов пока нет";
+    visitsList.appendChild(e);
+    return;
+  }
+
+  doctorVisits.forEach(v => {
+    const row = document.createElement("div");
+    row.className = "list-item-row";
+
+    const icon = document.createElement("div");
+    icon.className = "list-item-icon";
+    icon.textContent = "🩺";
+
+    const main = document.createElement("div");
+    main.className = "list-item-main";
+
+    const title = document.createElement("div");
+    title.className = "list-item-title";
+    const parts = [formatDateShortYear(new Date(v.visit_date))];
+    if (v.doctor_type) parts.push(v.doctor_type);
+    title.textContent = parts.join(" · ");
+
+    main.appendChild(title);
+
+    if (v.reason) {
+      const sub = document.createElement("div");
+      sub.className = "list-item-sub";
+      sub.textContent = v.reason;
+      main.appendChild(sub);
+    }
+
+    if (v.notes) {
+      const sub = document.createElement("div");
+      sub.className = "list-item-sub-italic";
+      sub.textContent = v.notes;
+      main.appendChild(sub);
+    }
+
+    if (v.next_visit_date) {
+      const meta = document.createElement("div");
+      meta.className = "list-item-meta";
+      meta.textContent = `Следующий визит: ${formatDateShortYear(new Date(v.next_visit_date))}`;
+      main.appendChild(meta);
+    }
+
+    row.appendChild(icon);
+    row.appendChild(main);
+    row.addEventListener("click", () => openVisitModal(v));
+    visitsList.appendChild(row);
+  });
+}
+
+function openVisitModal(v) {
+  if (v) {
+    editingVisitId = v.id;
+    visitModalTitle.textContent = "✏️ Изменить визит";
+    visitDate.value = dateToInputValue(new Date(v.visit_date));
+    visitDoctor.value = v.doctor_type || "";
+    visitReason.value = v.reason || "";
+    visitNotes.value = v.notes || "";
+    visitNextDate.value = v.next_visit_date ? dateToInputValue(new Date(v.next_visit_date)) : "";
+    deleteVisitBtn.style.display = "block";
+  } else {
+    editingVisitId = null;
+    visitModalTitle.textContent = "🩺 Добавить визит";
+    visitDate.value = dateToInputValue(new Date());
+    visitDoctor.value = "";
+    visitReason.value = "";
+    visitNotes.value = "";
+    visitNextDate.value = "";
+    deleteVisitBtn.style.display = "none";
+  }
+  saveVisitBtn.disabled = false;
+  visitModal.classList.add("visible");
+}
+
+function closeVisitModal() {
+  visitModal.classList.remove("visible");
+  editingVisitId = null;
+}
+
+async function saveVisit() {
+  if (!activeChildId || !familyId) return;
+  const dateVal = visitDate.value;
+  if (!dateVal) { alert("Укажи дату."); return; }
+  const parsedDate = new Date(dateVal + "T12:00:00");
+  if (Number.isNaN(parsedDate.getTime())) { alert("Некорректная дата."); return; }
+
+  const nextVal = visitNextDate.value.trim();
+  let nextISO = null;
+  if (nextVal) {
+    const nd = new Date(nextVal + "T12:00:00");
+    if (!Number.isNaN(nd.getTime())) nextISO = nd.toISOString();
+  }
+
+  saveVisitBtn.disabled = true;
+  hideError();
+
+  const payload = {
+    child_id: activeChildId,
+    family_id: familyId,
+    visit_date: parsedDate.toISOString(),
+    doctor_type: visitDoctor.value.trim() || null,
+    reason: visitReason.value.trim() || null,
+    notes: visitNotes.value.trim() || null,
+    next_visit_date: nextISO
+  };
+
+  try {
+    if (editingVisitId) {
+      const { error } = await supabaseClient.from(VISITS_TABLE).update(payload).eq("id", editingVisitId);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from(VISITS_TABLE).insert(payload);
+      if (error) throw error;
+    }
+    closeVisitModal(); hapticSuccess();
+    await loadDoctorVisits();
+  } catch (e) {
+    console.error(e); showError(e.message || "Не удалось сохранить."); saveVisitBtn.disabled = false;
+  }
+}
+
+async function deleteVisit() {
+  if (!editingVisitId) return;
+  if (!confirm("Удалить этот визит?")) return;
+  hideError();
+  try {
+    const { error } = await supabaseClient.from(VISITS_TABLE).delete().eq("id", editingVisitId);
+    if (error) throw error;
+    closeVisitModal(); hapticSuccess();
+    await loadDoctorVisits();
+  } catch (e) { console.error(e); showError(e.message || "Не удалось."); }
+}
+
+// VACCINATIONS
+async function loadVaccinationRecords() {
+  if (!activeChildId) { vaccinationRecords = []; renderVaccinations(); return; }
+  const { data, error } = await supabaseClient
+    .from(VACCINATIONS_TABLE).select("*").eq("child_id", activeChildId);
+  if (error) { console.error(error); return; }
+  vaccinationRecords = data || [];
+  renderVaccinations();
+}
+
+function getVaccinationRecord(code) {
+  return vaccinationRecords.find(r => r.vaccine_code === code) || null;
+}
+
+function renderVaccinations() {
+  vaccinationsList.innerHTML = "";
+
+  const done = vaccinationRecords.filter(r => r.status === "done").length;
+  const total = VACCINATION_SCHEDULE.length;
+  vaccinationsTitle.textContent = `💉 Прививки · ${done} из ${total}`;
+
+  // Группируем по возрастным вехам
+  const groups = new Map();
+  VACCINATION_SCHEDULE.forEach(item => {
+    const key = item.ageMonths;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  });
+
+  const sortedKeys = Array.from(groups.keys()).sort((a, b) => a - b);
+
+  sortedKeys.forEach(age => {
+    const items = groups.get(age);
+
+    const groupTitle = document.createElement("div");
+    groupTitle.className = "vacc-group-title";
+    groupTitle.textContent = formatAgeLabel(age);
+    vaccinationsList.appendChild(groupTitle);
+
+    items.forEach(item => {
+      const record = getVaccinationRecord(item.code);
+      const status = record ? record.status : "pending";
+
+      const row = document.createElement("div");
+      row.className = "list-item-row";
+
+      const icon = document.createElement("div");
+      icon.className = "list-item-icon";
+      if (status === "done") icon.textContent = "✓";
+      else if (status === "refused") icon.textContent = "✕";
+      else icon.textContent = "○";
+      if (status === "done") icon.style.color = "#48a860";
+      else if (status === "refused") icon.style.color = "#ff3b30";
+      else icon.style.color = "var(--hint)";
+
+      const main = document.createElement("div");
+      main.className = "list-item-main";
+
+      const title = document.createElement("div");
+      title.className = "list-item-title";
+      let titleText = item.name;
+      if (item.dose > 1 || VACCINATION_SCHEDULE.filter(x => x.name === item.name).length > 1) {
+        titleText += ` · ${item.dose}`;
+      }
+      title.textContent = titleText;
+      main.appendChild(title);
+
+      const subParts = [];
+      if (item.note) subParts.push(item.note);
+
+      if (status === "done" && record && record.done_date) {
+        subParts.push(`сделана ${formatDateShortYear(new Date(record.done_date))}`);
+      } else if (status === "refused") {
+        subParts.push("отказ");
+      } else {
+        subParts.push("предстоит");
+      }
+
+      if (subParts.length) {
+        const sub = document.createElement("div");
+        sub.className = "list-item-sub";
+        sub.textContent = subParts.join(" · ");
+        main.appendChild(sub);
+      }
+
+      if (record && record.reaction) {
+        const react = document.createElement("div");
+        react.className = "list-item-sub-italic";
+        react.textContent = `Реакция: ${record.reaction}`;
+        main.appendChild(react);
+      }
+
+      row.appendChild(icon);
+      row.appendChild(main);
+      row.addEventListener("click", () => openVaccinationModal(item));
+      vaccinationsList.appendChild(row);
+    });
+  });
+}
+
+function openVaccinationModal(item) {
+  editingVaccinationCode = item.code;
+
+  vaccinationModalTitle.textContent = `${item.name} · ${item.dose}`;
+  const parts = [];
+  if (item.note) parts.push(item.note);
+  parts.push(`план: ${formatAgeLabel(item.ageMonths)}`);
+  vaccinationSubtitle.textContent = parts.join(" · ");
+
+  const record = getVaccinationRecord(item.code);
+  if (record) {
+    vaccinationStatus.value = record.status || "pending";
+    vaccinationDate.value = record.done_date || "";
+    vaccinationReaction.value = record.reaction || "";
+    vaccinationNotes.value = record.notes || "";
+  } else {
+    vaccinationStatus.value = "pending";
+    vaccinationDate.value = "";
+    vaccinationReaction.value = "";
+    vaccinationNotes.value = "";
+  }
+
+  updateVaccinationFieldsVisibility();
+  saveVaccinationBtn.disabled = false;
+  vaccinationModal.classList.add("visible");
+}
+
+function updateVaccinationFieldsVisibility() {
+  const st = vaccinationStatus.value;
+  vaccinationDateField.style.display = st === "done" ? "" : "none";
+  vaccinationReactionField.style.display = st === "done" ? "" : "none";
+}
+
+function closeVaccinationModal() {
+  vaccinationModal.classList.remove("visible");
+  editingVaccinationCode = null;
+}
+
+async function saveVaccination() {
+  if (!activeChildId || !familyId || !editingVaccinationCode) return;
+
+  const status = vaccinationStatus.value;
+  let doneDate = null;
+  if (status === "done") {
+    const d = vaccinationDate.value;
+    if (!d) { alert("Укажи дату прививки."); return; }
+    doneDate = d;
+  }
+
+  saveVaccinationBtn.disabled = true;
+  hideError();
+
+  const payload = {
+    child_id: activeChildId,
+    family_id: familyId,
+    vaccine_code: editingVaccinationCode,
+    status: status,
+    done_date: doneDate,
+    reaction: status === "done" ? (vaccinationReaction.value.trim() || null) : null,
+    notes: vaccinationNotes.value.trim() || null
+  };
+
+  try {
+    const existing = getVaccinationRecord(editingVaccinationCode);
+
+    if (existing) {
+      const { error } = await supabaseClient.from(VACCINATIONS_TABLE).update(payload).eq("id", existing.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from(VACCINATIONS_TABLE).insert(payload);
+      if (error) throw error;
+    }
+
+    closeVaccinationModal(); hapticSuccess();
+    await loadVaccinationRecords();
+  } catch (e) {
+    console.error(e); showError(e.message || "Не удалось сохранить."); saveVaccinationBtn.disabled = false;
+  }
+}
+
 // STATS
 function mergeIntervals(intervals) {
   if (!intervals.length) return [];
@@ -2331,7 +2947,7 @@ function clipRawSessionsToRange(rawSessions, rsMs, reMs, nowMs) {
     if (se <= rsMs || ss >= reMs) return;
     const start = Math.max(ss, rsMs), end = Math.min(se, reMs);
     if (end <= start) return;
-    clipped.push({ start, end, originalStart: ss, originalEnd: se });
+    clipped.push({ start, end });
     overlapping.push({ sessionStartMs: ss, originalStart: ss, originalEnd: se });
   });
   return { clippedIntervals: clipped, overlappingSessions: overlapping };
@@ -2343,13 +2959,9 @@ function calculateSleepStats(raw, rsMs, reMs, nowMs) {
   const { clippedIntervals, overlappingSessions } = clipRawSessionsToRange(raw, rsMs, eeMs, nowMs);
   const merged = mergeIntervals(clippedIntervals);
 
-  // Классифицируем каждый объединённый интервал целиком
   const sleepPieces = merged.map(iv => {
-    // Для классификации используем оригинальные границы (до обрезки по диапазону)
-    // Находим исходную сессию, которая содержит этот интервал
     let originalStart = iv.start;
     let originalEnd = iv.end;
-    // Ищем среди overlapping сессий ту, что содержит этот интервал
     for (const s of overlappingSessions) {
       if (s.originalStart <= iv.start && s.originalEnd >= iv.end) {
         originalStart = s.originalStart;
@@ -2363,7 +2975,6 @@ function calculateSleepStats(raw, rsMs, reMs, nowMs) {
 
   let sleepMs = 0, dayMs = 0, dayCnt = 0, nightMs = 0, nightCnt = 0;
 
-  // Считаем эпизоды по оригинальным сессиям
   overlappingSessions.forEach(({ sessionStartMs, originalStart, originalEnd }) => {
     if (sessionStartMs >= rsMs && sessionStartMs < eeMs) {
       const type = classifySleepType(originalStart, originalEnd);
@@ -2893,7 +3504,11 @@ async function refreshAll() {
     await safeCall(loadRecentHistory);
     await safeCall(loadRecentEvents);
     await safeCall(loadOpenFeed);
-    if (currentView === "dev") await safeCall(loadMeasurements);
+    if (currentView === "dev") {
+      await safeCall(loadMeasurements);
+      await safeCall(loadDoctorVisits);
+      await safeCall(loadVaccinationRecords);
+    }
     if (statsView.style.display === "block") { refreshYesterdayRangeIfNeeded(); await safeCall(() => loadRangeStats(false)); }
     if (galleryView.style.display === "block") await safeCall(loadPhotos);
   } finally {
@@ -3019,16 +3634,16 @@ measurementModal.addEventListener("click", e => { if (e.target === measurementMo
 saveMeasurementBtn.addEventListener("click", saveMeasurement);
 deleteMeasurementBtn.addEventListener("click", deleteMeasurement);
 
-document.querySelectorAll(".metric-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const metric = btn.dataset.metric;
-    if (metric === currentMetric) return;
-    currentMetric = metric;
-    document.querySelectorAll(".metric-btn").forEach(b => b.classList.toggle("active", b.dataset.metric === metric));
-    hapticLight();
-    renderDevChart();
-  });
-});
+addVisitBtn.addEventListener("click", () => openVisitModal(null));
+cancelVisitBtn.addEventListener("click", closeVisitModal);
+visitModal.addEventListener("click", e => { if (e.target === visitModal) closeVisitModal(); });
+saveVisitBtn.addEventListener("click", saveVisit);
+deleteVisitBtn.addEventListener("click", deleteVisit);
+
+vaccinationStatus.addEventListener("change", updateVaccinationFieldsVisibility);
+cancelVaccinationBtn.addEventListener("click", closeVaccinationModal);
+vaccinationModal.addEventListener("click", e => { if (e.target === vaccinationModal) closeVaccinationModal(); });
+saveVaccinationBtn.addEventListener("click", saveVaccination);
 
 uploadPhotoBtn.addEventListener("click", uploadPhoto);
 editModal.addEventListener("click", e => { if (e.target === editModal) closeEditModal(); });
