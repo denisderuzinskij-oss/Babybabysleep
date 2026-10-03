@@ -956,7 +956,7 @@
 </div>
 
 <script>
-const APP_VERSION = "6.3.3";
+const APP_VERSION = "6.3.4";
 const BOT_USERNAME = "Ivanregimebot";
 const MINIAPP_SHORT_NAME = "Babybabysleep";
 
@@ -1234,6 +1234,19 @@ let vaccinationRecords = [];
 let editingVaccinationCode = null;
 
 // UTILS
+async function logVisit() {
+  if (!tgUser || !tgUser.id) return;
+  try {
+    await supabaseClient.from("app_visits").insert({
+      telegram_id: tgUser.id,
+      family_id: familyId,
+      child_id: activeChildId,
+      app_version: APP_VERSION
+    });
+  } catch (e) {
+    console.error("visit log failed", e);
+  }
+}
 function showError(m) { errorDiv.textContent = m; errorDiv.style.display = "block"; }
 function hideError() { errorDiv.textContent = ""; errorDiv.style.display = "none"; }
 async function safeCall(fn, fallback) {
@@ -3726,6 +3739,7 @@ statsToDate.value = todayV;
     await bootstrapFamily();
     if (familyId) {
       await loadChildren();
+      await safeCall(logVisit);
       await refreshAll();
     }
   } catch (e) {
